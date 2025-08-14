@@ -13,11 +13,8 @@ import OrderDeliveryManagement from "./Components/admin/modules/OrderDeliveryMan
 import WorkshopScheduleManagement from "./Components/admin/modules/WorkshopScheduleManagement.jsx";
 import CustomerMediaManagement from "./Components/admin/modules/CustomerMediaManagement.jsx";
 import OverviewPage from "./Components/admin/modules/OverviewPage.jsx";
+import HarvestFarmManagement from "./Components/admin/modules/HarvestFarmManagement.jsx";
 
-// If Harvest page doesn't exist yet, keep this stub:
-const HarvestFarmManagement = () => (
-  <div className="text-sm text-neutral-300">Harvest &amp; Farm — add your UI here.</div>
-);
 
 // --- Simple auth helpers ---
 const isAuthed = () => !!localStorage.getItem("token");
@@ -56,6 +53,7 @@ export default function App() {
           <Route path="harvest"   element={<HarvestFarmManagement />} />
           <Route path="orders"    element={<OrderDeliveryManagement />} />
           <Route path="media"     element={<CustomerMediaManagement />} />
+          <Route path="harvest" element={<HarvestFarmManagement />} />
         </Route>
 
         {/* Root & fallback */}
