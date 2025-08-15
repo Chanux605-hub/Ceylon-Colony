@@ -5,6 +5,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 // Adjust this path to match your real file location:
 import ModernLogin from "./Components/ModernLogin.jsx";
 import Layout from "./Components/admin/Layout.jsx";
+import Home from "./pages/Home.jsx";
+
 
 // Module pages (rendered inside Layout's <Outlet/>)
 import ProductManagement from "./Components/admin/modules/ProductManagement.jsx";
@@ -61,6 +63,7 @@ export default function App() {
         {/* Root & fallback */}
         <Route path="/" element={<AuthedRedirect />} />
         <Route path="*" element={<AuthedRedirect />} />
+        <Route path="/home" element={<Home />} />
       </Routes>
     </BrowserRouter>
   );
