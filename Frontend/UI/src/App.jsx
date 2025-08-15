@@ -14,7 +14,7 @@ import WorkshopScheduleManagement from "./Components/admin/modules/WorkshopSched
 import CustomerMediaManagement from "./Components/admin/modules/CustomerMediaManagement.jsx";
 import OverviewPage from "./Components/admin/modules/OverviewPage.jsx";
 import HarvestFarmManagement from "./Components/admin/modules/HarvestFarmManagement.jsx";
-
+import Harvest from "./HarvestManagement/HarvestFarmManagement.jsx";
 
 // --- Simple auth helpers ---
 const isAuthed = () => !!localStorage.getItem("token");
@@ -59,6 +59,7 @@ export default function App() {
         {/* Root & fallback */}
         <Route path="/" element={<AuthedRedirect />} />
         <Route path="*" element={<AuthedRedirect />} />
+        <Route path="/dinuja" element ={<Harvest/>}/>
       </Routes>
     </BrowserRouter>
   );
