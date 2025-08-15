@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ModernLogin from "./Components/ModernLogin.jsx";
 import Layout from "./Components/admin/Layout.jsx";
 import Home from "./pages/Home.jsx";
+import OurProducts from "./pages/OurProducts.jsx";
 
 
 // Module pages (rendered inside Layout's <Outlet/>)
@@ -64,6 +65,7 @@ export default function App() {
         <Route path="/" element={<AuthedRedirect />} />
         <Route path="*" element={<AuthedRedirect />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/products" element={<OurProducts />} />
       </Routes>
     </BrowserRouter>
   );
