@@ -10,8 +10,8 @@ import OurProducts from "./pages/OurProducts.jsx";
 
 
 // Module pages (rendered inside Layout's <Outlet/>)
-import ProductManagement from "./Components/admin/modules/ProductManagement.jsx";
-import InventoryManagement from "./Components/admin/modules/InventoryManagement.jsx";
+import ProductManagement from "./Components/admin/modules/AdminProducts.jsx";
+import InventoryManagement from "./Components/admin/modules/AdminInventory.jsx";
 import OrderDeliveryManagement from "./Components/admin/modules/OrderDeliveryManagement.jsx";
 import WorkshopScheduleManagement from "./Components/admin/modules/WorkshopScheduleManagement.jsx";
 import CustomerMediaManagement from "./Components/admin/modules/CustomerMediaManagement.jsx";
