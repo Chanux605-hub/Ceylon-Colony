@@ -6,6 +6,7 @@ import ModernLogin from "./Components/ModernLogin.jsx";
 import AdminLayout from "./Components/admin/AdminLayout.jsx";
 import Home from "./pages/Home.jsx"
 import OurProducts from "./pages/OurProducts.jsx"
+import Community from "./pages/Community.jsx"
 
 // Module pages (rendered inside Layout's <Outlet/>)
 import AdminProducts from "./Components/admin/modules/AdminProducts.jsx";
@@ -79,7 +80,7 @@ export default function App() {
 
         <Route path="/home" element={<Home />} />
         <Route path="/products" element={<OurProducts />} />
-
+        <Route path="/community" element={<Community />} />
 
       </Routes>
     </BrowserRouter>
