@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from "react";
+import Navbar from "../Components/User/navbar";
+import Footer from "../Components/User/Footer";
 
 // ---- MOCK DATA (hard-coded) ----
 const TABS = ["All", "Announcements", "Discussions", "Tutorials", "Events", "Gallery"];
@@ -63,6 +65,7 @@ const CONTRIBUTORS = [
 ];
 
 export default function Community() {
+   
   const [tab, setTab] = useState("All");
   const [q, setQ] = useState("");
 
@@ -81,7 +84,11 @@ export default function Community() {
   }, [tab, q]);
 
   return (
+    
     <div className="min-h-screen bg-[#0B0B0B] text-white">
+         {/* Navbar at the top */}
+         <Navbar />
+
       {/* HERO */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none"
@@ -301,6 +308,10 @@ export default function Community() {
           </aside>
         </div>
       </section>
+                 {/* Footer at the bottom */}
+                 <Footer />
+       
     </div>
   );
+ 
 }
