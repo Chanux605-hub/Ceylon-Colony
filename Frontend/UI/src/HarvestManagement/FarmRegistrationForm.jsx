@@ -1,38 +1,21 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 
 /**
  * FarmRegistrationForm.jsx
- * - Pure React component (frontend only)
- * - TailwindCSS classes for styling (no external UI libs required)
+ * - React form with TailwindCSS
  * - Auto-generates Farm ID
- * - Includes temporary ownerId (set to "001")
+ * - Temporary ownerId = "001"
+ * - Submits data to http://localhost:3000/api/farms/register
  */
 
 export default function FarmRegistrationForm() {
-  // ---------- const (temporary ownerId until context is ready) ----------
+  // ---------- const (temporary ownerId until session/user is implemented) ----------
   const ownerId = "001";
 
   // ---------- form state ----------
-  const [form, setForm] = useState({
-    farmName: "",
-    ownerId: ownerId, // inject ownerId into form
-    owner: "",
-    phone: "",
-    email: "",
-    address: "",
-    district: "",
-    lat: "",
-    lng: "",
-    size: "",
-    numHives: "",
-    hiveTypes: [],
-    flora: "",
-    dateEstablished: "",
-    status: "Active",
-    expectedAnnualYield: "",
-  });
-
+  const [form, setForm] = useState(defaultForm(ownerId));
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   // ---------- auto ID ----------
   const farmId = useMemo(() => makeFarmId(form.farmName), [form.farmName]);
@@ -59,7 +42,6 @@ export default function FarmRegistrationForm() {
 
   const validate = () => {
     const next = {};
-
     if (!String(form.farmName).trim()) next.farmName = "Farm Name is required";
     if (!String(form.owner).trim()) next.owner = "Owner / Manager is required";
     if (!String(form.phone).trim()) next.phone = "Phone is required";
@@ -69,9 +51,6 @@ export default function FarmRegistrationForm() {
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) next.email = "Invalid email";
     if (form.phone && !/^([+]?\d[\d\s-]{6,})$/.test(form.phone)) next.phone = "Invalid phone number";
 
-    if (form.lat && isNaN(Number(form.lat))) next.lat = "Latitude must be a number";
-    if (form.lng && isNaN(Number(form.lng))) next.lng = "Longitude must be a number";
-
     if (form.size !== "" && Number(form.size) < 0) next.size = "Size cannot be negative";
     if (form.numHives !== "" && Number(form.numHives) < 0) next.numHives = "Number of hives cannot be negative";
     if (form.expectedAnnualYield !== "" && Number(form.expectedAnnualYield) < 0) next.expectedAnnualYield = "Yield cannot be negative";
@@ -80,7 +59,8 @@ export default function FarmRegistrationForm() {
     return Object.keys(next).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  // ---------- submit handler (API call) ----------
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
@@ -95,8 +75,30 @@ export default function FarmRegistrationForm() {
       createdAt: new Date().toISOString(),
     };
 
-    console.log("Submit Farm Registration:", payload);
-    alert("Farm registered (frontend demo). Check console for payload.");
+    try {
+      setLoading(true);
+
+      const res = await fetch("http://localhost:3000/api/farms/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        alert("✅ Farm registered successfully!");
+        console.log("Server response:", data);
+        setForm(defaultForm(ownerId)); // reset form
+      } else {
+        alert("❌ Failed: " + (data.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error submitting farm:", err);
+      alert("❌ API Error: " + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ---------- UI ----------
@@ -110,10 +112,7 @@ export default function FarmRegistrationForm() {
             </span>
             <h1 className="text-2xl font-bold">Farm Registration</h1>
           </div>
-          <code
-            className="text-emerald-300 bg-slate-800 border border-slate-700 px-3 py-1 rounded-md text-xs"
-            title="Auto-generated"
-          >
+          <code className="text-emerald-300 bg-slate-800 border border-slate-700 px-3 py-1 rounded-md text-xs">
             {farmId}
           </code>
         </header>
@@ -137,12 +136,9 @@ export default function FarmRegistrationForm() {
               <FormField label="Farm ID (Auto)" hint="Generated from name + timestamp">
                 <input value={farmId} disabled className={inputCls + " opacity-70"} />
               </FormField>
-
-              {/* New Owner ID field (pre-filled with const ownerId) */}
               <FormField label="Owner ID (Auto)">
                 <input value={ownerId} disabled className={inputCls + " opacity-70"} />
               </FormField>
-
               <FormField label="Owner / Manager" required error={errors.owner}>
                 <input
                   name="owner"
@@ -302,7 +298,7 @@ export default function FarmRegistrationForm() {
             <button
               type="button"
               onClick={() => {
-                setForm(defaultForm());
+                setForm(defaultForm(ownerId));
                 setErrors({});
               }}
               className="px-4 py-2 rounded-xl border border-slate-700 hover:bg-slate-800"
@@ -311,9 +307,10 @@ export default function FarmRegistrationForm() {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl font-semibold text-slate-900 bg-amber-400 hover:bg-amber-300"
+              disabled={loading}
+              className="px-4 py-2 rounded-xl font-semibold text-slate-900 bg-amber-400 hover:bg-amber-300 disabled:opacity-50"
             >
-              Register Farm
+              {loading ? "Registering..." : "Register Farm"}
             </button>
           </div>
         </form>
@@ -369,10 +366,10 @@ function makeFarmId(name) {
   return `${slug || "FARM"}-${last6}`;
 }
 
-function defaultForm() {
+function defaultForm(ownerId) {
   return {
     farmName: "",
-    ownerId: "001", // default constant ownerId
+    ownerId,
     owner: "",
     phone: "",
     email: "",
