@@ -6,7 +6,7 @@ import connection from "./config/db.js";   // ✅ will now import the function
 import farmRouter from "./routes/farmRoutes.js";
 
 const app = express();
-
+const allowOrigins =['http://localhost:5173']
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
