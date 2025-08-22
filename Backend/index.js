@@ -1,13 +1,23 @@
-const express = require("express");
-const dbConnection = require("./config/db");
+import express from "express";
+import cors from "cors";
+import bodyParser from "body-parser";
+
+import connection from "./config/db.js";   // ✅ will now import the function
+import farmRouter from "./routes/farmRoutes.js";
 
 const app = express();
 
-//db connection
-dbConnection();
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
 
-app.get("/", (req, res) => res.send("Hello Server is Running.."));
+// Routes
+app.use("/api/farms", farmRouter);
 
-const PORT =3000;
+// Connect to DB
+connection();   // ✅ now works
 
-app.listen(PORT, () => console.log(`Server running on PORT ${PORT}`));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
