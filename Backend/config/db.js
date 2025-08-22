@@ -1,17 +1,18 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
-const dburl = "mongodb+srv://Chanux:12345@cluster0.j6tlgyi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const dburl =
+  "mongodb+srv://Chanux:12345@cluster0.j6tlgyi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
-mongoose.set("strictQuery",true,"useNewUrlParser",true);
+mongoose.set("strictQuery", true);
 
-const connection = async () => {
-    try{
-        await mongoose.connect(dburl);
-        console.log("MongoDB Connected");
-    } catch(e){
-        console.error(e.message);
-        process.exit();
-    }
-};
+async function connection() {
+  try {
+    await mongoose.connect(dburl);
+    console.log("✅ MongoDB Connected");
+  } catch (e) {
+    console.error("❌ MongoDB Connection Error:", e.message);
+    process.exit(1);
+  }
+}
 
-module.exports = connection;
+export default connection;   // <-- proper default export of the function

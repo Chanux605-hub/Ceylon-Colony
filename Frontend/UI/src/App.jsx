@@ -14,6 +14,8 @@ import OrderDeliveryManagement from "./Components/admin/modules/OrderDeliveryMan
 import WorkshopScheduleManagement from "./Components/admin/modules/WorkshopScheduleManagement.jsx";
 import CustomerMediaManagement from "./Components/admin/modules/CustomerMediaManagement.jsx";
 import AdminDahboard from "./Components/admin/AdminDahboard.jsx";
+import FarmRegistrationForm from "./HarvestManagement/FarmRegistrationForm.jsx";
+import HiveRegistrationForm from "./HarvestManagement/HiveRegistration.jsx";
 //import HarvestFarmManagement from "./Components/admin/modules/HarvestFarmManagement.jsx";
 
 
@@ -79,6 +81,8 @@ export default function App() {
 
         <Route path="/home" element={<Home />} />
         <Route path="/products" element={<OurProducts />} />
+        <Route path="/farmRegistration" element ={<FarmRegistrationForm/>}/>
+        <Route path="/hiveRegistration" element ={<HiveRegistrationForm/>}/>
 
 
       </Routes>
