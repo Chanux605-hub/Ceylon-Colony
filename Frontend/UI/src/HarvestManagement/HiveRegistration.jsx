@@ -1,88 +1,82 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 
+// ---------- constants (must match schema enums) ----------
+const HIVE_TYPES = ["Langstroth", "Top-bar", "Warre", "Traditional Box"];
+const MATERIALS = ["Wood", "Plastic", "Clay", "Other"];
+const STATUSES = ["Active", "Dormant", "Needs Attention", "Retired"];
+const STRENGTHS = ["Strong", "Medium", "Weak"];
+const COLONY_SOURCES = ["Swarm", "Split", "Purchased", "Other"];
+
 export default function HiveRegistrationForm() {
-  // ---------- state ----------
   const [form, setForm] = useState(defaultForm());
   const [errors, setErrors] = useState({});
-  const [farms, setFarms] = useState([]); // farm list
+  const [farms, setFarms] = useState([]);
 
-  // ---------- auto ID ----------
+  // auto ID
   const hiveId = useMemo(() => makeHiveId(form.hiveName), [form.hiveName]);
 
-  // ---------- load farms ----------
+  // hardcoded farms for now
   useEffect(() => {
-    const loadFarms = async () => {
-      try {
-        const res = await axios.get("/api/farms");
-
-        if (Array.isArray(res.data)) {
-          setFarms(res.data);
-        } else if (Array.isArray(res.data.farms)) {
-          setFarms(res.data.farms);
-        } else {
-          console.warn("Unexpected farms response:", res.data);
-          setFarms([]);
-        }
-      } catch (err) {
-        console.error("Failed to fetch farms:", err);
-        // fallback mock data
-        setFarms([
-          { farmId: "FARM-001", farmName: "Mahaweli Apiary" },
-          { farmId: "FARM-002", farmName: "Kandy Hills Farm" },
-        ]);
-      }
-    };
-
-    loadFarms();
+    setFarms([
+      { farmId: "FARM-001", farmName: "Mahaweli Apiary" },
+      { farmId: "FARM-002", farmName: "Kandy Hills Farm" },
+      { farmId: "FARM-003", farmName: "Colombo Urban Bees" },
+    ]);
   }, []);
 
-  // ---------- handlers ----------
   const handleChange = (e) => {
-    const { name, value, checked } = e.target;
-
-    if (name === "colonySource") {
+    const { name, value, checked, type } = e.target;
+    if (type === "checkbox") {
       setForm((prev) => {
-        const set = new Set(prev.colonySource);
-        if (checked) set.add(value);
-        else set.delete(value);
-        return { ...prev, colonySource: Array.from(set) };
+        const next = checked
+          ? [...prev.colonySource, value]
+          : prev.colonySource.filter((src) => src !== value);
+        return { ...prev, colonySource: next };
       });
-      return;
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
     }
-
-    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const validate = () => {
     const next = {};
-    if (!form.hiveName.trim()) next.hiveName = "Hive Name is required";
-    if (!form.farmId.trim()) next.farmId = "Farm is required";
-    if (!form.hiveType.trim()) next.hiveType = "Hive Type is required";
-    if (!form.material.trim()) next.material = "Material is required";
-    if (!form.status.trim()) next.status = "Status is required";
+    if (!form.hiveName) next.hiveName = "Hive name required";
+    if (!form.farmId) next.farmId = "Select a farm";
+    if (!form.hiveType) next.hiveType = "Select a hive type";
+    if (!form.material) next.material = "Select a material";
+    if (!form.status) next.status = "Select a status";
     setErrors(next);
     return Object.keys(next).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
-    const payload = {
-      hiveId,
-      ...form,
-      createdAt: new Date().toISOString(),
-    };
+    const payload = { hiveId, ...form, createdAt: new Date().toISOString() };
 
-    console.log("Submit Hive Registration:", payload);
-    alert("Hive registered (frontend demo). Check console for payload.");
+    try {
+      const res = await axios.post("http://localhost:3000/api/hives/register", payload);
+
+      if (res.data.success) {
+        alert("Hive registered successfully!");
+        console.log("Saved hive:", res.data.hive);
+        setForm(defaultForm()); // reset form after success
+        setErrors({});
+      } else {
+        alert("Failed to register hive: " + res.data.message);
+      }
+    } catch (err) {
+      console.error("Error saving hive:", err);
+      alert("Error saving hive. Check console.");
+    }
   };
 
-  // ---------- UI ----------
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 p-6">
       <div className="mx-auto max-w-5xl">
+        {/* Header */}
         <header className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <span className="px-2 py-1 text-xs rounded-full border border-slate-700 text-amber-300">
@@ -95,12 +89,13 @@ export default function HiveRegistrationForm() {
           </code>
         </header>
 
+        {/* Form */}
         <form
           onSubmit={handleSubmit}
           className="bg-slate-950/70 border border-slate-800 rounded-2xl p-5 shadow-xl"
         >
-          {/* Hive Basic Information */}
-          <Section title="Hive Basic Information">
+          {/* Basic Hive Information */}
+          <Section title="Basic Hive Information">
             <Grid>
               <FormField label="Hive Name" required error={errors.hiveName}>
                 <input
@@ -111,9 +106,11 @@ export default function HiveRegistrationForm() {
                   className={inputCls}
                 />
               </FormField>
+
               <FormField label="Hive ID (Auto)">
                 <input value={hiveId} disabled className={inputCls + " opacity-70"} />
               </FormField>
+
               <FormField label="Farm" required error={errors.farmId}>
                 <select
                   name="farmId"
@@ -122,14 +119,14 @@ export default function HiveRegistrationForm() {
                   className={inputCls}
                 >
                   <option value="">Select Farm</option>
-                  {Array.isArray(farms) &&
-                    farms.map((f) => (
-                      <option key={f.farmId} value={f.farmId}>
-                        {f.farmName}
-                      </option>
-                    ))}
+                  {farms.map((f) => (
+                    <option key={f.farmId} value={f.farmId}>
+                      {f.farmName}
+                    </option>
+                  ))}
                 </select>
               </FormField>
+
               <FormField label="Location within Farm">
                 <input
                   name="location"
@@ -152,7 +149,7 @@ export default function HiveRegistrationForm() {
                   onChange={handleChange}
                   className={inputCls}
                 >
-                  <option value="">Select Hive Type</option>
+                  <option value="">Select</option>
                   {HIVE_TYPES.map((t) => (
                     <option key={t} value={t}>
                       {t}
@@ -160,6 +157,7 @@ export default function HiveRegistrationForm() {
                   ))}
                 </select>
               </FormField>
+
               <FormField label="Material" required error={errors.material}>
                 <select
                   name="material"
@@ -167,7 +165,7 @@ export default function HiveRegistrationForm() {
                   onChange={handleChange}
                   className={inputCls}
                 >
-                  <option value="">Select Material</option>
+                  <option value="">Select</option>
                   {MATERIALS.map((m) => (
                     <option key={m} value={m}>
                       {m}
@@ -175,6 +173,7 @@ export default function HiveRegistrationForm() {
                   ))}
                 </select>
               </FormField>
+
               <FormField label="Date Established">
                 <input
                   type="date"
@@ -187,7 +186,7 @@ export default function HiveRegistrationForm() {
             </Grid>
           </Section>
 
-          {/* Bee Colony Info */}
+          {/* Bee Colony Information */}
           <Section title="Bee Colony Information">
             <Grid>
               <FormField label="Bee Species">
@@ -199,6 +198,7 @@ export default function HiveRegistrationForm() {
                   className={inputCls}
                 />
               </FormField>
+
               <FormField label="Queen Bee ID / Year Introduced">
                 <input
                   name="queenId"
@@ -208,6 +208,7 @@ export default function HiveRegistrationForm() {
                   className={inputCls}
                 />
               </FormField>
+
               <FormField label="Colony Strength">
                 <select
                   name="colonyStrength"
@@ -224,6 +225,7 @@ export default function HiveRegistrationForm() {
                 </select>
               </FormField>
             </Grid>
+
             <FormField label="Colony Source (check all that apply)" span={2}>
               <div className="flex flex-wrap gap-2">
                 {COLONY_SOURCES.map((src) => (
@@ -245,7 +247,7 @@ export default function HiveRegistrationForm() {
             </FormField>
           </Section>
 
-          {/* Operational Info */}
+          {/* Operational Information */}
           <Section title="Operational Information">
             <Grid>
               <FormField label="Current Status" required error={errors.status}>
@@ -262,6 +264,7 @@ export default function HiveRegistrationForm() {
                   ))}
                 </select>
               </FormField>
+
               <FormField label="Expected Annual Yield (kg)">
                 <input
                   type="number"
@@ -274,6 +277,7 @@ export default function HiveRegistrationForm() {
                   className={inputCls}
                 />
               </FormField>
+
               <FormField label="Primary Flora Source">
                 <input
                   name="flora"
@@ -298,6 +302,7 @@ export default function HiveRegistrationForm() {
                   className={inputCls}
                 />
               </FormField>
+
               <FormField label="Next Inspection Due">
                 <input
                   type="date"
@@ -308,6 +313,7 @@ export default function HiveRegistrationForm() {
                 />
               </FormField>
             </Grid>
+
             <FormField label="Notes" span={2}>
               <textarea
                 name="notes"
@@ -345,43 +351,8 @@ export default function HiveRegistrationForm() {
 }
 
 // ---------- helpers ----------
-const HIVE_TYPES = ["Langstroth", "Top-bar", "Warre", "Traditional Box"];
-const MATERIALS = ["Wood", "Plastic", "Clay", "Other"];
-const STATUSES = ["Active", "Dormant", "Needs Attention", "Retired"];
-const STRENGTHS = ["Strong", "Medium", "Weak"];
-const COLONY_SOURCES = ["Swarm", "Split", "Purchased", "Other"];
-
 const inputCls =
   "w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-400";
-
-function Section({ title, children }) {
-  return (
-    <section className="mb-6">
-      <div className="flex items-center gap-2 mb-3">
-        <h2 className="text-base font-semibold text-slate-200">{title}</h2>
-        <span className="h-px flex-1 bg-slate-800" />
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function Grid({ children }) {
-  return <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{children}</div>;
-}
-
-function FormField({ label, required, hint, error, span = 1, children }) {
-  return (
-    <label className={`grid gap-1 ${span === 2 ? "md:col-span-2" : ""}`}>
-      <span className="text-xs text-slate-300">
-        {label} {required && <span className="text-rose-400">*</span>}
-      </span>
-      {children}
-      <div className="text-[11px] text-slate-400">{hint}</div>
-      {error && <div className="text-[11px] text-rose-400">{error}</div>}
-    </label>
-  );
-}
 
 function makeHiveId(name) {
   const slug = String(name || "HIVE")
@@ -413,4 +384,32 @@ function defaultForm() {
     nextInspection: "",
     notes: "",
   };
+}
+
+function Section({ title, children }) {
+  return (
+    <section className="mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <h2 className="text-base font-semibold text-slate-200">{title}</h2>
+        <span className="h-px flex-1 bg-slate-800" />
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Grid({ children }) {
+  return <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{children}</div>;
+}
+
+function FormField({ label, required, error, span = 1, children }) {
+  return (
+    <label className={`grid gap-1 ${span === 2 ? "md:col-span-2" : ""}`}>
+      <span className="text-xs text-slate-300">
+        {label} {required && <span className="text-rose-400">*</span>}
+      </span>
+      {children}
+      {error && <div className="text-[11px] text-rose-400">{error}</div>}
+    </label>
+  );
 }
