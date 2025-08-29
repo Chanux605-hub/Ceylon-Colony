@@ -1,6 +1,11 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+
 
 export default function WorkshopScheduleManagement() {
+  useEffect(() => {
+    // Set browser tab title for clarity
+    document.title = "Admin | Workshops";
+  }, []);
   // --- Keep ONLY 3 workshops ---
   const data = [
     { id: "WKP-101", title: "Intro to Beekeeping: Hive Basics", date: "2025-09-05", seats: 30, filled: 24, trainer: "Amal",    status: "Published" },

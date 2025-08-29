@@ -1,553 +1,500 @@
 // src/pages/Workshops.jsx
 import React, { useMemo, useState } from "react";
 
-/**
- * Public Workshops Page (UI only)
- * - No external libs beyond React + Tailwind
- * - Replace mock `workshops` with your API later
- */
+import workshop1 from "../assets/workshop1.jpg";
+import workshop2 from "../assets/workshop2.jpg";
+import workshop3 from "../assets/workshop3.jpg";
+import workshop4 from "../assets/workshop4.jpg";
+import aboutHero from "../assets/about-hero2.jpg";
 
 export default function Workshops() {
-  const workshops = useMemo(
+  // ---------- MOCK DATA (frontend only) ----------
+  const data = useMemo(
     () => [
       {
-        id: "WKP-101",
-        slug: "intro-to-beekeeping-2025-09-05",
-        title: "Intro to Beekeeping: Hive Basics",
-        blurb: "Hands-on intro to hive safety, tools, and basic care.",
-        date: "2025-09-05T09:00:00+05:30",
-        durationMins: 150,
-        mode: "On-site",
-        venue: { name: "Colombo Workshop Space" },
-        trainer: "Amal",
-        priceLKR: 6500,
-        seats: 20,
-        filled: 16,
+        id: "w1",
+        title: "Intro to Beekeeping",
+        date: "2025-09-05",
+        time: "9:00 AM – 12:00 PM",
+        duration: "3h",
         level: "Beginner",
-        syllabus: ["PPE & safety", "Hive anatomy", "Inspection basics"],
-        bring: ["Long sleeves", "Closed shoes"],
-        provided: ["Gloves", "Veil"],
+        location: "Kandy",
+        price: 4000,
+        capacity: 30,
+        seatsTaken: 24,
+        cover: workshop1,
+        blurb:
+          "Start safely: hive parts, protective gear, bee behavior, and seasonal care basics.",
       },
       {
-        id: "WKP-104",
-        slug: "harvesting-techniques-2025-09-12",
-        title: "Sustainable Honey Harvesting Techniques",
-        blurb: "How to harvest cleanly, quickly, and bee-first.",
-        date: "2025-09-12T14:00:00+05:30",
-        durationMins: 120,
-        mode: "On-site",
-        venue: { name: "Kandy Training Yard" },
-        trainer: "Kavindi",
-        priceLKR: 7800,
-        seats: 25,
-        filled: 21,
+        id: "w2",
+        title: "Harvest Techniques",
+        date: "2025-09-12",
+        time: "10:00 AM – 1:30 PM",
+        duration: "3.5h",
         level: "Intermediate",
-        syllabus: ["Super selection", "Uncapping", "Extraction & filtering"],
-        bring: ["Long sleeves", "Water bottle"],
-        provided: ["Smoker", "Veil"],
+        location: "Gampaha",
+        price: 5500,
+        capacity: 25,
+        seatsTaken: 21,
+        cover: workshop2,
+        blurb:
+          "Hands-on uncapping, extraction, filtering, moisture checks, and food safety tips.",
       },
       {
-        id: "WKP-103",
-        slug: "honey-quality-and-safety-2025-09-19",
-        title: "Honey Quality & Safety",
-        blurb: "Moisture, hygiene, labeling and batch control.",
-        date: "2025-09-19T10:00:00+05:30",
-        durationMins: 120,
-        mode: "Online",
-        venue: null,
-        trainer: "Ruwan",
-        priceLKR: 5200,
-        seats: 20,
-        filled: 20,
+        id: "w3",
+        title: "Quality & Safety",
+        date: "2025-09-19",
+        time: "2:00 PM – 5:00 PM",
+        duration: "3h",
+        level: "All Levels",
+        location: "Matara",
+        price: 4500,
+        capacity: 20,
+        seatsTaken: 16,
+        cover: workshop3,
+        blurb:
+          "From hive to jar: hygiene, HACCP handling, labeling, and traceability best practices.",
+      },
+      {
+        id: "w4",
+        title: "Bee Garden Basics",
+        date: "2025-10-03",
+        time: "9:00 AM – 11:30 AM",
+        duration: "2.5h",
         level: "Beginner",
-        syllabus: ["Moisture testing", "Hygiene basics", "Labels & batch codes"],
-        bring: ["Notebook"],
-        provided: ["PDF handbook"],
-      },
-      {
-        id: "WKP-107",
-        slug: "queen-rearing-2025-09-26",
-        title: "Queen Rearing Fundamentals",
-        blurb: "Grafting, cell builders, and nucs.",
-        date: "2025-09-26T09:30:00+05:30",
-        durationMins: 180,
-        mode: "On-site",
-        venue: { name: "Galle Field Apiary" },
-        trainer: "Amal",
-        priceLKR: 9500,
-        seats: 18,
-        filled: 12,
-        level: "Advanced",
-        syllabus: ["Larvae selection", "Cell cups", "Nuc setup"],
-        bring: ["Long sleeves", "Closed shoes"],
-        provided: ["Queen cage", "Veil"],
+        location: "Kurunegala",
+        price: 3500,
+        capacity: 28,
+        seatsTaken: 12,
+        cover: workshop4,
+        blurb:
+          "Planting for nectar flow, water access, and safe siting to keep happy, healthy colonies.",
       },
     ],
     []
   );
 
-  // Filters
+  // ---------- UI STATE ----------
   const [query, setQuery] = useState("");
-  const [level, setLevel] = useState("All"); // All | Beginner | Intermediate | Advanced
-  const [mode, setMode] = useState("All");   // All | On-site | Online
+  const [level, setLevel] = useState("All");
+  const [location, setLocation] = useState("All");
+  const [date, setDate] = useState("");
 
-  // Drawer (details)
-  const [open, setOpen] = useState(false);
-  const [active, setActive] = useState(null);
+  const [openId, setOpenId] = useState(null);       // details modal
+  const open = data.find((w) => w.id === openId) || null;
 
-  const filtered = useMemo(() => {
+  const [booking, setBooking] = useState(null);     // booking modal (workshop object or null)
+
+  // ---------- DERIVED LIST (simple filters) ----------
+  const list = data.filter((w) => {
     const q = query.trim().toLowerCase();
-    return workshops.filter((w) => {
-      const matchesQuery =
-        !q ||
-        [w.title, w.blurb, w.trainer, w.venue?.name ?? "", w.level, w.mode]
-          .join(" ")
-          .toLowerCase()
-          .includes(q);
-      const matchesLevel = level === "All" || w.level === level;
-      const matchesMode = mode === "All" || w.mode === mode;
-      return matchesQuery && matchesLevel && matchesMode;
-    });
-  }, [workshops, query, level, mode]);
+    const passQ =
+      !q ||
+      w.title.toLowerCase().includes(q) ||
+      w.blurb.toLowerCase().includes(q) ||
+      w.location.toLowerCase().includes(q);
+    const passL = level === "All" || w.level === level;
+    const passLoc = location === "All" || w.location === location;
+    const passDate = !date || w.date >= date; // naive filter: from selected date forward
+    return passQ && passL && passLoc && passDate;
+  });
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100">
-      {/* HERO */}
-      <section className="border-b border-neutral-900 bg-neutral-950">
-        <div className="mx-auto max-w-7xl px-4 py-10">
-          <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">
-            Learn with <span className="text-yellow-400">Ceylon Colony</span>
-          </h1>
-          <p className="mt-2 max-w-2xl text-neutral-300">
-            Small-group, hands-on workshops for beginners and hobbyists. Bee-first, practical, and fun.
-          </p>
+    <div className="min-h-screen bg-white text-neutral-900">
+      {/* ---------- HERO (screen-wide band) ---------- */}
+      <section
+        className="relative isolate w-full"
+        style={{ "--band-h": "46vh", "--band-min": "340px" }}
+      >
+        <img
+          src={aboutHero}
+          alt="Beekeeping workshops"
+          className="absolute inset-0 h-[var(--band-h)] min-h-[var(--band-min)] w-full object-cover brightness-75"
+        />
+        <div className="absolute inset-0 h-[var(--band-h)] min-h-[var(--band-min)] bg-black/45" />
+
+        <div className="relative mx-auto flex h-[var(--band-h)] min-h-[var(--band-min)] max-w-7xl items-center justify-center px-4">
+          <div className="text-center text-white max-w-3xl">
+            <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-semibold ring-1 ring-white/20">
+              Ceylon Colony
+            </span>
+            <h1 className="mt-3 text-3xl md:text-5xl font-extrabold leading-tight">
+              Beekeeping <span className="text-[#fbb01a]">Workshops</span>
+            </h1>
+            <p className="mt-3 text-white/85">
+              Learn ethical, hands-on methods—hive setup, seasonal care, safe harvesting, and
+              quality standards. Beginner-friendly and community-focused.
+            </p>
+            <a
+              href="#workshops"
+              className="mt-5 inline-flex items-center justify-center rounded-full bg-[#fbb01a] px-6 py-3 font-semibold text-black hover:brightness-95"
+            >
+              View sessions
+            </a>
+          </div>
         </div>
       </section>
 
-      <main className="mx-auto max-w-7xl px-4 py-6">
-        {/* Filters */}
-        <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
-          <div className="relative sm:col-span-2">
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by title, trainer, venue…"
-              className="w-full rounded-xl bg-neutral-900 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 ring-1 ring-neutral-800 outline-none focus:ring-yellow-500/40"
-              aria-label="Search workshops"
-            />
-            {query && (
-              <button
-                onClick={() => setQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-200"
-                aria-label="Clear search"
-              >
-                ×
-              </button>
-            )}
-          </div>
-
-          <select
-            value={level}
-            onChange={(e) => setLevel(e.target.value)}
-            className="rounded-xl bg-neutral-900 px-3 py-2 text-sm ring-1 ring-neutral-800 focus:ring-yellow-500/40"
-            aria-label="Filter by level"
-          >
-            {["All", "Beginner", "Intermediate", "Advanced"].map((l) => (
-              <option key={l}>{l}</option>
-            ))}
-          </select>
-
-          <select
-            value={mode}
-            onChange={(e) => setMode(e.target.value)}
-            className="rounded-xl bg-neutral-900 px-3 py-2 text-sm ring-1 ring-neutral-800 focus:ring-yellow-500/40"
-            aria-label="Filter by mode"
-          >
-            {["All", "On-site", "Online"].map((m) => (
-              <option key={m}>{m}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Grid */}
-        {filtered.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((w) => (
-              <WorkshopCard
-                key={w.id}
-                w={w}
-                onDetails={() => {
-                  setActive(w);
-                  setOpen(true);
-                }}
+      <main id="workshops" className="mx-auto max-w-7xl px-4 pt-8 pb-16">
+        {/* ---------- FILTERS (pure UI) ---------- */}
+        <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
+          <div className="grid gap-3 md:grid-cols-4">
+            <div className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2">
+              <span aria-hidden>🔎</span>
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search title, location…"
+                className="w-full bg-transparent text-sm outline-none placeholder:text-neutral-400"
               />
-            ))}
+            </div>
+
+            <select
+              value={level}
+              onChange={(e) => setLevel(e.target.value)}
+              className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none"
+            >
+              <option>All</option>
+              <option>Beginner</option>
+              <option>Intermediate</option>
+              <option>All Levels</option>
+            </select>
+
+            <select
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none"
+            >
+              <option>All</option>
+              <option>Kandy</option>
+              <option>Gampaha</option>
+              <option>Matara</option>
+              <option>Kurunegala</option>
+            </select>
+
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none"
+            />
+          </div>
+        </section>
+
+        {/* ---------- LIST (cards) ---------- */}
+        <section className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {list.map((w) => {
+            const pct = Math.round((w.seatsTaken / w.capacity) * 100);
+            const spotsLeft = w.capacity - w.seatsTaken;
+
+            return (
+              <article
+                key={w.id}
+                className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              >
+                {/* Cover */}
+                <div className="relative aspect-[4/3] w-full overflow-hidden">
+                  <img
+                    src={w.cover}
+                    alt={w.title}
+                    className="h-full w-full object-cover transition duration-500 hover:scale-105"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.src = "/images/workshops/placeholder.jpg";
+                    }}
+                  />
+                  <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2 py-1 text-xs font-semibold ring-1 ring-black/5">
+                    {w.level}
+                  </span>
+                </div>
+
+                {/* Content */}
+                <div className="p-5">
+                  <h3 className="text-lg font-semibold text-stone-900">{w.title}</h3>
+                  <p className="mt-1 text-sm text-neutral-600">{w.blurb}</p>
+
+                  <div className="mt-3 grid gap-1 text-sm text-neutral-700">
+                    <div>📅 {w.date} — {w.time} ({w.duration})</div>
+                    <div>📍 {w.location}</div>
+                    <div>
+                      💰 {w.price.toLocaleString()} LKR{" "}
+                      <span className="text-neutral-500">(per person)</span>
+                    </div>
+                  </div>
+
+                  {/* Capacity */}
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between text-xs text-neutral-600">
+                      <span>Spots</span>
+                      <span>{w.seatsTaken}/{w.capacity}</span>
+                    </div>
+                    <div className="mt-1 h-2 w-full rounded-full bg-neutral-200">
+                      <div
+                        className="h-2 rounded-full bg-[#fbb01a]"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <div className="mt-1 text-xs text-neutral-600">
+                      {spotsLeft > 0 ? `${spotsLeft} seats left` : "Full — join waitlist"}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="mt-4 flex items-center gap-2">
+                    <button
+                      onClick={() => setOpenId(w.id)}
+                      className="inline-flex items-center justify-center rounded-full border border-neutral-300 px-4 py-2 text-sm font-semibold hover:bg-neutral-50"
+                    >
+                      Details
+                    </button>
+                    <button
+                      onClick={() => setBooking(w)}
+                      className="inline-flex items-center justify-center rounded-full bg-[#fbb01a] px-4 py-2 text-sm font-semibold text-black hover:brightness-95"
+                    >
+                      Book
+                    </button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </section>
+
+        {/* ---------- EMPTY STATE ---------- */}
+        {list.length === 0 && (
+          <div className="mt-10 rounded-2xl border border-neutral-200 bg-white p-10 text-center text-neutral-600">
+            No workshops match your filters. Try clearing the search or choosing a broader date.
           </div>
         )}
       </main>
 
-      {/* Details Drawer */}
-      {open && active && (
-        <DetailsDrawer
-          w={active}
-          onClose={() => setOpen(false)}
-        />
-      )}
-    </div>
-  );
-}
-
-/* ---------- Cards & small components ---------- */
-
-function WorkshopCard({ w, onDetails }) {
-  const seatsLeft = w.seats - w.filled;
-  const pct = Math.round((w.filled / w.seats) * 100);
-  const soldOut = seatsLeft <= 0;
-
-  return (
-    <div className="flex h-full flex-col rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4">
-      <div className="mb-2 flex items-center gap-2">
-        <Badge>{w.level}</Badge>
-        <span className="text-xs text-neutral-400">
-          {w.mode === "Online" ? "Online" : w.venue?.name}
-        </span>
-      </div>
-
-      <h3 className="line-clamp-2 text-base font-semibold">{w.title}</h3>
-      <p className="mt-1 line-clamp-2 text-sm text-neutral-300">{w.blurb}</p>
-
-      <div className="mt-3 space-y-1 text-sm text-neutral-300">
-        <Row label="Date & Time" value={formatDateTime(w.date)} />
-        <Row
-          label="Duration"
-          value={`${Math.floor(w.durationMins / 60)}h${
-            w.durationMins % 60 ? ` ${w.durationMins % 60}m` : ""
-          }`}
-        />
-        <Row label="Trainer" value={w.trainer} />
-        <Row label="Price" value={formatLKR(w.priceLKR)} />
-      </div>
-
-      <div className="mt-3">
-        <SeatsBar percent={pct} label={`${w.filled}/${w.seats} seats`} />
-        <div className="mt-1 text-xs text-neutral-400">
-          {soldOut ? "Sold out" : `${seatsLeft} seats left`}
-        </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <button
-          className={`rounded-xl px-3 py-2 text-sm font-semibold ${
-            soldOut
-              ? "cursor-not-allowed bg-neutral-800 text-neutral-400"
-              : "bg-yellow-400 text-black hover:brightness-95"
-          }`}
-          disabled={soldOut}
-          // TODO: connect to checkout or waitlist
+      {/* ---------- DETAILS MODAL ---------- */}
+      {open && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setOpenId(null)}
         >
-          {soldOut ? "Join Waitlist" : "Register"}
-        </button>
-
-        <button
-          onClick={onDetails}
-          className="rounded-xl bg-neutral-900 px-3 py-2 text-sm font-semibold ring-1 ring-neutral-700 hover:ring-yellow-500/40"
-        >
-          Details
-        </button>
-
-        <button
-          onClick={() =>
-            downloadICS({
-              title: w.title,
-              startISO: w.date,
-              endISO: new Date(new Date(w.date).getTime() + w.durationMins * 60000).toISOString(),
-              location: w.mode === "Online" ? "Online" : w.venue?.name,
-              details: w.blurb,
-              url: window.location.origin + "/workshops/" + w.slug,
-            })
-          }
-          className="col-span-1 rounded-xl bg-neutral-900 px-3 py-2 text-sm font-semibold ring-1 ring-neutral-700 hover:ring-yellow-500/40"
-        >
-          Add to Calendar
-        </button>
-
-        <ShareButton slug={w.slug} title={w.title} className="col-span-1" />
-      </div>
-    </div>
-  );
-}
-
-function ShareButton({ slug, title, className = "" }) {
-  const [copied, setCopied] = useState(false);
-  const url = (typeof window !== "undefined" ? window.location.origin : "") + "/workshops/" + slug;
-
-  const onShare = async () => {
-    try {
-      if (navigator.share) {
-        await navigator.share({ title, url });
-        return;
-      }
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-    } catch {
-      // fallback: open whatsapp share
-      window.open(`https://wa.me/?text=${encodeURIComponent(title + " - " + url)}`, "_blank");
-    }
-  };
-
-  return (
-    <button
-      onClick={onShare}
-      className={`rounded-xl bg-neutral-900 px-3 py-2 text-sm font-semibold ring-1 ring-neutral-700 hover:ring-yellow-500/40 ${className}`}
-      aria-live="polite"
-    >
-      {copied ? "Link Copied!" : "Share"}
-    </button>
-  );
-}
-
-function Row({ label, value }) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-neutral-400">{label}</span>
-      <span className="text-neutral-200">{value}</span>
-    </div>
-  );
-}
-
-function Badge({ children }) {
-  return (
-    <span className="inline-flex items-center rounded-lg bg-yellow-400/10 px-2 py-0.5 text-xs font-semibold text-yellow-400 ring-1 ring-yellow-500/30">
-      {children}
-    </span>
-  );
-}
-
-function SeatsBar({ percent, label }) {
-  return (
-    <div className="flex items-center gap-2">
-      <div className="h-2 w-full rounded-full bg-neutral-800">
-        <div className="h-2 rounded-full bg-yellow-400" style={{ width: `${percent}%` }} />
-      </div>
-      <span className="whitespace-nowrap text-xs text-neutral-400">{label}</span>
-    </div>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-10 text-center">
-      <div className="text-lg font-semibold">No workshops found</div>
-      <p className="mt-1 text-neutral-400">Try changing filters, or subscribe to get notified.</p>
-      <div className="mt-4 flex justify-center">
-        <input
-          placeholder="Email for next dates"
-          className="w-72 rounded-l-xl bg-neutral-900 px-3 py-2 text-sm ring-1 ring-neutral-800 outline-none focus:ring-yellow-500/40"
-        />
-        <button className="rounded-r-xl bg-yellow-400 px-4 text-sm font-semibold text-black hover:brightness-95">
-          Notify me
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ---------- Details Drawer ---------- */
-
-function DetailsDrawer({ w, onClose }) {
-  const seatsLeft = w.seats - w.filled;
-  const soldOut = seatsLeft <= 0;
-  const pct = Math.round((w.filled / w.seats) * 100);
-
-  return (
-    <div className="fixed inset-0 z-50">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      {/* Panel */}
-      <div className="absolute right-0 top-0 h-full w-full max-w-md overflow-y-auto border-l border-neutral-800 bg-neutral-950 p-5">
-        <div className="mb-3 flex items-start justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <Badge>{w.level}</Badge>
-              <span className="text-xs text-neutral-400">
-                {w.mode === "Online" ? "Online" : w.venue?.name}
-              </span>
-            </div>
-            <h2 className="mt-1 text-xl font-semibold">{w.title}</h2>
-            <p className="mt-1 text-sm text-neutral-300">{w.blurb}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="rounded-full bg-neutral-900 px-3 py-1.5 text-sm ring-1 ring-neutral-800 hover:ring-yellow-500/40"
-            aria-label="Close details"
+          <div
+            className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-xl"
+            onClick={(e) => e.stopPropagation()}
           >
-            ✕
-          </button>
-        </div>
-
-        <div className="space-y-3 text-sm">
-          <Row label="Date & Time" value={formatDateTime(w.date)} />
-          <Row
-            label="Duration"
-            value={`${Math.floor(w.durationMins / 60)}h${
-              w.durationMins % 60 ? ` ${w.durationMins % 60}m` : ""
-            }`}
-          />
-          <Row label="Trainer" value={w.trainer} />
-          <Row label="Price" value={formatLKR(w.priceLKR)} />
-          <div>
-            <div className="text-neutral-400">Seats</div>
-            <div className="mt-1">
-              <SeatsBar percent={pct} label={`${w.filled}/${w.seats}`} />
-              <div className="mt-1 text-xs text-neutral-400">
-                {soldOut ? "Sold out" : `${seatsLeft} seats left`}
+            <div className="relative aspect-[16/9] w-full">
+              <img
+                src={open.cover}
+                alt={open.title}
+                className="h-full w-full object-cover"
+              />
+              <button
+                onClick={() => setOpenId(null)}
+                className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1 text-sm font-semibold ring-1 ring-black/5 hover:bg-white"
+              >
+                Close
+              </button>
+            </div>
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-stone-900">{open.title}</h3>
+              <p className="mt-2 text-neutral-700">{open.blurb}</p>
+              <div className="mt-4 grid gap-2 text-sm text-neutral-700">
+                <div>📅 {open.date} — {open.time} ({open.duration})</div>
+                <div>📍 {open.location}</div>
+                <div>🎓 Level: {open.level}</div>
+                <div>💰 {open.price.toLocaleString()} LKR per person</div>
+              </div>
+              <div className="mt-6 flex items-center gap-2">
+                <button
+                  onClick={() => setBooking(open)}
+                  className="inline-flex items-center justify-center rounded-full bg-[#fbb01a] px-5 py-2 font-semibold text-black hover:brightness-95"
+                >
+                  Book this workshop
+                </button>
+                <button
+                  onClick={() => setOpenId(null)}
+                  className="inline-flex items-center justify-center rounded-full border border-neutral-300 px-5 py-2 font-semibold hover:bg-neutral-50"
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>
-
-          <Divider />
-
-          <ListBlock title="What you’ll learn" items={w.syllabus} />
-          <ListBlock title="What to bring" items={w.bring} />
-          <ListBlock title="Provided by us" items={w.provided} />
-
-          <Divider />
-
-          {/* Actions */}
-          <div className="flex gap-2">
-            <button
-              onClick={() =>
-                downloadICS({
-                  title: w.title,
-                  startISO: w.date,
-                  endISO: new Date(new Date(w.date).getTime() + w.durationMins * 60000).toISOString(),
-                  location: w.mode === "Online" ? "Online" : w.venue?.name,
-                  details: w.blurb,
-                  url: window.location.origin + "/workshops/" + w.slug,
-                })
-              }
-              className="rounded-xl bg-neutral-900 px-3 py-2 text-sm font-semibold ring-1 ring-neutral-700 hover:ring-yellow-500/40"
-            >
-              Add to Calendar
-            </button>
-            <ShareButton slug={w.slug} title={w.title} />
-          </div>
-
-          {/* Mini register form (UI only) */}
-          <div className="rounded-xl border border-neutral-800 bg-neutral-900/60 p-3">
-            <div className="text-sm font-semibold">Register your spot</div>
-            <div className="mt-2 grid grid-cols-1 gap-2">
-              <input
-                placeholder="Your name"
-                className="rounded-lg bg-neutral-900 px-3 py-2 text-sm ring-1 ring-neutral-800 outline-none focus:ring-yellow-500/40"
-              />
-              <input
-                placeholder="Email or WhatsApp"
-                className="rounded-lg bg-neutral-900 px-3 py-2 text-sm ring-1 ring-neutral-800 outline-none focus:ring-yellow-500/40"
-              />
-              <select className="rounded-lg bg-neutral-900 px-3 py-2 text-sm ring-1 ring-neutral-800 focus:ring-yellow-500/40">
-                {[1, 2, 3, 4].map((n) => (
-                  <option key={n} value={n}>
-                    {n} seat{n > 1 ? "s" : ""}
-                  </option>
-                ))}
-              </select>
-              <button
-                className={`mt-1 rounded-xl px-3 py-2 text-sm font-semibold ${
-                  soldOut
-                    ? "cursor-not-allowed bg-neutral-800 text-neutral-400"
-                    : "bg-yellow-400 text-black hover:brightness-95"
-                }`}
-                disabled={soldOut}
-              >
-                {soldOut ? "Join Waitlist" : "Proceed to Payment"}
-              </button>
-              <p className="text-xs text-neutral-500">
-                By registering you agree to our hygiene & safety policy. PPE is provided on-site.
-              </p>
-            </div>
-          </div>
         </div>
-        <div className="h-6" />
+      )}
+
+      {/* ---------- BOOKING MODAL (FORM UI) ---------- */}
+      {booking && <BookingModal workshop={booking} onClose={() => setBooking(null)} />}
+    </div>
+  );
+}
+
+/* ======================= Booking Modal ======================= */
+function BookingModal({ workshop, onClose }) {
+  const spotsLeft = Math.max(workshop.capacity - workshop.seatsTaken, 0);
+
+  const [form, setForm] = React.useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",   // NEW
+    seats: 1,
+    notes: "",     // stays, but UI moved below
+    agree: false,
+  });
+  const [submitted, setSubmitted] = React.useState(false);
+  const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    if (!form.name || !form.email || !form.phone || !form.agree) return;
+    setSubmitted(true);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="border-b border-neutral-200 bg-neutral-50 px-5 py-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-stone-900">Register for {workshop.title}</h3>
+            <button
+              onClick={onClose}
+              className="rounded-full border border-neutral-300 px-3 py-1 text-sm hover:bg-neutral-100"
+            >
+              Close
+            </button>
+          </div>
+          <p className="mt-1 text-sm text-neutral-600">
+            📅 {workshop.date} • {workshop.time} • {workshop.location} • {workshop.level}
+          </p>
+        </div>
+
+        {/* Body */}
+        <div className="p-5">
+          {submitted ? (
+            <div className="rounded-xl bg-green-50 p-5 text-green-700">
+              <div className="text-lg font-semibold">Thanks! 🎉</div>
+              <p className="mt-1 text-sm">
+                We’ve received your registration request for <strong>{workshop.title}</strong>. We’ll email you
+                confirmation shortly.
+              </p>
+              <button
+                onClick={onClose}
+                className="mt-4 inline-flex items-center justify-center rounded-full bg-[#fbb01a] px-5 py-2 font-semibold text-black hover:brightness-95"
+              >
+                Done
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={onSubmit} className="grid gap-3">
+              {/* Name + Phone */}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="grid gap-1 text-sm">
+                  Full name
+                  <input
+                    value={form.name}
+                    onChange={(e) => update("name", e.target.value)}
+                    required
+                    className="rounded-xl border border-neutral-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#fbb01a]/40"
+                  />
+                </label>
+                <label className="grid gap-1 text-sm">
+                  Phone
+                  <input
+                    value={form.phone}
+                    onChange={(e) => update("phone", e.target.value)}
+                    required
+                    className="rounded-xl border border-neutral-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#fbb01a]/40"
+                  />
+                </label>
+              </div>
+
+              {/* Email */}
+              <label className="grid gap-1 text-sm">
+                Email
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => update("email", e.target.value)}
+                  required
+                  className="rounded-xl border border-neutral-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#fbb01a]/40"
+                />
+              </label>
+
+              {/* NEW: Address */}
+              <label className="grid gap-1 text-sm">
+                Address
+                <input
+                  value={form.address}
+                  onChange={(e) => update("address", e.target.value)}
+                  placeholder="Street, city, district"
+                  className="rounded-xl border border-neutral-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#fbb01a]/40"
+                />
+              </label>
+
+              {/* Seats */}
+              <label className="grid gap-1 text-sm">
+                Seats
+                <input
+                  type="number"
+                  min={1}
+                  max={Math.max(spotsLeft, 1)}
+                  value={form.seats}
+                  onChange={(e) => update("seats", Number(e.target.value))}
+                  required
+                  className="rounded-xl border border-neutral-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#fbb01a]/40"
+                />
+                <span className="text-xs text-neutral-500">
+                  {spotsLeft > 0 ? `${spotsLeft} seats available` : "Currently full — we’ll add you to the waitlist"}
+                </span>
+              </label>
+
+              {/* Notes moved below (full width) */}
+              <label className="grid gap-1 text-sm">
+                Notes (optional)
+                <textarea
+                  rows={3}
+                  value={form.notes}
+                  onChange={(e) => update("notes", e.target.value)}
+                  className="rounded-xl border border-neutral-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#fbb01a]/40"
+                  placeholder="Allergies, accessibility, etc."
+                />
+              </label>
+
+              {/* Consent */}
+              <label className="mt-1 flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={form.agree}
+                  onChange={(e) => update("agree", e.target.checked)}
+                  required
+                  className="mt-0.5"
+                />
+                I agree to the event guidelines and consent to be contacted about my registration.
+              </label>
+
+              {/* Buttons */}
+              <div className="mt-2 flex items-center gap-2">
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center rounded-full bg-[#fbb01a] px-5 py-2 font-semibold text-black hover:brightness-95"
+                >
+                  Submit registration
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="inline-flex items-center justify-center rounded-full border border-neutral-300 px-5 py-2 font-semibold hover:bg-neutral-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );
-}
 
-function Divider() {
-  return <div className="my-2 h-px bg-neutral-900" />;
-}
-
-function ListBlock({ title, items }) {
-  return (
-    <div>
-      <div className="text-neutral-300">{title}</div>
-      <ul className="mt-1 list-disc space-y-1 pl-5 text-neutral-300">
-        {items.map((it) => (
-          <li key={it}>{it}</li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-/* ---------- tiny utils ---------- */
-
-function formatDateTime(iso) {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleString(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  } catch {
-    return iso;
-  }
-}
-function formatLKR(amount) {
-  try {
-    return amount.toLocaleString("en-LK", {
-      style: "currency",
-      currency: "LKR",
-      maximumFractionDigits: 0,
-    });
-  } catch {
-    return `LKR ${amount}`;
-  }
-}
-
-/** Download a basic ICS calendar file for the workshop */
-function downloadICS({ title, startISO, endISO, location, details, url }) {
-  const dt = (s) =>
-    new Date(s).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
-  const esc = (s = "") =>
-    s.replace(/\\n/g, "\\n").replace(/\n/g, "\\n").replace(/,/g, "\\,");
-  const ics = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//Ceylon Colony//Workshops//EN",
-    "BEGIN:VEVENT",
-    `UID:${(crypto?.randomUUID?.() || Math.random().toString(36).slice(2))}@ceyloncolony`,
-    `DTSTAMP:${dt(new Date().toISOString())}`,
-    `DTSTART:${dt(startISO)}`,
-    `DTEND:${dt(endISO)}`,
-    `SUMMARY:${esc(title)}`,
-    location ? `LOCATION:${esc(location)}` : "",
-    `DESCRIPTION:${esc(details)}${url ? "\\n" + esc(url) : ""}`,
-    "END:VEVENT",
-    "END:VCALENDAR",
-  ]
-    .filter(Boolean)
-    .join("\r\n");
-
-  const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `${title.replace(/\s+/g, "-").toLowerCase()}.ics`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
 }
