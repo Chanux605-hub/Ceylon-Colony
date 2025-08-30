@@ -25,17 +25,11 @@ const Navbar = () => {
           {/* Links */}
           <div className="hidden md:flex space-x-8 font-medium">
              <Link to="/home" className="text-white hover:text-[#FBB01A]">Home</Link>
-                        <Link to="/products"
-                          className="text-white hover:text-[#FBB01A] transition"
-                        > Our Products </Link>
             <a href="#" className="text-white hover:text-[#FBB01A] transition">About Us</a>
             <a href="#" className="text-white hover:text-[#FBB01A] transition">Blog</a>
             <a href="#" className="text-white hover:text-[#FBB01A] transition">WorkShops</a>
-<<<<<<< HEAD
             <Link to="/products" className="text-white hover:text-[#FBB01A] transition" > Our Products </Link>
-=======
             <Link to="/community" className="text-white hover:text-[#FBB01A]">Community</Link>
->>>>>>> 8831f91350aee6848d64dfa950e8ca9897eb9e7c
           </div>
 
           {/* Search + Cart */}

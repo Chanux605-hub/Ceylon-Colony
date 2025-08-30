@@ -15,7 +15,6 @@ import OrderDeliveryManagement from "./Components/admin/modules/OrderDeliveryMan
 import WorkshopScheduleManagement from "./Components/admin/modules/WorkshopScheduleManagement.jsx";
 import CustomerMediaManagement from "./Components/admin/modules/CustomerMediaManagement.jsx";
 import AdminDahboard from "./Components/admin/AdminDahboard.jsx";
-import CommunityWall from "./pages/CommunityWall.jsx";
 //import HarvestFarmManagement from "./Components/admin/modules/HarvestFarmManagement.jsx";
 
 
@@ -80,12 +79,7 @@ export default function App() {
 
         <Route path="/home" element={<Home />} />
         <Route path="/products" element={<OurProducts />} />
-<<<<<<< HEAD
-        <Route path="/products" element={<CommunityWall />} />
-
-=======
         <Route path="/community" element={<Community />} />
->>>>>>> 8831f91350aee6848d64dfa950e8ca9897eb9e7c
 
       </Routes>
     </BrowserRouter>

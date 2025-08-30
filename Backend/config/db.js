@@ -1,17 +1,23 @@
+// backend/db.js
 const mongoose = require("mongoose");
 
-const dburl = "mongodb+srv://Chanux:12345@cluster0.j6tlgyi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+async function connectDB() {
+  const uri = process.env.MONGO_URI;
+  const dbName = process.env.MONGO_DB || "ceylon_colony";
 
-mongoose.set("strictQuery",true,"useNewUrlParser",true);
+  if (!uri) {
+    console.error("MONGO_URI is missing in .env");
+    process.exit(1);
+  }
 
-const connection = async () => {
-    try{
-        await mongoose.connect(dburl);
-        console.log("MongoDB Connected");
-    } catch(e){
-        console.error(e.message);
-        process.exit();
-    }
-};
+  try {
+    mongoose.set("strictQuery", true);
+    await mongoose.connect(uri, { dbName });
+    console.log("MongoDB connected");
+  } catch (e) {
+    console.error("MongoDB connection error:", e.message);
+    process.exit(1);
+  }
+}
 
-module.exports = connection;
+module.exports = { connectDB };

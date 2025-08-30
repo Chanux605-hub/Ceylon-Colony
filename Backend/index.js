@@ -1,13 +1,31 @@
+// backend/server.js
 const express = require("express");
-const dbConnection = require("./config/db");
+const cors = require("cors");
+require("dotenv").config();
+const { connectDB } = require("./config/db");
+const postRoutes = require("./routes/postRoutes");
 
 const app = express();
 
-//db connection
-dbConnection();
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+];
 
-app.get("/", (req, res) => res.send("Hello Server is Running.."));
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ["GET","POST","PATCH","DELETE","OPTIONS"],
+  allowedHeaders: ["Content-Type","Authorization"],
+  credentials: true,
+}));
 
-const PORT =3000;
 
-app.listen(PORT, () => console.log(`Server running on PORT ${PORT}`));
+app.use(express.json());
+app.use("/api", postRoutes);
+
+app.get("/health", (req, res) => res.json({ ok: true }));
+
+connectDB().then(() => {
+  const port = process.env.PORT || 4000;
+  app.listen(port, () => console.log("API listening on", port));
+});
