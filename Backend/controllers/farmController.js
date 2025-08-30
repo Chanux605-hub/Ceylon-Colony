@@ -1,4 +1,4 @@
-import farmModel from "../models/FarmModel.js";
+import farmModel from "../models/farmModel.js";
 
 export const registerFarm = async (req, res) => {
   try {
@@ -57,3 +57,27 @@ export const registerFarm = async (req, res) => {
     return res.json({ success: false, message: error.message });
   }
 };
+
+//get all farm details
+export const getAllFarms = async (req, res) => {
+  try {
+    const farms = await farmModel.find();
+    res.json({ success: true, farms });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get farm by ID
+export const getFarmById = async (req, res) => {
+  try {
+    const farm = await farmModel.findById(req.params.id);
+    if (!farm) {
+      return res.status(404).json({ success: false, message: "Farm not found" });
+    }
+    res.json({ success: true, farm });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+

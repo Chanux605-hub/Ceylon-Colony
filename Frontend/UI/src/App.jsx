@@ -16,7 +16,7 @@ import CustomerMediaManagement from "./Components/admin/modules/CustomerMediaMan
 import AdminDahboard from "./Components/admin/AdminDahboard.jsx";
 import FarmRegistrationForm from "./HarvestManagement/FarmRegistrationForm.jsx";
 import HiveRegistrationForm from "./HarvestManagement/HiveRegistration.jsx";
-//import HarvestFarmManagement from "./Components/admin/modules/HarvestFarmManagement.jsx";
+import FarmHarvestManagement from "./HarvestManagement/FarmHarvestManagement.jsx";
 
 
 // --- Simple auth helpers ---
@@ -65,6 +65,8 @@ export default function App() {
         
           <Route path="orders"    element={<OrderDeliveryManagement />} />
           <Route path="media"     element={<CustomerMediaManagement />} />
+          <Route path="farm-harvest"     element={<FarmHarvestManagement />} />
+
         
         </Route>
 

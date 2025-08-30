@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const dburl =
-  "mongodb+srv://Chanux:12345@cluster0.j6tlgyi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+  "mongodb+srv://Chanux:12345@cluster0.j6tlgyi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/ceylon_colony";
 
 mongoose.set("strictQuery", true)
 
