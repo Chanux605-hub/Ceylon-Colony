@@ -23,7 +23,7 @@ const farmSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      // unique: true,  // ⚠️ uncomment only if you want globally unique names
+      // unique: true,  // uncomment only if you want globally unique names
     },
     owner: {
       type: String,
