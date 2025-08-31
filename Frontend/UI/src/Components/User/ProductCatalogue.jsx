@@ -1,6 +1,8 @@
 // src/components/products/ProductCatalogue.jsx
 import React, { useMemo, useState, useEffect } from "react";
 
+import { Link } from "react-router-dom";
+
 const API = "http://localhost:4000/api/products";
 const asset = (file) => new URL(`../../assets/${file}`, import.meta.url).href;
 const PLACEHOLDER = asset("jar.jpeg"); // fallback image
@@ -198,14 +200,23 @@ export default function ProductCatalogue() {
                   {p.weight && (
                     <p className="text-white/70 text-sm">{p.weight}</p>
                   )}
-                  <div className="mt-3 flex items-center justify-between">
-                    <span className="text-[#F28C28] font-semibold">
-                      Rs {p.price.toLocaleString()}
-                    </span>
-                    <button className="rounded-full bg-[#FBB01A] text-black px-3 py-1.5 text-sm font-semibold hover:opacity-90">
-                      Add
-                    </button>
-                  </div>
+
+                  
+                 <div className="mt-3 flex items-center justify-between">
+                <span className="text-[#F28C28] font-semibold">
+                  Rs {p.price.toLocaleString()}
+                </span>
+
+                <Link
+                  to={`/product/${p.id}`}  /* or p.slug if you have it */
+                  className="rounded-full bg-[#FBB01A] text-black px-3 py-1.5 text-sm font-semibold hover:opacity-90"
+                >
+                  View
+                </Link>
+              </div>
+
+
+
                 </div>
               </article>
             ))

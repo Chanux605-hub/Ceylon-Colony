@@ -18,6 +18,12 @@ import AdminDahboard from "./Components/admin/AdminDahboard.jsx";
 //import HarvestFarmManagement from "./Components/admin/modules/HarvestFarmManagement.jsx";
 
 
+
+
+import ProductDetails from "./pages/ProductDetails";
+
+
+
 // --- Simple auth helpers ---
 const isAuthed = () => !!localStorage.getItem("token");
 
@@ -81,6 +87,9 @@ export default function App() {
         <Route path="/home" element={<Home />} />
         <Route path="/products" element={<OurProducts />} />
         <Route path="/community" element={<Community />} />
+
+
+         <Route path="/product/:id" element={<ProductDetails />} />
 
       </Routes>
     </BrowserRouter>
