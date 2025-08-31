@@ -81,3 +81,31 @@ export const getFarmById = async (req, res) => {
   }
 };
 
+// Update farm status 
+export const updateFarmStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    //  Validation added here
+    if (!["Active", "Inactive", "Under Maintenance"].includes(status)) {
+      return res.status(400).json({ success: false, message: "Invalid status value" });
+    }
+
+    const farm = await farmModel.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!farm) {
+      return res.status(404).json({ success: false, message: "Farm not found" });
+    }
+
+    res.json({ success: true, message: "Farm status updated", farm });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
