@@ -1,39 +1,17 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { Plus, Search, Edit, Trash2, X, ImagePlus, Filter } from "lucide-react";
 
-// helper: make currency
+// helpers
 const rs = (n) => `Rs ${Number(n || 0).toLocaleString()}`;
 
-// helper: resolve sample asset images (since this file is in src/pages)
-const asset = (file) => new URL(`../assets/${file}`, import.meta.url).href;
+// backend API
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
+const API = `${API_BASE}/api/products`;
 
-// seed data (3–4 products)
-const SEED = [
-  { id: crypto.randomUUID(), name: "Wildflower Honey", category: "Raw Honey",    weight: "350g", price: 1200, status: "Active", img: asset("honeyjarP1.jpeg") },
-  { id: crypto.randomUUID(), name: "Cinnamon Infused", category: "Infused",      weight: "350g", price: 1450, status: "Active", img: asset("jar.jpeg") },
-  { id: crypto.randomUUID(), name: "Honey Glow Serum", category: "Skincare",     weight: "50ml", price: 1750, status: "Active", img: asset("honeyserump2.jpeg") },
-  { id: crypto.randomUUID(), name: "Taster Gift Set",  category: "Gift Sets",    weight: "3×125g", price: 3200, status: "Active", img: asset("product5.jpg") /* replace if you have */ },
-];
-
-const CATEGORIES = ["All", "Raw Honey", "Infused", "Skincare", "Gift Sets"];
-const SORTS = [
-  { value: "new",  label: "Newest" },
-  { value: "name", label: "Name (A→Z)" },
-  { value: "low",  label: "Price (Low→High)" },
-  { value: "high", label: "Price (High→Low)" },
-];
 
 export default function AdminProducts() {
-  // load from localStorage once
-  const [products, setProducts] = useState(() => {
-    const saved = localStorage.getItem("admin_products");
-    return saved ? JSON.parse(saved) : SEED;
-  });
-
-  // persist whenever products change
-  useEffect(() => {
-    localStorage.setItem("admin_products", JSON.stringify(products));
-  }, [products]);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // controls
   const [q, setQ] = useState("");
@@ -43,6 +21,51 @@ export default function AdminProducts() {
   // modal
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null); // product or null
+
+  // load from API
+// load from API
+const load = async () => {
+  try {
+    setLoading(true);
+    const res = await fetch(API);
+    const { items = [] } = await res.json(); // <— read items array
+    const list = items.map((p) => ({
+      id: p.id || p._id,
+      name: p.name,
+      category: p.category || "Raw Honey",
+      weight: p.weight || "",
+      price: Number(p.price) || 0,
+      status: p.status || "Active",
+      imageUrl: (p.imageUrl || p.img || "").trim(), // <— support both fields
+      _ts: p.createdAt ? Date.parse(p.createdAt) : Date.now(),
+    }));
+    setProducts(list);
+  } catch (e) {
+    console.error("Failed to load products:", e);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const CATEGORIES = useMemo(() => {
+    // derive categories from data + keep defaults
+    const fromData = Array.from(new Set(products.map((p) => p.category).filter(Boolean)));
+    const base = ["Raw Honey", "Infused", "Skincare", "Gift Sets"];
+    const merged = Array.from(new Set([...base, ...fromData]));
+    return ["All", ...merged];
+  }, [products]);
+
+  const SORTS = [
+    { value: "new", label: "Newest" },
+    { value: "name", label: "Name (A→Z)" },
+    { value: "low", label: "Price (Low→High)" },
+    { value: "high", label: "Price (High→Low)" },
+  ];
 
   const filtered = useMemo(() => {
     let list = [...products];
@@ -54,7 +77,7 @@ export default function AdminProducts() {
       list = list.filter(
         (p) =>
           p.name.toLowerCase().includes(s) ||
-          p.category.toLowerCase().includes(s) ||
+          (p.category || "").toLowerCase().includes(s) ||
           (p.weight || "").toLowerCase().includes(s)
       );
     }
@@ -67,21 +90,58 @@ export default function AdminProducts() {
     return list;
   }, [products, q, cat, sort]);
 
-  const onDelete = (id) => {
-    if (confirm("Delete this product?")) {
-      setProducts((prev) => prev.filter((p) => p.id !== id));
+  const onDelete = async (id) => {
+  if (!confirm("Delete this product?")) return;
+  try {
+    const res = await fetch(`${API}/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const msg = (await res.json().catch(() => ({}))).message || res.statusText;
+      throw new Error(`Delete failed: ${res.status} ${msg}`);
     }
+    await load();
+    alert("Deleted ✔");
+  } catch (e) {
+    console.error(e);
+    alert(e.message || "Delete failed");
+  }
+};
+
+const onSave = async (data) => {
+  const payload = {
+    name: data.name?.trim(),
+    category: data.category || "",
+    weight: data.weight || "",
+    price: Number(data.price),        // ensure number
+    status: data.status || "Active",
+    imageUrl: (data.imageUrl || "").trim(),
   };
 
-  const onSave = (data) => {
-    if (data.id) {
-      setProducts((prev) => prev.map((p) => (p.id === data.id ? { ...p, ...data } : p)));
-    } else {
-      setProducts((prev) => [{ ...data, id: crypto.randomUUID(), _ts: Date.now() }, ...prev]);
+  try {
+    const url = data.id ? `${API}/${data.id}` : API;
+    const method = data.id ? "PUT" : "POST";
+
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    // Read response safely for good error messages
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(`${res.status} ${body.message || res.statusText}`);
     }
+
     setOpen(false);
     setEditing(null);
-  };
+    await load();
+    alert(data.id ? "Updated ✔" : "Created ✔");
+  } catch (e) {
+    console.error("Save failed:", e, { payload });
+    alert(e.message || "Save failed");
+  }
+};
+
 
   return (
     <div className="space-y-6">
@@ -93,7 +153,10 @@ export default function AdminProducts() {
             <p className="text-white/70 text-sm">Create, search, filter, and edit your catalogue.</p>
           </div>
           <button
-            onClick={() => { setEditing(null); setOpen(true); }}
+            onClick={() => {
+              setEditing(null);
+              setOpen(true);
+            }}
             className="inline-flex items-center gap-2 rounded-xl px-4 py-2 font-semibold bg-[#FBB01A] text-black hover:opacity-90"
           >
             <Plus size={18} /> Add Product
@@ -133,7 +196,12 @@ export default function AdminProducts() {
               onChange={(e) => setSort(e.target.value)}
               className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none"
             >
-              {SORTS.map((s) => (
+              {[
+                { value: "new", label: "Newest" },
+                { value: "name", label: "Name (A→Z)" },
+                { value: "low", label: "Price (Low→High)" },
+                { value: "high", label: "Price (High→Low)" },
+              ].map((s) => (
                 <option key={s.value} value={s.value} className="bg-[#121212]">
                   {s.label}
                 </option>
@@ -157,58 +225,73 @@ export default function AdminProducts() {
                 <th className="py-3 px-4 text-right pr-5">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/10">
-              {filtered.map((p) => (
-                <tr key={p.id} className="hover:bg-white/5">
-                  <td className="py-3 pl-5 pr-4">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={p.img}
-                        alt={p.name}
-                        className="h-10 w-10 rounded-lg object-cover ring-1 ring-white/10"
-                      />
-                      <div>
-                        <div className="font-medium">{p.name}</div>
-                        <div className="text-white/50 text-xs">{p.id.slice(0, 8)}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 text-white/85">{p.category}</td>
-                  <td className="py-3 px-4 text-white/85">{p.weight}</td>
-                  <td className="py-3 px-4 text-[#F28C28] font-semibold">{rs(p.price)}</td>
-                  <td className="py-3 px-4">
-                    <span className="px-2 py-0.5 rounded text-xs bg-emerald-500/20 text-emerald-300">
-                      {p.status || "Active"}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex justify-end gap-2 pr-1">
-                      <button
-                        onClick={() => { setEditing(p); setOpen(true); }}
-                        className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10"
-                        title="Edit"
-                      >
-                        <Edit size={16} /> Edit
-                      </button>
-                      <button
-                        onClick={() => onDelete(p.id)}
-                        className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 text-red-300"
-                        title="Delete"
-                      >
-                        <Trash2 size={16} /> Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {filtered.length === 0 && (
+
+            {loading ? (
+              <tbody>
                 <tr>
-                  <td colSpan="6" className="py-12 text-center text-white/60">
-                    No products match your filters.
+                  <td colSpan="6" className="py-8 text-center text-white/60">
+                    Loading…
                   </td>
                 </tr>
-              )}
-            </tbody>
+              </tbody>
+            ) : (
+              <tbody className="divide-y divide-white/10">
+                {filtered.map((p) => (
+                  <tr key={p.id} className="hover:bg-white/5">
+                    <td className="py-3 pl-5 pr-4">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={p.imageUrl}
+                          alt={p.name}
+                          className="h-10 w-10 rounded-lg object-cover ring-1 ring-white/10"
+                          onError={(e) => (e.currentTarget.style.display = "none")}
+                        />
+                        <div>
+                          <div className="font-medium">{p.name}</div>
+                          <div className="text-white/50 text-xs">{String(p.id).slice(0, 8)}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-white/85">{p.category}</td>
+                    <td className="py-3 px-4 text-white/85">{p.weight}</td>
+                    <td className="py-3 px-4 text-[#F28C28] font-semibold">{rs(p.price)}</td>
+                    <td className="py-3 px-4">
+                      <span className="px-2 py-0.5 rounded text-xs bg-emerald-500/20 text-emerald-300">
+                        {p.status || "Active"}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex justify-end gap-2 pr-1">
+                        <button
+                          onClick={() => {
+                            setEditing(p);
+                            setOpen(true);
+                          }}
+                          className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10"
+                          title="Edit"
+                        >
+                          <Edit size={16} /> Edit
+                        </button>
+                        <button
+                          onClick={() => onDelete(p.id)}
+                          className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 text-red-300"
+                          title="Delete"
+                        >
+                          <Trash2 size={16} /> Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {filtered.length === 0 && (
+                  <tr>
+                    <td colSpan="6" className="py-12 text-center text-white/60">
+                      No products match your filters.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            )}
           </table>
         </div>
       </div>
@@ -216,7 +299,10 @@ export default function AdminProducts() {
       {open && (
         <ProductModal
           initial={editing}
-          onClose={() => { setOpen(false); setEditing(null); }}
+          onClose={() => {
+            setOpen(false);
+            setEditing(null);
+          }}
           onSave={onSave}
         />
       )}
@@ -234,10 +320,10 @@ function ProductModal({ initial, onClose, onSave }) {
       weight: "",
       price: "",
       status: "Active",
-      img: "",
+      imageUrl: "",
     }
   );
-  const [preview, setPreview] = useState(initial?.img || "");
+  const [preview, setPreview] = useState(initial?.imageUrl || "");
 
   const handleChange = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -246,7 +332,7 @@ function ProductModal({ initial, onClose, onSave }) {
     const reader = new FileReader();
     reader.onload = (e) => {
       setPreview(e.target.result);
-      handleChange("img", e.target.result); // store base64 (no backend)
+      handleChange("imageUrl", e.target.result); // store base64/URL into imageUrl
     };
     reader.readAsDataURL(file);
   };
@@ -254,7 +340,7 @@ function ProductModal({ initial, onClose, onSave }) {
   const submit = (e) => {
     e.preventDefault();
     if (!form.name || !form.price) return alert("Name and price are required.");
-    onSave(form);
+    onSave(initial ? { ...form, id: initial.id } : form);
   };
 
   return (
