@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 /* -------- Inline API helpers (no separate api file needed) -------- */
-const BASE = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 async function jfetch(url, opts = {}) {
   const res = await fetch(url, {
     headers: { "Content-Type": "application/json", ...(opts.headers || {}) },

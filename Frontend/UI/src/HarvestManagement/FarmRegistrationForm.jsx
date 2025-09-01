@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 
 // Base API URL (from .env or default localhost:4000)
-const API = (import.meta.env.VITE_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+const API = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/+$/, "");
 
 /**
  * FarmRegistrationForm.jsx

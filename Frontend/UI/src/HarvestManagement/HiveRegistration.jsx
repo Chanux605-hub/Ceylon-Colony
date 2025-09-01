@@ -57,7 +57,7 @@ export default function HiveRegistrationForm() {
     const payload = { hiveId, ...form, createdAt: new Date().toISOString() };
 
     try {
-      const res = await axios.post("http://localhost:4000/api/hives/register", payload);
+      const res = await axios.post("http://localhost:3000/api/hives/register", payload);
 
       if (res.data.success) {
         alert("Hive registered successfully!");
