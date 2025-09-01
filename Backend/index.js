@@ -6,6 +6,10 @@ import connection from "./config/db.js";
 import farmRouter from "./routes/farmRoutes.js";
 import hiveRouter from "./routes/hiveRoutes.js";
 
+// workshops
+import workshopRouter from "./routes/workshop.routes.js";
+
+
 const app = express();
 const allowOrigins =['http://localhost:5173']
 
@@ -20,7 +24,14 @@ app.use("/api/hives", hiveRouter)
 // Connect to DB
 connection();   
 
-const PORT = process.env.PORT || 3000;
+//app.use(bodyParser.json());
+
+app.use(express.json({ limit: "50mb" }));              
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+
+app.use("/api/workshops", workshopRouter);
+
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

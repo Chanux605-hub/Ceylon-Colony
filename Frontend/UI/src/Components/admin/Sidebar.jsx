@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink, Link } from "react-router-dom";
 import {
-  LayoutDashboard, Package, Boxes, BarChart3, Truck, Users, Settings, LogOut,Leaf
+  LayoutDashboard, Package, Boxes, BarChart3, Truck, Users, Settings, LogOut,Leaf , CalendarDays,
 } from "lucide-react";
 
 import logo from "../../assets/logo (2).png"; // or .png/.jpg
@@ -47,6 +47,7 @@ export default function Sidebar() {
         {item("/admin/customers", "Customers", Users)}
         {item("/admin/farm-harvest", "Farm & Harvest", Leaf)}
 
+        {item("/admin/workshops", "Workshops", CalendarDays)} 
       </nav>
 
       <div className="mt-auto p-3 space-y-1">

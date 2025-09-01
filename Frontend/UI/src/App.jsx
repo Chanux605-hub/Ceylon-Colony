@@ -3,9 +3,15 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // Adjust this path to match your real file location:
 import ModernLogin from "./Components/ModernLogin.jsx";
+
 import AdminLayout from "./Components/admin/AdminLayout.jsx";
 import Home from "./pages/Home.jsx"
 import OurProducts from "./pages/OurProducts.jsx"
+
+
+import About from "./pages/About.jsx";
+import Workshops from "./pages/Workshops.jsx";
+
 
 // Module pages (rendered inside Layout's <Outlet/>)
 import AdminProducts from "./Components/admin/modules/AdminProducts.jsx";
@@ -47,6 +53,9 @@ export default function App() {
       <Routes>
         {/* Login (public only) */}
         <Route path="/login" element={<ModernLogin brand="Ceylon Colony" />} />
+        {/* Public marketing page */}
+        <Route path="/about" element={<About />} />
+        <Route path="/workshops" element={<Workshops />} />
 
         {/* Admin shell (protected) */}
         <Route

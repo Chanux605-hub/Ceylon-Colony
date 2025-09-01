@@ -1,8 +1,5 @@
 import mongoose from "mongoose";
 
-const dburl =
-  "mongodb+srv://Chanux:12345@cluster0.j6tlgyi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/ceylon_colony";
-
 mongoose.set("strictQuery", true)
 
 async function connection() {
@@ -14,5 +11,13 @@ async function connection() {
     process.exit(1);
   }
 }
+
+import dotenv from "dotenv";
+dotenv.config();
+
+const dburl =
+  "mongodb+srv://Chanux:12345@cluster0.j6tlgyi.mongodb.net/ceylon_colony?retryWrites=true&w=majority&appName=Cluster0";
+
+mongoose.set("strictQuery", true)
 
 export default connection;   
