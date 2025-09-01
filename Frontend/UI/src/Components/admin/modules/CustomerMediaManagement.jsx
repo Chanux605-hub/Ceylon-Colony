@@ -472,18 +472,11 @@ export default function CustomerMediaManagement() {
   ========================================================================================= */
   return (
     <div className="space-y-6 text-white">
-      <HeaderControls
-        q={q}
-        setQ={setQ}
-        range={range}
-        setRange={setRange}
-        filterTag={filterTag}
-        setFilterTag={setFilterTag}
-        filterProduct={filterProduct}
-        setFilterProduct={setFilterProduct}
-        tagOptions={tagOptions}
-        productOptions={productOptions}
-      />
+      <AnnouncementForm onSubmit={(data) => {
+  console.log("New announcement:", data);
+  // TODO: send to backend API (e.g., POST /api/admin/announcements)
+}} />
+
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Kpi title="Submissions Today" icon={<BarChart2 className="h-4 w-4" />} value={submissionsToday} />
@@ -568,78 +561,114 @@ export default function CustomerMediaManagement() {
    PRESENTATION COMPONENTS
 ========================================================================================= */
 
-function HeaderControls({
-  q, setQ, range, setRange,
-  filterTag, setFilterTag,
-  filterProduct, setFilterProduct,
-  tagOptions, productOptions
-}) {
+function AnnouncementForm({ onSubmit }) {
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    date: "",
+    time: "",
+    flyer: null,
+  });
+
+  const handleChange = (key, value) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleFile = (e) => {
+    const file = e.target.files?.[0] || null;
+    handleChange("flyer", file);
+  };
+
+  const submit = (e) => {
+    e.preventDefault();
+    if (!form.title || !form.date || !form.time) {
+      alert("Title, date and time are required.");
+      return;
+    }
+    onSubmit?.(form);
+  };
+
   return (
-    <div className="rounded-2xl bg-black/40 border border-white/10 p-5">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <div className="text-lg font-semibold">Customer Media &amp; Engagement</div>
-          <p className="text-white/70 text-sm">Moderate content, track submissions, and review top videos.</p>
-        </div>
+    <form
+      onSubmit={submit}
+      className="rounded-2xl bg-black/40 border border-white/10 p-5 space-y-4 text-white"
+    >
+      <div>
+        <h2 className="text-lg font-semibold">Add Announcement</h2>
+        <p className="text-white/70 text-sm">
+          Publish an announcement to appear in the community page.
+        </p>
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-12">
-        <div className="md:col-span-5 relative">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-white/50" />
+      {/* Title */}
+      <div>
+        <label className="text-sm text-white/70">Title</label>
+        <input
+          type="text"
+          value={form.title}
+          onChange={(e) => handleChange("title", e.target.value)}
+          className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]/30"
+          placeholder="Enter announcement title"
+        />
+      </div>
+
+      {/* Description */}
+      <div>
+        <label className="text-sm text-white/70">Description</label>
+        <textarea
+          value={form.description}
+          onChange={(e) => handleChange("description", e.target.value)}
+          className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]/30"
+          placeholder="Write a short description..."
+        />
+      </div>
+
+      {/* Date & Time */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="text-sm text-white/70">Date</label>
           <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search by title, user, tag, product…"
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]/30"
+            type="date"
+            value={form.date}
+            onChange={(e) => handleChange("date", e.target.value)}
+            className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]/30"
           />
         </div>
-
-        <div className="md:col-span-3">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-white/60" />
-            <select
-              value={range}
-              onChange={(e) => setRange(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none"
-            >
-              <option value="7d" className="bg-[#121212]">Last 7 days</option>
-              <option value="30d" className="bg-[#121212]">Last 30 days</option>
-              <option value="all" className="bg-[#121212]">All time</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="md:col-span-2">
-          <select
-            value={filterTag}
-            onChange={(e) => setFilterTag(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none"
-          >
-            {tagOptions.map((t) => (
-              <option key={t} value={t} className="bg-[#121212]">
-                {t === "all" ? "All tags" : `#${t}`}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="md:col-span-2">
-          <select
-            value={filterProduct}
-            onChange={(e) => setFilterProduct(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none"
-          >
-            {productOptions.map((p) => (
-              <option key={p} value={p} className="bg-[#121212]">
-                {p === "all" ? "All products" : p}
-              </option>
-            ))}
-          </select>
+        <div>
+          <label className="text-sm text-white/70">Time</label>
+          <input
+            type="time"
+            value={form.time}
+            onChange={(e) => handleChange("time", e.target.value)}
+            className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]/30"
+          />
         </div>
       </div>
-    </div>
+
+      {/* Flyer Upload */}
+      <div>
+        <label className="text-sm text-white/70">Flyer (optional)</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleFile}
+          className="w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-[#FBB01A] file:px-3 file:py-2 file:text-black hover:file:opacity-90"
+        />
+      </div>
+
+      {/* Submit */}
+      <div className="pt-2">
+        <button
+          type="submit"
+          className="rounded-xl px-5 py-2 bg-[#FBB01A] text-black font-semibold hover:opacity-90"
+        >
+          Publish
+        </button>
+      </div>
+    </form>
   );
 }
+
 
 function Kpi({ title, icon, value }) {
   return (
