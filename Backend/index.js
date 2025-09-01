@@ -28,7 +28,7 @@ app.use((req, res) => {
 // Connect to DB
 connection();
 
-const PORT = process.env.PORT || 4000;
+const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
