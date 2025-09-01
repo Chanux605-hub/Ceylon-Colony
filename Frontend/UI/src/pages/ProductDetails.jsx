@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
 const PLACEHOLDER =
   "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1600&q=80";
 

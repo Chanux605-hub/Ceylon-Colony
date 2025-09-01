@@ -5,7 +5,7 @@ import { Plus, Search, Edit, Trash2, X, ImagePlus, Filter, Settings2 } from "luc
 const rs = (n) => `Rs ${Number(n || 0).toLocaleString()}`;
 
 // backend API
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
 const API = `${API_BASE}/api/products`;
 
 export default function AdminProducts() {
