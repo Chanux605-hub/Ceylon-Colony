@@ -462,28 +462,28 @@ function AlsoLike() {
       name: "Forest Reserve Honey",
       category: "Raw Honey",
       price: 1900,
-      img: "https://imgur.com/a/PDpdQup",
+      img: "https://res.cloudinary.com/dxoytbws6/image/upload/v1756686014/Creative_Honey_Label_Trends_jqadqv.jpg",
     },
     {
       id: "rel-2",
       name: "Multi-Floral Honey",
       category: "Raw Honey",
       price: 2050,
-      img: "https://imgur.com/a/F2nsG6p",
+      img: "https://res.cloudinary.com/dxoytbws6/image/upload/v1756687256/buns_r9o495.jpg",
     },
     {
       id: "rel-3",
       name: "Cinnamon Infused",
       category: "Infused",
       price: 1450,
-      img: "https://images.unsplash.com/photo-1505575967455-40b9d88b4be8?w=1200&q=80",
+      img: "https://res.cloudinary.com/dxoytbws6/image/upload/v1756687289/Candles_Mumlar_yczevq.jpg",
     },
     {
       id: "rel-4",
       name: "Taster Gift Set",
       category: "Gift Sets",
       price: 3200,
-      img: "https://images.unsplash.com/photo-1495197359483-d092478c170a?w=1200&q=80",
+      img: "https://res.cloudinary.com/dxoytbws6/image/upload/v1756687326/download_15_hm3cfb.jpg",
     },
   ];
 
