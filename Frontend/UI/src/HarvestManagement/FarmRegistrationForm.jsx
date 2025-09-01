@@ -1,13 +1,15 @@
 import React, { useMemo, useState } from "react";
 
+// Base API URL (from .env or default localhost:4000)
+const API = (import.meta.env.VITE_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+
 /**
  * FarmRegistrationForm.jsx
  * - React form with TailwindCSS
  * - Auto-generates Farm ID
  * - Temporary ownerId = "001"
- * - Submits data to http://localhost:3000/api/farms/register
+ * - Submits data to http://localhost:4000/api/farms/register
  */
-
 export default function FarmRegistrationForm() {
   // ---------- const (temporary ownerId until session/user is implemented) ----------
   const ownerId = "001";
@@ -78,21 +80,28 @@ export default function FarmRegistrationForm() {
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:3000/api/farms/register", {
+      const res = await fetch(`${API}/api/farms/register`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        alert("✅ Farm registered successfully!");
-        console.log("Server response:", data);
-        setForm(defaultForm(ownerId)); // reset form
-      } else {
-        alert("❌ Failed: " + (data.message || "Unknown error"));
+      const ct = res.headers.get("content-type") || "";
+      if (!ct.includes("application/json")) {
+        const text = await res.text();
+        throw new Error(
+          `Expected JSON from ${res.url}, got ${ct} (status ${res.status}). Snippet: ${text.slice(0, 120)}`
+        );
       }
+
+      const data = await res.json();
+      if (!res.ok || data?.success === false) {
+        throw new Error(data?.message || `HTTP ${res.status}`);
+      }
+
+      alert("✅ Farm registered successfully!");
+      console.log("Server response:", data);
+      setForm(defaultForm(ownerId)); // reset
     } catch (err) {
       console.error("Error submitting farm:", err);
       alert("❌ API Error: " + err.message);
