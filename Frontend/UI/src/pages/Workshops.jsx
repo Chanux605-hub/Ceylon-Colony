@@ -3,7 +3,7 @@ import React from "react";
 import aboutHero from "../assets/about-hero2.jpg";
 
 /* -------- tiny inline API helper (no api/ folder needed) -------- */
-const BASE = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 async function listWorkshops() {
   const res = await fetch(`${BASE}/api/workshops`);
   const data = await res.json().catch(() => []);
