@@ -42,7 +42,7 @@ export default function Sidebar() {
         {item("/admin", "Overview", LayoutDashboard)}
         {item("/admin/products", "Products", Package)}
         {item("/admin/inventory", "Inventory", Boxes)}
-        {item("/admin/stock-analysis", "Stock Analysis", BarChart3)}
+        {item("/admin/stock-analysis", "Analysis Stock ", BarChart3)}
         {item("/admin/suppliers", "Suppliers", Truck)}
         {item("/admin/customers", "Customers", Users)}
       </nav>
