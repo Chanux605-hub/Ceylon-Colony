@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import bodyParser from "body-parser";
+//import bodyParser from "body-parser";
 
 import connection from "./config/db.js"; 
 import farmRouter from "./routes/farmRoutes.js";
