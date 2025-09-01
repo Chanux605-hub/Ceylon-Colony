@@ -7,6 +7,7 @@ const dburl =
 
 mongoose.set("strictQuery", true)
 
+
 async function connection() {
   try {
     await mongoose.connect(dburl);
