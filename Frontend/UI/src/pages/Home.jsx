@@ -5,6 +5,7 @@ import AboutBanner from "../Components/User/AboutBanner";
 import OurLatestProducts from "../Components/User/OurLatestProducts";
 import WorkshopsBanner from "../Components/User/WorkshopsBanner";
 import Footer from "../Components/User/Footer";
+import ColonyChatWidget from "../Components/User/chatbot";
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
       <AboutBanner />
       <OurLatestProducts />
       <WorkshopsBanner />
+      <ColonyChatWidget />
       <Footer />
     </>
   );
