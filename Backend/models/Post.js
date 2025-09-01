@@ -1,4 +1,5 @@
-const mongoose = require('mongoose');
+// backend/models/Post.js
+import mongoose from "mongoose";
 
 const AuthorSchema = new mongoose.Schema({
   userId: { type: String, required: true },
@@ -19,12 +20,13 @@ const PostSchema = new mongoose.Schema({
   author: { type: AuthorSchema, required: true },
 
   // moderation + visibility
-status: {
-  type: String,
-  enum: ["pending", "approved", "rejected"],default: function () {            // <-- dynamic default based on contentType
-    return this.contentType === "review" ? "approved" : "pending";
-  }
-},
+  status: {
+    type: String,
+    enum: ["pending", "approved", "rejected"],
+    default: function () {
+      return this.contentType === "review" ? "approved" : "pending";
+    },
+  },
 
   isPublic: { type: Boolean, default: true },
 
@@ -34,4 +36,4 @@ status: {
   commentsCount: { type: Number, default: 0 },
 }, { timestamps: true });
 
-module.exports = mongoose.model("Post", PostSchema);
+export default mongoose.model("Post", PostSchema);

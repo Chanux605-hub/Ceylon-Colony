@@ -10,7 +10,7 @@ import {
 ========================================================================================= */
 
 /** Backend base URL from env (fallback to localhost) */
-const API = (import.meta.env.VITE_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+const API = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/+$/, "");
 
 /** Simple fetch wrapper that throws on non-2xx and returns JSON */
 async function fetchJson(url, options) {

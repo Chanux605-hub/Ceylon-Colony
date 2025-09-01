@@ -1,8 +1,9 @@
-const Post = require('../models/Post');
-const { cloudinary } = require('../config/cloudinary'); // CJS import
+// backend/controllers/postController.js
+import Post from "../models/Post.js";
+import { cloudinary } from "../config/cloudinary.js"; // ESM import
 
 // Create (customer/admin)
-const createPost = async (req, res) => {
+export const createPost = async (req, res) => {
   try {
     const { contentType, title, description, productId, tags, userId, username, avatarUrl = "" } = req.body;
     if (!userId || !username) return res.status(400).json({ message: "Missing author info" });
@@ -31,7 +32,7 @@ const createPost = async (req, res) => {
       contentType, mediaType, mediaUrl, posterUrl, title, description,
       tags: tags ? JSON.parse(tags) : [], productId,
       author: { userId, username, avatarUrl },
-      status,                         
+      status,
     });
     res.status(201).json(doc);
   } catch (e) {
@@ -40,7 +41,7 @@ const createPost = async (req, res) => {
 };
 
 // Public carousel (approved + public)
-const listShorts = async (req, res) => {
+export const listShorts = async (req, res) => {
   try {
     const { tag, productId, limit = 30 } = req.query;
     const q = { contentType: "short", mediaType: "video", status: "approved", isPublic: true };
@@ -61,7 +62,7 @@ const listShorts = async (req, res) => {
   }
 };
 
-const addView = async (req, res) => {
+export const addView = async (req, res) => {
   try {
     const doc = await Post.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }, { new: true });
     if (!doc) return res.status(404).json({ message: "Not found" });
@@ -72,7 +73,7 @@ const addView = async (req, res) => {
 };
 
 // Admin list
-const adminListPosts = async (req, res) => {
+export const adminListPosts = async (req, res) => {
   try {
     const { page = 1, limit = 20, search = "", status, contentType, productId, tag, sortBy = "createdAt", order = "desc" } = req.query;
     const q = {};
@@ -98,7 +99,7 @@ const adminListPosts = async (req, res) => {
   }
 };
 
-const adminUpdateStatus = async (req, res) => {
+export const adminUpdateStatus = async (req, res) => {
   try {
     const { status, isPublic } = req.body;
     const update = {};
@@ -112,7 +113,7 @@ const adminUpdateStatus = async (req, res) => {
   }
 };
 
-const adminDeletePost = async (req, res) => {
+export const adminDeletePost = async (req, res) => {
   try {
     await Post.findByIdAndDelete(req.params.id);
     res.json({ ok: true });
@@ -121,7 +122,7 @@ const adminDeletePost = async (req, res) => {
   }
 };
 
-const adminStats = async (req, res) => {
+export const adminStats = async (req, res) => {
   try {
     const [byType, byProduct, topTags, uploadsByDay] = await Promise.all([
       Post.aggregate([{ $group: { _id: "$contentType", count: { $sum: 1 } } }]),
@@ -141,14 +142,4 @@ const adminStats = async (req, res) => {
   } catch (e) {
     res.status(500).json({ message: "Failed to compute stats", error: e.message });
   }
-};
-
-module.exports = {
-  createPost,
-  listShorts,
-  addView,
-  adminListPosts,
-  adminUpdateStatus,
-  adminDeletePost,
-  adminStats,
 };

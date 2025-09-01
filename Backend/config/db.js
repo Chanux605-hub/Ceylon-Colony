@@ -1,7 +1,7 @@
 // backend/db.js
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
-async function connectDB() {
+export async function connectDB() {
   const uri = process.env.MONGO_URI;
   const dbName = process.env.MONGO_DB || "ceylon_colony";
 
@@ -19,5 +19,3 @@ async function connectDB() {
     process.exit(1);
   }
 }
-
-module.exports = { connectDB };
