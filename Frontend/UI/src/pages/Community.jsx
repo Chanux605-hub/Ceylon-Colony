@@ -533,51 +533,59 @@ export default function Community() {
             </div>
 
             {/* Posts (REAL: Discussions + Gallery) */}
-            {filtered.map((p) => (
-              <article key={p.id} className="rounded-2xl overflow-hidden bg-black/60 border border-white/10 shadow-neon">
-                <div className="p-4">
-                  <div className="flex items-center gap-3 text-sm text-white/70">
-                    <div className="h-9 w-9 rounded-full grid place-items-center bg-white/5 border border-white/10">
-                      <span className="text-lg">{p.avatar}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {filtered.map((p) => (
+                <article
+                  key={p.id}
+                  className={`rounded-2xl overflow-hidden bg-black/60 border border-white/10 shadow-neon
+                              ${p.type === "Discussions" ? "sm:col-span-2" : ""}`}
+                >
+                  <div className="p-4">
+                    <div className="flex items-center gap-3 text-sm text-white/70">
+                      <div className="h-9 w-9 rounded-full grid place-items-center bg-white/5 border border-white/10">
+                        <span className="text-lg">{p.avatar}</span>
+                      </div>
+                      <div>
+                        <div className="font-medium text-white">{p.author}</div>
+                        <div className="text-white/50">{p.type} • {p.time}</div>
+                      </div>
+                      <span className="ml-auto px-2 py-0.5 rounded-full text-xs bg-amber-400/20 text-amber-300 border border-amber-200/30">
+                        {p.type}
+                      </span>
                     </div>
-                    <div>
-                      <div className="font-medium text-white">{p.author}</div>
-                      <div className="text-white/50">{p.type} • {p.time}</div>
+
+                    {p.title && <h3 className="mt-3 text-lg font-semibold">{p.title}</h3>}
+                    {p.body && <p className="mt-1 text-white/80">{p.body}</p>}
+
+                    {/* Gallery images stay neat, not oversized */}
+                    {p.image && (
+                      <div className="mt-3 rounded-xl overflow-hidden border border-white/10 flex justify-center bg-black/40 p-3">
+                        <img src={p.image} alt="" className="max-h-60 w-auto object-contain" />
+                      </div>
+                    )}
+
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      {(p.tags || []).map((t) => (
+                        <span key={t} className="text-xs px-2 py-1 rounded-full bg-white/5 border border-white/10">#{t}</span>
+                      ))}
                     </div>
-                    <span className="ml-auto px-2 py-0.5 rounded-full text-xs bg-amber-400/20 text-amber-300 border border-amber-200/30">
-                      {p.type}
-                    </span>
                   </div>
 
-                  {p.title && <h3 className="mt-3 text-lg font-semibold">{p.title}</h3>}
-                  {p.body && <p className="mt-1 text-white/80">{p.body}</p>}
-
-                  {p.image && (
-                    <div className="mt-3 rounded-xl overflow-hidden border border-white/10">
-                      <img src={p.image} alt="" className="w-full h-auto object-cover" />
-                    </div>
-                  )}
-
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    {(p.tags || []).map((t) => (
-                      <span key={t} className="text-xs px-2 py-1 rounded-full bg-white/5 border border-white/10">#{t}</span>
-                    ))}
+                  <div className="flex items-center gap-4 px-4 py-3 border-t border-white/10 text-sm">
+                    <button className="hover:text-amber-300">👍 {p.likes}</button>
+                    <button className="hover:text-amber-300">💬 {p.comments}</button>
+                    <button className="ml-auto hover:text-amber-300">🔗 Share</button>
                   </div>
-                </div>
+                </article>
+              ))}
 
-                <div className="flex items-center gap-4 px-4 py-3 border-t border-white/10 text-sm">
-                  <button className="hover:text-amber-300">👍 {p.likes}</button>
-                  <button className="hover:text-amber-300">💬 {p.comments}</button>
-                  <button className="ml-auto hover:text-amber-300">🔗 Share</button>
+              {filtered.length === 0 && (
+                <div className="rounded-2xl bg-black/50 border border-white/10 p-6 text-center text-white/60 sm:col-span-2">
+                  No posts match your filter yet.
                 </div>
-              </article>
-            ))}
+              )}
+            </div>
 
-            {filtered.length === 0 && (
-              <div className="rounded-2xl bg-black/50 border border-white/10 p-6 text-center text-white/60">
-                No posts match your filter yet.
-              </div>
-            )}
 
             <div className="text-center">
               <button

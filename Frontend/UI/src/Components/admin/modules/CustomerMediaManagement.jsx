@@ -7,9 +7,6 @@ import {
 
 /* =========================================================================================
    CONFIG & UTILS
-   - API base
-   - Lightweight fetch helper
-   - UI helpers (date, assets)
 ========================================================================================= */
 
 /** Backend base URL from env (fallback to localhost) */
@@ -41,8 +38,7 @@ const isSameDay = (a, b) =>
   a.getDate() === b.getDate();
 
 /* =========================================================================================
-   MOCK / SEED CONTENT (used for KPIs, charts, and Top5 cards to keep page rich)
-   - Does not affect backend-connected “Pending” or “All Content” areas.
+   MOCK / SEED CONTENT (only for KPIs/charts/top cards)
 ========================================================================================= */
 
 const TAGS = ["skincare", "recipe", "health", "honey", "ceylon"];
@@ -55,7 +51,6 @@ const USERS = [
 ];
 const thumbs = ["thumb1.jpg", "thumb2.jpg", "thumb3.jpg", "thumb4.jpg", "thumb5.jpg"];
 
-/** Create mock dataset once for demo stats/charts (unchanged behavior) */
 function makeSeed() {
   const now = new Date();
   const daysAgoISO = (d) => {
@@ -77,7 +72,7 @@ function makeSeed() {
 
     items.push({
       id: `m_${i + 1}`,
-      type,                         // "video" | "image" (for mock only)
+      type,
       title: type === "video" ? `Short clip #${i + 1}` : `Image post #${i + 1}`,
       user: pick(USERS),
       tags,
@@ -92,14 +87,11 @@ function makeSeed() {
 }
 
 /* =========================================================================================
-   MAIN PAGE COMPONENT
+   MAIN PAGE
 ========================================================================================= */
 
 export default function CustomerMediaManagement() {
-  /* ---------------------------------------------
-     LOCAL MOCK STATE (for KPIs/charts/top videos)
-     - Kept as-is; persists to localStorage
-  ---------------------------------------------- */
+  /* ---------------- Mock state (for KPIs / charts / top cards) ---------------- */
   const [contents, setContents] = useState(() => {
     const saved = localStorage.getItem("admin_media_contents");
     return saved ? JSON.parse(saved) : makeSeed();
@@ -108,31 +100,62 @@ export default function CustomerMediaManagement() {
     localStorage.setItem("admin_media_contents", JSON.stringify(contents));
   }, [contents]);
 
-  /* ---------------------------------------------
-     GLOBAL CONTROLS (search + filters)
-  ---------------------------------------------- */
-  const [q, setQ] = useState("");            // global search
-  const [range, setRange] = useState("7d");  // 7d | 30d | all
+  /* ---------------- Backend: Approved SHORTS (declare EARLY) ------------------ */
+  const [shorts, setShorts] = useState([]);
+  const [shortsLoading, setShortsLoading] = useState(true);
+  const [previewShort, setPreviewShort] = useState(null);
+
+
+  const loadShorts = async () => {
+    try {
+      setShortsLoading(true);
+      const data = await fetchJson(
+        `${API}/api/admin/posts?contentType=short&status=approved&sortBy=createdAt&order=desc&limit=200`
+      );
+      const items = Array.isArray(data?.items) ? data.items : data;
+      const shaped = items.map((p) => ({
+        id: p._id,
+        title: p.title || "Short clip",
+        tags: Array.isArray(p.tags) ? p.tags : [],
+        product: p.productId || "",
+        metrics: {
+          likes: p.likes ?? 0,
+          comments: p.commentsCount ?? 0,
+          views: p.views ?? 0,
+        },
+        mediaUrl: p.mediaUrl || "",
+        posterUrl: p.posterUrl || "",
+        author: { name: p.author?.username || "User", avatarUrl: p.author?.avatarUrl || "" },
+      }));
+      setShorts(shaped);
+    } catch (err) {
+      alert(`Failed to load short videos: ${err.message}`);
+    } finally {
+      setShortsLoading(false);
+    }
+  };
+  useEffect(() => { loadShorts(); }, []);
+
+  /* ---------------- Global controls ---------------- */
+  const [q, setQ] = useState("");
+  const [range, setRange] = useState("all"); // 7d | 30d | all
   const [filterTag, setFilterTag] = useState("all");
   const [filterProduct, setFilterProduct] = useState("all");
   const [videoSort, setVideoSort] = useState("likes"); // likes | comments | views
   const [videoProduct, setVideoProduct] = useState("all");
 
-  /* ---------------------------------------------
-     SELECT OPTIONS derived from mock content
-  ---------------------------------------------- */
+  /* ---------------- Select options ---------------- */
   const tagOptions = useMemo(
     () => ["all", ...Array.from(new Set(contents.flatMap((c) => c.tags)))],
     [contents]
   );
-  const productOptions = useMemo(
-    () => ["all", ...Array.from(new Set(contents.map((c) => c.product)))],
-    [contents]
-  );
+  const productOptions = useMemo(() => {
+    const fromMock = contents.map((c) => c.product).filter(Boolean);
+    const fromShorts = shorts.map((s) => s.product).filter(Boolean);
+    return ["all", ...Array.from(new Set([...fromMock, ...fromShorts]))];
+  }, [contents, shorts]);
 
-  /* ---------------------------------------------
-     KPIs from mock content
-  ---------------------------------------------- */
+  /* ---------------- KPIs from mock ---------------- */
   const today = new Date();
   const submissionsToday = useMemo(
     () => contents.filter((c) => isSameDay(new Date(c.createdAt), today)).length,
@@ -156,7 +179,7 @@ export default function CustomerMediaManagement() {
   }, [contents]);
 
   const topTagUniqueUsers = useMemo(() => {
-    const m = new Map(); // tag -> Set(userId)
+    const m = new Map();
     contents.forEach((c) =>
       c.tags.forEach((t) => {
         if (!m.has(t)) m.set(t, new Set());
@@ -168,9 +191,7 @@ export default function CustomerMediaManagement() {
     return list[0] || null;
   }, [contents]);
 
-  /* ---------------------------------------------
-     CHART DATA from mock content
-  ---------------------------------------------- */
+  /* ---------------- Charts (mock) ---------------- */
   const yearsAvailable = useMemo(
     () => [...new Set(contents.map((c) => new Date(c.createdAt).getFullYear()))].sort((a, b) => b - a),
     [contents]
@@ -204,10 +225,8 @@ export default function CustomerMediaManagement() {
     return sums.map((v) => Math.round(v / years.length));
   }, [monthlyByYear]);
 
-  /* ---------------------------------------------
-     PIE (Tag-wise uploads) from mock content
-  ---------------------------------------------- */
-  const [pieRange, setPieRange] = useState("7d"); // "7d" | "30d"
+  /* ---------------- Pie (mock) ---------------- */
+  const [pieRange, setPieRange] = useState("7d");
   const pieRows = useMemo(() => {
     const now = new Date();
     const days = pieRange === "7d" ? 7 : 30;
@@ -218,7 +237,7 @@ export default function CustomerMediaManagement() {
 
   const PIE_COLORS = ["#FBB01A", "#F59E0B", "#EAB308", "#D97706", "#A3E635", "#34D399", "#60A5FA"];
   const pieCounts = useMemo(() => {
-    const m = new Map(); // tag -> count
+    const m = new Map();
     pieRows.forEach((c) => c.tags.forEach((t) => m.set(t, (m.get(t) || 0) + 1)));
     const arr = [...m.entries()].map(([label, value]) => ({ label, value }));
     arr.sort((a, b) => b.value - a.value);
@@ -231,35 +250,28 @@ export default function CustomerMediaManagement() {
     return arr;
   }, [pieRows]);
 
-  /* ---------------------------------------------
-     TOP 5 short videos (mock content)
-  ---------------------------------------------- */
+  /* ---------------- Top-5 shorts (backend) ---------------- */
   const top5Videos = useMemo(() => {
-    let vids = contents.filter((c) => c.type === "video");
+    let vids = shorts;
     if (videoProduct !== "all") vids = vids.filter((v) => v.product === videoProduct);
-    vids.sort((a, b) => (b.metrics[videoSort] || 0) - (a.metrics[videoSort] || 0));
+    vids.sort((a, b) => {
+      const k = videoSort; // "likes" | "comments" | "views"
+      return (b.metrics[k] || 0) - (a.metrics[k] || 0);
+    });
     return vids.slice(0, 5);
-  }, [contents, videoSort, videoProduct]);
+  }, [shorts, videoSort, videoProduct]);
 
-  /* ---------------------------------------------
-     BACKEND — Pending uploads (image/short only)
-     - Load list
-     - Approve / Reject / Delete
-     - Small "review" modal with actions
-  ---------------------------------------------- */
+  /* ---------------- Backend: Pending uploads ---------------- */
   const [pendingUploads, setPendingUploads] = useState([]);
   const [pendingLoading, setPendingLoading] = useState(true);
-  const [selected, setSelected] = useState(null);  // item selected for the (pending) review modal
-  const [acting, setActing] = useState(false);     // disable action buttons while calling API
+  const [selected, setSelected] = useState(null);
+  const [acting, setActing] = useState(false);
 
-  /** Fetch pending uploads from backend (status=pending) */
   const loadPending = async () => {
     try {
       setPendingLoading(true);
       const data = await fetchJson(`${API}/api/admin/posts?status=pending&sortBy=createdAt&order=desc&limit=200`);
       const items = Array.isArray(data?.items) ? data.items : [];
-
-      // Only "image" or "short" content types (your requirement)
       const shaped = items
         .filter((p) => p?.contentType === "image" || p?.contentType === "short")
         .map((p) => ({
@@ -269,7 +281,7 @@ export default function CustomerMediaManagement() {
           tags: Array.isArray(p.tags) ? p.tags : [],
           product: p.productId || "",
           status: p.status || "pending",
-          type: p.contentType,                 // "image" | "short"
+          type: p.contentType,
           createdAt: p.createdAt,
           author: p.author?.username || "Unknown",
           avatarUrl: p.author?.avatarUrl || "",
@@ -279,7 +291,6 @@ export default function CustomerMediaManagement() {
           likes: p.likes ?? 0,
           comments: p.commentsCount ?? 0,
         }));
-
       setPendingUploads(shaped);
     } catch (err) {
       alert(`Failed to load pending uploads: ${err.message}`);
@@ -289,7 +300,6 @@ export default function CustomerMediaManagement() {
   };
   useEffect(() => { loadPending(); }, []);
 
-  /** Approve or reject a pending row, then refresh "All Content" */
   const approveReject = async (row, status) => {
     if (!row?.id) return;
     try {
@@ -299,10 +309,8 @@ export default function CustomerMediaManagement() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-      // Remove from pending immediately
       setPendingUploads((list) => list.filter((c) => c.id !== row.id));
       if (selected?.id === row.id) setSelected(null);
-      // Refresh "All Content" list to reflect new status
       loadAllContent();
     } catch (err) {
       alert(`Failed to update: ${err.message}`);
@@ -311,7 +319,6 @@ export default function CustomerMediaManagement() {
     }
   };
 
-  /** Delete a pending row, then refresh "All Content" */
   const deletePending = async (row) => {
     if (!row?.id) return;
     if (!confirm("Delete this media item?")) return;
@@ -328,7 +335,6 @@ export default function CustomerMediaManagement() {
     }
   };
 
-  /** Filter pending list by global search (kept as-is) */
   const pendingFiltered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return pendingUploads;
@@ -340,21 +346,16 @@ export default function CustomerMediaManagement() {
     );
   }, [pendingUploads, q]);
 
-  /* ---------------------------------------------
-     BACKEND — All Content (approved/rejected only)
-     - Read-only "review" modal for any row
-  ---------------------------------------------- */
+  /* ---------------- Backend: All content (approved/rejected) ---------------- */
   const [allContent, setAllContent] = useState([]);
   const [allLoading, setAllLoading] = useState(true);
-  const [selectedReviewed, setSelectedReviewed] = useState(null); // read-only modal item
+  const [selectedReviewed, setSelectedReviewed] = useState(null);
 
-  /** Fetch all content, keep only approved/rejected image/short */
   const loadAllContent = async () => {
     try {
       setAllLoading(true);
       const data = await fetchJson(`${API}/api/admin/posts?sortBy=createdAt&order=desc&limit=500`);
       const items = Array.isArray(data?.items) ? data.items : [];
-
       const filtered = items
         .filter(
           (p) =>
@@ -364,8 +365,8 @@ export default function CustomerMediaManagement() {
         .map((p) => ({
           id: p._id,
           title: p.title || (p.contentType === "short" ? "Short clip" : "Image post"),
-          type: p.contentType === "short" ? "Video" : "Image", // display string for the table
-          typeInternal: p.contentType,                          // "short" | "image" (for modal)
+          type: p.contentType === "short" ? "Video" : "Image",
+          typeInternal: p.contentType,
           tags: Array.isArray(p.tags) ? p.tags : [],
           product: p.productId || "",
           status: p.status,
@@ -381,7 +382,6 @@ export default function CustomerMediaManagement() {
           author: p.author?.username || "Unknown",
           avatarUrl: p.author?.avatarUrl || "",
         }));
-
       setAllContent(filtered);
     } catch (err) {
       alert(`Failed to load all content: ${err.message}`);
@@ -391,24 +391,19 @@ export default function CustomerMediaManagement() {
   };
   useEffect(() => { loadAllContent(); }, []);
 
-  /** Compose filters over backend-provided "All Content" for the table */
   const allContentFilteredBackend = useMemo(() => {
     const s = q.trim().toLowerCase();
     const now = new Date();
     let rows = allContent.slice();
 
-    // Time range filter
     if (range !== "all") {
       const days = range === "7d" ? 7 : 30;
       const cutoff = new Date(now);
       cutoff.setDate(now.getDate() - days);
       rows = rows.filter((c) => new Date(c.createdAt) >= cutoff);
     }
-    // Tag filter
     if (filterTag !== "all") rows = rows.filter((c) => c.tags.includes(filterTag));
-    // Product filter
     if (filterProduct !== "all") rows = rows.filter((c) => c.product === filterProduct);
-    // Text search
     if (s) {
       rows = rows.filter(
         (c) =>
@@ -418,15 +413,27 @@ export default function CustomerMediaManagement() {
           (c.product || "").toLowerCase().includes(s)
       );
     }
-
     rows.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     return rows;
   }, [allContent, q, range, filterTag, filterProduct]);
 
-  /* ---------------------------------------------
-     (Legacy) mock "All Content" derivation (unchanged)
-     - Left intact for your existing widgets
-  ---------------------------------------------- */
+  // delete from All Content (approved/rejected)
+  const deleteReviewed = async (row) => {
+    if (!row?.id) return;
+    if (!confirm("Delete this media item?")) return;
+    try {
+      setActing(true);
+      await fetchJson(`${API}/api/admin/posts/${row.id}`, { method: "DELETE" });
+      setAllContent((list) => list.filter((c) => c.id !== row.id));
+      setSelectedReviewed(null);
+    } catch (err) {
+      alert(`Failed to delete: ${err.message}`);
+    } finally {
+      setActing(false);
+    }
+  };
+
+  /* ---------------- Legacy mock table (kept) ---------------- */
   const allContentFiltered = useMemo(() => {
     const s = q.trim().toLowerCase();
     const now = new Date();
@@ -453,9 +460,7 @@ export default function CustomerMediaManagement() {
     return rows;
   }, [contents, q, range, filterTag, filterProduct]);
 
-  /* ---------------------------------------------
-     Misc handlers preserved (used in legacy UI)
-  ---------------------------------------------- */
+  /* ---------------- Misc (legacy handlers) ---------------- */
   const reviewItem = (row) => alert(`Review ${row.id} — open your review UI here.`);
   const deleteItem = (row) => {
     if (!confirm("Delete this media item?")) return;
@@ -467,7 +472,6 @@ export default function CustomerMediaManagement() {
   ========================================================================================= */
   return (
     <div className="space-y-6 text-white">
-      {/* ===== Header + Global controls ===== */}
       <HeaderControls
         q={q}
         setQ={setQ}
@@ -481,7 +485,6 @@ export default function CustomerMediaManagement() {
         productOptions={productOptions}
       />
 
-      {/* ===== KPIs ===== */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Kpi title="Submissions Today" icon={<BarChart2 className="h-4 w-4" />} value={submissionsToday} />
         <Kpi
@@ -496,7 +499,6 @@ export default function CustomerMediaManagement() {
         />
       </div>
 
-      {/* ===== Charts row: Pie + Bars ===== */}
       <div className="grid md:grid-cols-2 gap-4">
         <PiePanel
           pieRange={pieRange}
@@ -513,17 +515,17 @@ export default function CustomerMediaManagement() {
         />
       </div>
 
-      {/* ===== Top 5 Short Videos (mock) ===== */}
       <Top5Videos
         top5Videos={top5Videos}
+        loading={shortsLoading}
         videoSort={videoSort}
         setVideoSort={setVideoSort}
         videoProduct={videoProduct}
         setVideoProduct={setVideoProduct}
         productOptions={productOptions}
+        onPreview={setPreviewShort}
       />
 
-      {/* ===== Pending uploads (backend) ===== */}
       <PendingUploadsTable
         rows={pendingFiltered}
         loading={pendingLoading}
@@ -531,14 +533,12 @@ export default function CustomerMediaManagement() {
         onDelete={deletePending}
       />
 
-      {/* ===== All Content (backend) ===== */}
       <AllContentTable
         rows={allContentFilteredBackend}
         loading={allLoading}
         onReview={setSelectedReviewed}
       />
 
-      {/* ===== Modals ===== */}
       <PendingReviewModal
         item={selected}
         onClose={() => setSelected(null)}
@@ -551,16 +551,23 @@ export default function CustomerMediaManagement() {
       <ReviewedReadOnlyModal
         item={selectedReviewed}
         onClose={() => setSelectedReviewed(null)}
+        onDelete={deleteReviewed}
+        acting={acting}
       />
+
+      <ShortPreviewModal
+        item={previewShort}
+        onClose={() => setPreviewShort(null)}
+      />
+
     </div>
   );
 }
 
 /* =========================================================================================
-   PRESENTATION COMPONENTS (unchanged styles/behavior, added small comments)
+   PRESENTATION COMPONENTS
 ========================================================================================= */
 
-/** Header + global filters/search */
 function HeaderControls({
   q, setQ, range, setRange,
   filterTag, setFilterTag,
@@ -577,7 +584,6 @@ function HeaderControls({
       </div>
 
       <div className="mt-4 grid gap-3 md:grid-cols-12">
-        {/* Search */}
         <div className="md:col-span-5 relative">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-white/50" />
           <input
@@ -588,7 +594,6 @@ function HeaderControls({
           />
         </div>
 
-        {/* Range */}
         <div className="md:col-span-3">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-white/60" />
@@ -604,7 +609,6 @@ function HeaderControls({
           </div>
         </div>
 
-        {/* Tag */}
         <div className="md:col-span-2">
           <select
             value={filterTag}
@@ -619,7 +623,6 @@ function HeaderControls({
           </select>
         </div>
 
-        {/* Product */}
         <div className="md:col-span-2">
           <select
             value={filterProduct}
@@ -638,7 +641,6 @@ function HeaderControls({
   );
 }
 
-/** KPI card (reused) */
 function Kpi({ title, icon, value }) {
   return (
     <div className="rounded-2xl bg-black/40 border border-white/10 p-4">
@@ -651,12 +653,10 @@ function Kpi({ title, icon, value }) {
   );
 }
 
-/** Left panel: tag-wise uploads pie */
 function PiePanel({ pieRange, setPieRange, pieCounts, PIE_COLORS }) {
   return (
     <div className="rounded-2xl bg-black/40 border border-white/10 p-4">
       <div className="flex items-center justify-between mb-2">
-        {/* range selector */}
         <div className="flex items-center gap-2">
           <select
             className="bg-white/5 border border-white/10 text-white rounded-md text-sm px-2 py-1"
@@ -672,7 +672,6 @@ function PiePanel({ pieRange, setPieRange, pieCounts, PIE_COLORS }) {
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        {/* donut */}
         <div className="flex-1 min-w-[220px]">
           <PieDonut
             data={pieCounts.map((d, i) => ({ ...d, color: PIE_COLORS[i % PIE_COLORS.length] }))}
@@ -681,7 +680,6 @@ function PiePanel({ pieRange, setPieRange, pieCounts, PIE_COLORS }) {
           />
         </div>
 
-        {/* legend */}
         <div className="sm:w-56 grid grid-cols-1 gap-2">
           {pieCounts.length === 0 ? (
             <div className="text-white/60 text-sm">No uploads in this range.</div>
@@ -702,7 +700,6 @@ function PiePanel({ pieRange, setPieRange, pieCounts, PIE_COLORS }) {
   );
 }
 
-/** Right panel: submissions by month bars + average line */
 function BarsPanel({ yearsAvailable, year, setYear, submissionsByMonth, monthlyAverage }) {
   return (
     <div className="rounded-2xl bg-black/40 border border-white/10 p-4">
@@ -733,8 +730,7 @@ function BarsPanel({ yearsAvailable, year, setYear, submissionsByMonth, monthlyA
   );
 }
 
-/** Top-5 videos card grid (mock data) */
-function Top5Videos({ top5Videos, videoSort, setVideoSort, videoProduct, setVideoProduct, productOptions }) {
+function Top5Videos({ top5Videos, loading, videoSort, setVideoSort, videoProduct, setVideoProduct, productOptions, onPreview }) {
   return (
     <div className="rounded-2xl bg-black/40 border border-white/10 p-4">
       <div className="flex items-center justify-between mb-3">
@@ -765,31 +761,66 @@ function Top5Videos({ top5Videos, videoSort, setVideoSort, videoProduct, setVide
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 xl:grid-cols-5 gap-3">
-        {top5Videos.map((v) => (
-          <div key={v.id} className="rounded-xl bg-white/5 border border-white/10 p-3">
-            <div className="aspect-video rounded-md overflow-hidden bg-black/30 mb-2">
-              <img src={v.thumb} alt={v.title} className="h-full w-full object-cover opacity-90" />
+      {loading ? (
+        <div className="col-span-full text-center text-white/60 py-6">Loading…</div>
+      ) : (
+        <div className="grid sm:grid-cols-2 xl:grid-cols-5 gap-3">
+          {top5Videos.map((v) => (
+            <div key={v.id} className="rounded-xl bg-white/5 border border-white/10 p-3">
+              <div className="aspect-video relative rounded-md overflow-hidden bg-black/30 mb-2">
+                {v.posterUrl ? (
+                  <img
+                    src={v.posterUrl}
+                    alt={v.title}
+                    className="h-full w-full object-cover opacity-90"
+                  />
+                ) : (
+                  <video
+                    src={v.mediaUrl}
+                    className="h-full w-full object-cover opacity-90"
+                    muted
+                    playsInline
+                  />
+                )}
+
+                {/* Play button overlay */}
+                <button
+                  onClick={() => onPreview(v)}
+                  className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/50 transition"
+                  title="Play video"
+                >
+                  <PlayCircle className="h-12 w-12 text-white/90" />
+                </button>
+              </div>
+
+              <div className="text-sm font-medium truncate" title={v.title}>{v.title}</div>
+              <div className="text-xs text-white/60 mt-1 truncate">
+                {v.tags && v.tags.length ? `#${v.tags[0]}` : "—"} {v.product ? `· ${v.product}` : ""}
+              </div>
+              <div className="mt-1 flex items-center gap-2">
+                {v.author?.avatarUrl ? (
+                  <img src={v.author.avatarUrl} alt={v.author.name} className="h-6 w-6 rounded-full object-cover" />
+                ) : (
+                  <div className="h-6 w-6 rounded-full bg-white/10 grid place-items-center text-xs">👤</div>
+                )}
+                <span className="text-[11px] text-white/70 truncate">{v.author?.name || "User"}</span>
+              </div>
+              <div className="flex gap-3 text-[11px] text-white/70 mt-2">
+                <span className="inline-flex items-center gap-1"><Heart className="h-3.5 w-3.5" /> {v.metrics.likes}</span>
+                <span className="inline-flex items-center gap-1"><MessageCircle className="h-3.5 w-3.5" /> {v.metrics.comments}</span>
+                <span className="inline-flex items-center gap-1"><PlayCircle className="h-3.5 w-3.5" /> {v.metrics.views}</span>
+              </div>
             </div>
-            <div className="text-sm font-medium truncate" title={v.title}>{v.title}</div>
-            <div className="text-xs text-white/60 mt-1 truncate">#{v.tags[0]} · {v.product}</div>
-            <div className="text-[11px] text-white/50 mt-1">by {v.user.name}</div>
-            <div className="flex gap-3 text-[11px] text-white/70 mt-2">
-              <span className="inline-flex items-center gap-1"><Heart className="h-3.5 w-3.5" /> {v.metrics.likes}</span>
-              <span className="inline-flex items-center gap-1"><MessageCircle className="h-3.5 w-3.5" /> {v.metrics.comments}</span>
-              <span className="inline-flex items-center gap-1"><PlayCircle className="h-3.5 w-3.5" /> {v.metrics.views}</span>
-            </div>
-          </div>
-        ))}
-        {top5Videos.length === 0 && (
-          <div className="col-span-full text-center text-white/60 py-6">No videos match these filters.</div>
-        )}
-      </div>
+          ))}
+          {!loading && top5Videos.length === 0 && (
+            <div className="col-span-full text-center text-white/60 py-6">No videos match these filters.</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-/** Pending uploads (backend table) */
 function PendingUploadsTable({ rows, loading, onReview, onDelete }) {
   return (
     <div className="rounded-2xl bg-black/40 border border-white/10 overflow-hidden">
@@ -798,7 +829,6 @@ function PendingUploadsTable({ rows, loading, onReview, onDelete }) {
       </div>
 
       <div className="overflow-x-auto">
-        {/* Columns requested: Type | Author | Tags | Product | Created | Status | Action */}
         <table className="min-w-[860px] w-full text-sm">
           <thead className="bg-white/5 text-white/70">
             <tr className="text-left">
@@ -813,12 +843,9 @@ function PendingUploadsTable({ rows, loading, onReview, onDelete }) {
           </thead>
 
           <tbody className="divide-y divide-white/10 text-white">
-            {/* Loading state */}
             {loading && (
               <tr><td colSpan="7" className="py-10 text-center text-white/60">Loading…</td></tr>
             )}
-
-            {/* Rows */}
             {!loading && rows.map((row) => (
               <tr key={row.id} className="hover:bg-white/5">
                 <td className="py-3 pl-5 pr-4 capitalize">{row.type}</td>
@@ -851,8 +878,6 @@ function PendingUploadsTable({ rows, loading, onReview, onDelete }) {
                 </td>
               </tr>
             ))}
-
-            {/* Empty state */}
             {!loading && rows.length === 0 && (
               <tr><td colSpan="7" className="py-10 text-center text-white/60">Nothing pending.</td></tr>
             )}
@@ -863,7 +888,6 @@ function PendingUploadsTable({ rows, loading, onReview, onDelete }) {
   );
 }
 
-/** All content table (backend data only) with read-only review action */
 function AllContentTable({ rows, loading, onReview }) {
   return (
     <div className="rounded-2xl bg-black/40 border border-white/10 p-4">
@@ -875,8 +899,7 @@ function AllContentTable({ rows, loading, onReview }) {
         <table className="min-w-[1100px] w-full text-sm">
           <thead className="bg-white/5 text-white/70">
             <tr className="text-left">
-              <th className="py-3 pl-5 pr-4">ID</th>
-              <th className="py-3 px-4">Name</th>
+              <th className="py-3 px-4">Title</th>
               <th className="py-3 px-4">Type</th>
               <th className="py-3 px-4">Tag(s)</th>
               <th className="py-3 px-4">Product</th>
@@ -890,15 +913,11 @@ function AllContentTable({ rows, loading, onReview }) {
           </thead>
 
           <tbody className="divide-y divide-white/10 text-white">
-            {/* Loading */}
             {loading && (
               <tr><td colSpan="11" className="py-10 text-center text-white/60">Loading…</td></tr>
             )}
-
-            {/* Rows */}
             {!loading && rows.map((row) => (
               <tr key={row.id} className="hover:bg-white/5">
-                <td className="py-3 pl-5 pr-4">{row.id}</td>
                 <td className="py-3 px-4">{row.title}</td>
                 <td className="py-3 px-4">{row.type}</td>
                 <td className="py-3 px-4">{row.tags.map((t) => `#${t}`).join(", ")}</td>
@@ -921,8 +940,6 @@ function AllContentTable({ rows, loading, onReview }) {
                 </td>
               </tr>
             ))}
-
-            {/* Empty */}
             {!loading && rows.length === 0 && (
               <tr><td colSpan="11" className="py-10 text-center text-white/60">No content for these filters.</td></tr>
             )}
@@ -933,15 +950,13 @@ function AllContentTable({ rows, loading, onReview }) {
   );
 }
 
-/** Modal for reviewing PENDING items (approve/reject/delete) */
 function PendingReviewModal({ item, onClose, onApprove, onReject, onDelete, acting }) {
   if (!item) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
-      <div className="w-full max-w-sm rounded-2xl bg-[#111] border border-white/10 shadow-neon overflow-hidden my-6">
-        {/* Header */}
-        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3">
+      <div className="w-full max-w-md rounded-2xl bg-[#111] border border-white/10 shadow-neon overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="p-4 border-b border-white/10 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             {item.avatarUrl ? (
               <img src={item.avatarUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
@@ -960,8 +975,7 @@ function PendingReviewModal({ item, onClose, onApprove, onReject, onDelete, acti
           <button onClick={onClose} className="text-white/70 hover:text-white" title="Close">✕</button>
         </div>
 
-        {/* Body */}
-        <div className="p-4">
+        <div className="p-4 overflow-auto flex-1 min-h-0">
           {item.title && <h3 className="text-lg font-semibold">{item.title}</h3>}
           {item.description && <p className="mt-1 text-white/80">{item.description}</p>}
 
@@ -970,12 +984,18 @@ function PendingReviewModal({ item, onClose, onApprove, onReject, onDelete, acti
               <video
                 src={item.mediaUrl}
                 poster={item.posterUrl}
-                className="w-full h-full object-cover"
+                className="w-full max-h-[55vh] object-contain"
                 controls
                 playsInline
+                preload="metadata"
               />
             ) : (
-              <img src={item.mediaUrl} alt="" className="w-full h-auto object-cover" />
+              <img
+                src={item.mediaUrl}
+                alt=""
+                className="w-full max-h-[55vh] object-contain"
+                loading="lazy"
+              />
             )}
           </div>
 
@@ -991,8 +1011,7 @@ function PendingReviewModal({ item, onClose, onApprove, onReject, onDelete, acti
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="p-4 border-t border-white/10 flex flex-wrap items-center gap-2 justify-end">
+        <div className="p-4 border-t border-white/10 flex flex-wrap items-center gap-2 justify-end shrink-0">
           <button
             disabled={acting}
             onClick={() => onApprove(item)}
@@ -1020,14 +1039,12 @@ function PendingReviewModal({ item, onClose, onApprove, onReject, onDelete, acti
   );
 }
 
-/** Modal for reviewed items (approved/rejected) — READ ONLY */
-function ReviewedReadOnlyModal({ item, onClose }) {
+function ReviewedReadOnlyModal({ item, onClose, onDelete, acting }) {
   if (!item) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
-      <div className="w-full max-w-sm rounded-2xl bg-[#111] border border-white/10 shadow-neon overflow-hidden my-6">
-        {/* Header */}
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3">
+      <div className="w-full max-w-md rounded-2xl bg-[#111] border border-white/10 shadow-neon overflow-hidden">
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {item.avatarUrl ? (
@@ -1047,7 +1064,6 @@ function ReviewedReadOnlyModal({ item, onClose }) {
           <button onClick={onClose} className="text-white/70 hover:text-white" title="Close">✕</button>
         </div>
 
-        {/* Body */}
         <div className="p-4">
           {item.title && <h3 className="text-lg font-semibold">{item.title}</h3>}
           {item.description && <p className="mt-1 text-white/80">{item.description}</p>}
@@ -1057,12 +1073,18 @@ function ReviewedReadOnlyModal({ item, onClose }) {
               <video
                 src={item.mediaUrl}
                 poster={item.posterUrl}
-                className="w-full h-full object-cover"
+                className="w-full max-h-[58vh] object-contain"
                 controls
                 playsInline
+                preload="metadata"
               />
             ) : (
-              <img src={item.mediaUrl} alt="" className="w-full h-auto object-cover" />
+              <img
+                src={item.mediaUrl}
+                alt=""
+                className="w-full max-h-[58vh] object-contain"
+                loading="lazy"
+              />
             )}
           </div>
 
@@ -1075,28 +1097,92 @@ function ReviewedReadOnlyModal({ item, onClose }) {
                 {item.product}
               </span>
             )}
-            <span className="ml-auto text-xs px-2 py-1 rounded bg-white/5 border border-white/10 capitalize">
-              {item.status}
-            </span>
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                disabled={acting}
+                onClick={() => onDelete?.(item)}
+                className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 text-red-300 disabled:opacity-60"
+                title="Delete"
+              >
+                🗑️ <span className="text-xs">Delete</span>
+              </button>
+              <span className="text-xs px-2 py-1 rounded bg-white/5 border border-white/10 capitalize">
+                {item.status}
+              </span>
+            </div>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="p-3 border-t border-white/10 flex justify-end">
-          <button onClick={onClose} className="rounded-lg px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10">
-            Close
-          </button>
         </div>
       </div>
     </div>
   );
 }
 
+function ShortPreviewModal({ item, onClose }) {
+  if (!item) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3">
+      <div className="w-full max-w-md rounded-2xl bg-[#111] border border-white/10 shadow-neon overflow-hidden">
+        {/* Header (read-only) */}
+        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {item.author?.avatarUrl ? (
+              <img src={item.author.avatarUrl} alt={item.author.name} className="h-10 w-10 rounded-full object-cover" />
+            ) : (
+              <div className="h-10 w-10 rounded-full bg-white/10 grid place-items-center">👤</div>
+            )}
+            <div>
+              <div className="font-semibold">{item.author?.name || "User"}</div>
+              {item.createdAt && (
+                <div className="text-xs text-white/60">
+                  {new Date(item.createdAt).toLocaleString()}
+                </div>
+              )}
+            </div>
+          </div>
+          <button onClick={onClose} className="text-white/70 hover:text-white" title="Close">✕</button>
+        </div>
+
+        {/* Body (no action buttons) */}
+        <div className="p-4">
+          {item.title && <h3 className="text-lg font-semibold">{item.title}</h3>}
+
+          <div className="mt-3 rounded-xl overflow-hidden border border-white/10 bg-black">
+            <video
+              src={item.mediaUrl}
+              poster={item.posterUrl}
+              className="w-full max-h-[58vh] object-contain"
+              controls
+              playsInline
+              preload="metadata"
+            />
+          </div>
+
+          {/* Meta: tags, product, metrics */}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {(item.tags || []).map((t) => (
+              <span key={t} className="text-xs px-2 py-1 rounded-full bg-white/5 border border-white/10">#{t}</span>
+            ))}
+            {item.product && (
+              <span className="text-xs px-2 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-200/30">
+                {item.product}
+              </span>
+            )}
+            <span className="ml-auto text-xs text-white/70">
+              ❤️ {item.metrics?.likes ?? 0} · 💬 {item.metrics?.comments ?? 0} · ▶️ {item.metrics?.views ?? 0}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 /* =========================================================================================
-   CHART PRIMITIVES (unchanged UI)
+   CHART PRIMITIVES
 ========================================================================================= */
 
-/** Simple bars with average guideline (SVG) */
 function BarsWithAverage({ labels = [], data = [], avg = [], height = 200, pad = 28 }) {
   const max = Math.max(1, ...data, ...avg);
   const W = Math.max(360, labels.length * 42);
@@ -1114,11 +1200,9 @@ function BarsWithAverage({ labels = [], data = [], avg = [], height = 200, pad =
   return (
     <div className="w-full overflow-x-auto">
       <svg width={W} height={H} className="block">
-        {/* Axes */}
         <line x1={pad} y1={pad + innerH} x2={pad + innerW} y2={pad + innerH} stroke="currentColor" className="text-white/15" />
         <line x1={pad} y1={pad} x2={pad} y2={pad + innerH} stroke="currentColor" className="text-white/15" />
 
-        {/* Bars */}
         {data.map((v, i) => {
           const bx = x(i);
           const by = y(v);
@@ -1135,20 +1219,17 @@ function BarsWithAverage({ labels = [], data = [], avg = [], height = 200, pad =
           );
         })}
 
-        {/* Average line & points */}
         <path d={avgPath} fill="none" stroke="rgba(255,255,255,0.6)" strokeDasharray="4 3" strokeWidth="1.5" />
         {avg.map((v, i) => (
           <circle key={i} cx={pad + i * slot + slot / 2} cy={y(v)} r={2.5} fill="rgba(255,255,255,0.7)" />
         ))}
 
-        {/* X labels */}
         {labels.map((lab, i) => (
           <text key={lab} x={pad + i * slot + slot / 2} y={pad + innerH + 14} textAnchor="middle" fontSize="10" fill="rgba(255,255,255,0.6)">
             {lab}
           </text>
         ))}
 
-        {/* Legend */}
         <g transform={`translate(${pad}, ${pad - 10})`}>
           <rect x="0" y="-8" width="10" height="10" rx="2" fill="#FBB01A" />
           <text x="14" y="0" fontSize="11" fill="rgba(255,255,255,0.8)">Selected year</text>
@@ -1160,7 +1241,6 @@ function BarsWithAverage({ labels = [], data = [], avg = [], height = 200, pad =
   );
 }
 
-/** Donut (pie) chart (SVG) */
 function PieDonut({ data = [], size = 200, strokeWidth = 20 }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   const r = (size - strokeWidth) / 2;
@@ -1195,7 +1275,6 @@ function PieDonut({ data = [], size = 200, strokeWidth = 20 }) {
         ))}
       </g>
 
-      {/* Center label */}
       <g transform={`translate(${size / 2}, ${size / 2})`}>
         <text x="0" y="-2" textAnchor="middle" fontSize="14" fill="rgba(255,255,255,0.9)" className="font-semibold">
           {total}
