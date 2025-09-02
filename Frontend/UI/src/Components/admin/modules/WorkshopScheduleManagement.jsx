@@ -1,9 +1,8 @@
 // src/Components/admin/modules/WorkshopScheduleManagement.jsx
 import React, { useEffect, useState } from "react";
 
+/* -------- Inline API helpers (no separate api file needed) -------- */
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
-
-// --- API helpers ---
 async function jfetch(url, opts = {}) {
   const res = await fetch(url, {
     headers: { "Content-Type": "application/json" },
