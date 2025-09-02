@@ -92,6 +92,7 @@ export default function App() {
 
         <Route path="/home" element={<Home />} />
         <Route path="/products" element={<OurProducts />} />
+        <Route path="/community" element={<Community />} />
         <Route path="/farmRegistration" element ={<FarmRegistrationForm/>}/>
         <Route path="/hiveRegistration" element ={<HiveRegistrationForm/>}/>
 
