@@ -31,7 +31,7 @@ export default function FarmHarvestManagement() {
   useEffect(() => {
     if (activeTab === "farms" || activeTab === "overview" || activeTab === "hives") {
       axios
-        .get("http://localhost:4000/api/farms")
+        .get("http://localhost:3000/api/farms")
         .then((res) => {
           if (res.data.success) {
             setFarms(res.data.farms);
@@ -44,7 +44,7 @@ export default function FarmHarvestManagement() {
   // 🔹 View single farm details
   const handleViewFarm = async (farmId) => {
     try {
-      const res = await axios.get(`http://localhost:4000/api/farms/${farmId}`);
+      const res = await axios.get(`http://localhost:3000/api/farms/${farmId}`);
       if (res.data.success) {
         setSelectedFarm(res.data.farm);
       }
@@ -61,7 +61,7 @@ export default function FarmHarvestManagement() {
     if (!confirmAction) return;
 
     try {
-      const res = await axios.put(`http://localhost:4000/api/farms/${farmId}/status`, {
+      const res = await axios.put(`http://localhost:3000/api/farms/${farmId}/status`, {
         status: newStatus,
       });
 

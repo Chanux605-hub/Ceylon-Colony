@@ -71,7 +71,7 @@ export default function App() {
           <Route path="products"  element={<AdminProducts />} />
           <Route path="inventory" element={<AdminInventory />} />
           <Route path="workshops" element={<WorkshopScheduleManagement />} />
-        
+      
           <Route path="orders"    element={<OrderDeliveryManagement />} />
           <Route path="media"     element={<CustomerMediaManagement />} />
           <Route path="farm-harvest"     element={<FarmHarvestManagement />} />
