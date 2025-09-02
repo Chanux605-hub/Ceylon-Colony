@@ -3,7 +3,7 @@ import React, { useMemo, useState, useEffect } from "react";
 
 import { Link } from "react-router-dom";
 
-const API = "http://localhost:4000/api/products";
+const API = "http://localhost:3000/api/products";
 const asset = (file) => new URL(`../../assets/${file}`, import.meta.url).href;
 const PLACEHOLDER = asset("jar.jpeg"); // fallback image
 

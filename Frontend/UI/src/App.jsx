@@ -92,12 +92,8 @@ export default function App() {
 
         <Route path="/home" element={<Home />} />
         <Route path="/products" element={<OurProducts />} />
-<<<<<<< HEAD
         <Route path="/farmRegistration" element ={<FarmRegistrationForm/>}/>
         <Route path="/hiveRegistration" element ={<HiveRegistrationForm/>}/>
-=======
-        <Route path="/community" element={<Community />} />
->>>>>>> origin/Gima
 
 
          <Route path="/product/:id" element={<ProductDetails />} />
