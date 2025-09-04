@@ -12,6 +12,8 @@ import OurProducts from "./pages/OurProducts.jsx"
 import About from "./pages/About.jsx";
 import Workshops from "./pages/Workshops.jsx";
 
+import BlogPage from "./pages/BlogPage.jsx";
+
 
 // Module pages (rendered inside Layout's <Outlet/>)
 import AdminProducts from "./Components/admin/modules/AdminProducts.jsx";
@@ -23,6 +25,9 @@ import AdminDahboard from "./Components/admin/AdminDahboard.jsx";
 import FarmRegistrationForm from "./HarvestManagement/FarmRegistrationForm.jsx";
 import HiveRegistrationForm from "./HarvestManagement/HiveRegistration.jsx";
 import FarmHarvestManagement from "./HarvestManagement/FarmHarvestManagement.jsx";
+import AddBlogForm from "./HarvestManagement/Blog/AddBlogForm.jsx";
+import ManageBlogs from "./HarvestManagement/Blog/ManageBlog.jsx";
+
 
 
 // --- Simple auth helpers ---
@@ -56,6 +61,7 @@ export default function App() {
         {/* Public marketing page */}
         <Route path="/about" element={<About />} />
         <Route path="/workshops" element={<Workshops />} />
+        <Route path="blogs"  element={<BlogPage />} />
 
         {/* Admin shell (protected) */}
         <Route
@@ -71,11 +77,16 @@ export default function App() {
           <Route path="products"  element={<AdminProducts />} />
           <Route path="inventory" element={<AdminInventory />} />
           <Route path="workshops" element={<WorkshopScheduleManagement />} />
+          
+          
+          <Route path="blogs" element={<ManageBlogs />} />
+
       
+
           <Route path="orders"    element={<OrderDeliveryManagement />} />
           <Route path="media"     element={<CustomerMediaManagement />} />
           <Route path="farm-harvest"     element={<FarmHarvestManagement />} />
-
+          <Route path="addblog" element={<AddBlogForm />} />    
         
         </Route>
 
