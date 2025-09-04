@@ -193,7 +193,7 @@ export default function Workshops() {
                       <div>📅 {w.date} — {w.time}{w.duration ? ` (${w.duration})` : ""}</div>
                       <div>📍 {w.location}</div>
                       <div>
-                        💰 {Number(w.price || 0).toLocaleString()} LKR{" "}
+                        💰 {w.price || "N/A"}{" "}
                         <span className="text-neutral-500">(per person)</span>
                       </div>
                     </div>
@@ -265,7 +265,7 @@ export default function Workshops() {
                 <div>📅 {open.date} — {open.time}{open.duration ? ` (${open.duration})` : ""}</div>
                 <div>📍 {open.location}</div>
                 <div>🎓 Level: {open.level}</div>
-                <div>💰 {Number(open.price || 0).toLocaleString()} LKR per person</div>
+                <div>💰 {open.price || "N/A"} per person</div>
               </div>
               <div className="mt-6 flex items-center gap-2">
                 <button

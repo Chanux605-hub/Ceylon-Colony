@@ -3,7 +3,14 @@ import Workshop from "../models/Workshop.js";
 // CREATE
 export const create = async (req, res) => {
   try {
-    const doc = await Workshop.create(req.body);
+    // Auto-generate unique workshopId
+    const workshopId = `WS-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    const doc = await Workshop.create({
+      ...req.body,
+      workshopId,   // ensure it's always set
+    });
+
     res.status(201).json(doc);
   } catch (err) {
     res.status(400).json({ error: err.message });
