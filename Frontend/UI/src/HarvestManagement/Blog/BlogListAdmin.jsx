@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { CalendarDays, Edit, Trash2, Eye, Search } from "lucide-react";
 
-export default function BlogListAdmin({ onEdit, onView }) {
+export default function BlogListAdmin({ onEdit, onView, onDelete }) {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -11,10 +11,6 @@ export default function BlogListAdmin({ onEdit, onView }) {
   const categories = ["all", "Health", "Workshops", "News"];
 
   useEffect(() => {
-    fetchBlogs();
-  }, []);
-
-  const fetchBlogs = () => {
     axios
       .get("http://localhost:3000/api/blogs")
       .then((res) => {
@@ -25,20 +21,7 @@ export default function BlogListAdmin({ onEdit, onView }) {
         console.error("Error fetching blogs:", err);
         setLoading(false);
       });
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this blog?")) return;
-
-    try {
-      await axios.delete(`http://localhost:3000/api/blogs/delete/${id}`);
-      alert("✅ Blog deleted successfully");
-      fetchBlogs(); // refresh list
-    } catch (err) {
-      alert("❌ Error deleting blog");
-      console.error(err);
-    }
-  };
+  }, []);
 
   const filteredBlogs = blogs.filter((blog) => {
     const matchesSearch =
@@ -51,10 +34,14 @@ export default function BlogListAdmin({ onEdit, onView }) {
 
   const getCategoryColor = (category) => {
     switch (category) {
-      case "Health": return "bg-emerald-500";
-      case "Workshops": return "bg-amber-500";
-      case "News": return "bg-blue-500";
-      default: return "bg-gray-500";
+      case "Health":
+        return "bg-emerald-500";
+      case "Workshops":
+        return "bg-amber-500";
+      case "News":
+        return "bg-blue-500";
+      default:
+        return "bg-gray-500";
     }
   };
 
@@ -90,67 +77,83 @@ export default function BlogListAdmin({ onEdit, onView }) {
         {loading ? (
           <p className="text-gray-400">Loading blogs...</p>
         ) : filteredBlogs.length > 0 ? (
-          filteredBlogs.map((blog) => (
-            <div
-              key={blog._id}
-              className="bg-black/40 rounded-xl border border-white/10 hover:border-[#FBB01A]/50 transition overflow-hidden group hover:shadow-lg hover:shadow-[#FBB01A]/10 flex flex-col"
-            >
-              {/* Image */}
-              <div className="relative">
-                <img
-                  src={blog.coverImage}
-                  alt={blog.title}
-                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform"
-                />
-                <span
-                  className={`absolute top-3 left-3 px-3 py-1 text-xs font-semibold rounded-full text-white ${getCategoryColor(blog.category)}`}
-                >
-                  {blog.category}
-                </span>
-              </div>
+          filteredBlogs.map((blog) => {
+            const showUpdated =
+              blog.updatedAt && blog.updatedAt !== blog.createdAt
+                ? new Date(blog.updatedAt).toLocaleDateString()
+                : null;
 
-              {/* Content + Actions */}
-              <div className="p-5 flex flex-col flex-grow">
-                <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-[#FBB01A] transition">
-                  {blog.title}
-                </h3>
-                <p className="text-gray-400 text-sm mb-4 line-clamp-3 flex-grow">
-                  {blog.content}
-                </p>
+            const publishedDate = new Date(
+              blog.createdAt
+            ).toLocaleDateString();
 
-                <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
-                  <div className="flex items-center gap-1">
-                    <CalendarDays className="w-3 h-3 text-[#FBB01A]" />
-                    <span>{new Date(blog.createdAt).toLocaleDateString()}</span>
+            return (
+              <div
+                key={blog._id}
+                className="bg-black/40 rounded-xl border border-white/10 hover:border-[#FBB01A]/50 transition overflow-hidden group hover:shadow-lg hover:shadow-[#FBB01A]/10 flex flex-col"
+              >
+                {/* Image */}
+                <div className="relative">
+                  <img
+                    src={blog.coverImage}
+                    alt={blog.title}
+                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform"
+                  />
+                  <span
+                    className={`absolute top-3 left-3 px-3 py-1 text-xs font-semibold rounded-full text-white ${getCategoryColor(
+                      blog.category
+                    )}`}
+                  >
+                    {blog.category}
+                  </span>
+                </div>
+
+                {/* Content + Actions */}
+                <div className="p-5 flex flex-col flex-grow">
+                  <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-[#FBB01A] transition">
+                    {blog.title}
+                  </h3>
+                  <p className="text-gray-400 text-sm mb-4 line-clamp-3 flex-grow">
+                    {blog.content}
+                  </p>
+
+                  {/* Date */}
+                  <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                    <div className="flex items-center gap-1">
+                      <CalendarDays className="w-3 h-3 text-[#FBB01A]" />
+                      {showUpdated ? (
+                        <span>Updated on {showUpdated}</span>
+                      ) : (
+                        <span>Published on {publishedDate}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions stick to bottom */}
+                  <div className="mt-auto flex gap-2">
+                    <button
+                      onClick={() => onEdit(blog._id)}
+                      className="flex-1 px-3 py-2 bg-[#FBB01A] hover:bg-[#FBB01A]/80 text-black font-medium rounded-lg flex items-center justify-center gap-1"
+                    >
+                      <Edit className="w-4 h-4" /> Edit
+                    </button>
+                    <button
+                      onClick={() => onView(blog._id)}
+                      className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg flex items-center justify-center"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => onDelete(blog._id)}
+                      className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center justify-center"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-
-                {/* Actions */}
-                <div className="mt-auto flex gap-2">
-                  <button
-                    onClick={() => onEdit(blog._id)}
-                    className="flex-1 px-3 py-2 bg-[#FBB01A] hover:bg-[#FBB01A]/80 text-black font-medium rounded-lg flex items-center justify-center gap-1"
-                  >
-                    <Edit className="w-4 h-4" /> Edit
-                  </button>
-                  <button
-                    onClick={() => onView(blog._id)}   // ✅ open BlogDetailAdmin
-                    className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg flex items-center justify-center"
-                    >
-                    <Eye className="w-4 h-4" />
-                 </button>
-
-
-                  <button
-                    onClick={() => handleDelete(blog._id)}
-                    className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center justify-center"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           <p className="text-center text-gray-400">No blogs found</p>
         )}

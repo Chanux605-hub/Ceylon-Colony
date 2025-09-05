@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
-const API = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/+$/, "");
+
+const API = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(
+  /\/+$/,
+  ""
+);
 
 export default function EditBlogForm({ blogId, onCancel, onUpdated }) {
   const [form, setForm] = useState(null);
@@ -12,7 +16,8 @@ export default function EditBlogForm({ blogId, onCancel, onUpdated }) {
       .then((res) => res.json())
       .then((json) => {
         if (json.success) setForm(json.data);
-      });
+      })
+      .catch((err) => console.error("Error fetching blog:", err));
   }, [blogId]);
 
   const handleChange = (e) => {
@@ -27,7 +32,13 @@ export default function EditBlogForm({ blogId, onCancel, onUpdated }) {
     if (!form) return;
 
     const data = new FormData();
-    Object.keys(form).forEach((key) => data.append(key, form[key]));
+
+    // ✅ Prevent sending invalid publishedAt
+    Object.keys(form).forEach((key) => {
+      if (key === "publishedAt" && (!form[key] || form[key] === "null")) return;
+      data.append(key, form[key]);
+    });
+
     if (file) data.append("coverImage", file);
 
     try {

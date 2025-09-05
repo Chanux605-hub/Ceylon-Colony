@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { CalendarDays } from "lucide-react";
 
-export default function BlogDetail({ blogId, onBack }) {
+export default function BlogDetail({ blogId }) {
   const [blog, setBlog] = useState(null);
 
   useEffect(() => {
@@ -20,25 +20,25 @@ export default function BlogDetail({ blogId, onBack }) {
 
   if (!blog) return <p className="text-center text-gray-400">Loading...</p>;
 
+  // pick updatedAt if it's different from createdAt
+  const showUpdated =
+    blog.updatedAt && blog.updatedAt !== blog.createdAt
+      ? new Date(blog.updatedAt).toLocaleDateString()
+      : null;
+
+  const publishedDate = new Date(blog.createdAt).toLocaleDateString();
+
   return (
     <div className="max-w-5xl mx-auto">
-      {/* Back Button */}
-      <button
-        onClick={onBack}
-        className="mb-6 px-5 py-2 bg-[#FBB01A] text-black font-semibold rounded-lg shadow hover:bg-yellow-500 transition"
-      >
-        ← Back
-      </button>
-
       {/* Blog Card */}
       <div className="bg-black/40 border border-[#FBB01A]/40 rounded-2xl shadow-lg overflow-hidden">
         {/* Cover Image */}
         {blog.coverImage && (
-          <div className="w-full flex justify-center bg-black/60">
+          <div className="w-full flex justify-center bg-black">
             <img
               src={blog.coverImage}
               alt={blog.title}
-              className="w-full h-[350px] object-cover"
+              className="w-full max-h-[500px] object-contain"
             />
           </div>
         )}
@@ -57,7 +57,11 @@ export default function BlogDetail({ blogId, onBack }) {
             </span>
             <span className="flex items-center gap-1">
               <CalendarDays size={16} className="text-[#FBB01A]" />
-              {new Date(blog.createdAt).toLocaleDateString()}
+              {showUpdated ? (
+                <span>Updated on {showUpdated}</span>
+              ) : (
+                <span>Published on {publishedDate}</span>
+              )}
             </span>
           </div>
 
