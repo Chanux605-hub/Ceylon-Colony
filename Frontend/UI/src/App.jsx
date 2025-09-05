@@ -80,6 +80,9 @@ export default function App() {
           
           
           <Route path="blogs" element={<ManageBlogs />} />
+
+      
+
           <Route path="orders"    element={<OrderDeliveryManagement />} />
           <Route path="media"     element={<CustomerMediaManagement />} />
           <Route path="farm-harvest"     element={<FarmHarvestManagement />} />
