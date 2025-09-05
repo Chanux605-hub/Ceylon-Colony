@@ -9,7 +9,7 @@ export default function BlogDetail({ blogId, onBack }) {
     if (!blogId) return;
 
     axios
-      .get(`http://localhost:3000/api/blogs/${blogId}`) // ✅ backend API
+      .get(`http://localhost:3000/api/blogs/${blogId}`)
       .then((res) => {
         if (res.data.success) {
           setBlog(res.data.data);
@@ -19,6 +19,14 @@ export default function BlogDetail({ blogId, onBack }) {
   }, [blogId]);
 
   if (!blog) return <p className="text-center text-black">Loading...</p>;
+
+  // ✅ Decide which date to show
+  const showUpdated =
+    blog.updatedAt && blog.updatedAt !== blog.createdAt
+      ? new Date(blog.updatedAt).toLocaleDateString()
+      : null;
+
+  const publishedDate = new Date(blog.createdAt).toLocaleDateString();
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -31,7 +39,7 @@ export default function BlogDetail({ blogId, onBack }) {
       </button>
 
       <div className="bg-white rounded-2xl shadow-md overflow-hidden">
-        {/* Full Cover Image */}
+        {/* Cover Image */}
         {blog.coverImage && (
           <div className="w-full flex justify-center">
             <img
@@ -55,7 +63,11 @@ export default function BlogDetail({ blogId, onBack }) {
             </span>
             <span className="flex items-center gap-1 text-gray-500">
               <CalendarDays size={16} className="text-[#FBB01A]" />
-              {new Date(blog.createdAt).toLocaleDateString()}
+              {showUpdated ? (
+                <span>Updated on {showUpdated}</span>
+              ) : (
+                <span>Published on {publishedDate}</span>
+              )}
             </span>
           </div>
 

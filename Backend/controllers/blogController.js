@@ -86,14 +86,20 @@ export const updateBlog = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // pick up body + optional file
     const updateData = { ...req.body };
+
+    //  Fix: Handle publishedAt properly
+    if (!updateData.publishedAt || updateData.publishedAt === "null") {
+      delete updateData.publishedAt;
+    }
+
+    // Handle cover image upload if file exists
     if (req.file) {
-      updateData.coverImage = req.file.path; // if using multer/cloudinary
+      updateData.coverImage = req.file.path;
     }
 
     const blog = await blogModel.findOneAndUpdate(
-      { $or: [{ _id: id }, { blogId: id }] }, // allow both _id and blogId
+      { $or: [{ _id: id }, { blogId: id }] },
       updateData,
       { new: true }
     );
@@ -108,6 +114,7 @@ export const updateBlog = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
 
 /* DELETE BLOG */
 export const deleteBlog = async (req, res) => {
