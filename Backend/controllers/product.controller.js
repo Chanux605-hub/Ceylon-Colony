@@ -5,7 +5,7 @@ export async function list(req, res, next) {
   try {
     const { q, category, sort = "createdAt:desc", page = 1, limit = 12 } = req.query;
 
-    
+
     const [sortField, sortDir] = String(sort).split(":");
     const filter = {};
     if (q) filter.name = { $regex: q, $options: "i" };
