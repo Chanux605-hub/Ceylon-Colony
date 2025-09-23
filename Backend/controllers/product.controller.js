@@ -8,6 +8,8 @@ export async function list(req, res, next) {
 
     const [sortField, sortDir] = String(sort).split(":");
     const filter = {};
+
+    
     if (q) filter.name = { $regex: q, $options: "i" };
     if (category) filter.category = category;
 
