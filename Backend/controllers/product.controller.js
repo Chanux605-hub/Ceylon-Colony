@@ -10,6 +10,8 @@ export async function list(req, res, next) {
     if (q) filter.name = { $regex: q, $options: "i" };
     if (category) filter.category = category;
 
+    
+
     const pageNum = Math.max(1, Number(page));
     const pageSize = Math.max(1, Number(limit));
     const skip = (pageNum - 1) * pageSize;
