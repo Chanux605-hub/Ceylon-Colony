@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from "react";
-<<<<<<< HEAD
-=======
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from "recharts";
->>>>>>> origin/Luhith
 import axios from "axios";
 import {
   Download,
@@ -21,14 +18,11 @@ export default function FarmHarvestManagement() {
   const [farms, setFarms] = useState([]);
   const [selectedFarm, setSelectedFarm] = useState(null);
 
-<<<<<<< HEAD
-=======
 // Hive states
   const [hives, setHives] = useState([]);
   const [hiveStats, setHiveStats] = useState({ total: 0, productive: 0, lowProductive: 0 });
   const [hiveAlerts, setHiveAlerts] = useState({ overdueInspections: [], lowProductive: [] });
 
->>>>>>> origin/Luhith
   const tabs = [
     { id: "overview", label: "Overview", icon: Leaf },
     { id: "farms", label: "Farms", icon: Building },
@@ -39,19 +33,11 @@ export default function FarmHarvestManagement() {
     { id: "actions", label: "Admin Actions", icon: Tag },
   ];
 
-<<<<<<< HEAD
-  // 🔹 Fetch farms when "farms" tab is active
-  useEffect(() => {
-    if (activeTab === "farms" || activeTab === "overview" || activeTab === "hives") {
-      axios
-        .get("http://localhost:4000/api/farms")
-=======
   // Fetch farms when "farms" tab is active
   useEffect(() => {
     if (activeTab === "farms" || activeTab === "overview" || activeTab === "hives") {
       axios
         .get("http://localhost:3000/api/farms")
->>>>>>> origin/Luhith
         .then((res) => {
           if (res.data.success) {
             setFarms(res.data.farms);
@@ -61,12 +47,6 @@ export default function FarmHarvestManagement() {
     }
   }, [activeTab]);
 
-<<<<<<< HEAD
-  // 🔹 View single farm details
-  const handleViewFarm = async (farmId) => {
-    try {
-      const res = await axios.get(`http://localhost:4000/api/farms/${farmId}`);
-=======
   // 🔹 Fetch hive stats & list
   useEffect(() => {
     if (activeTab === "hives" || activeTab === "overview") {
@@ -88,7 +68,6 @@ export default function FarmHarvestManagement() {
   const handleViewFarm = async (farmId) => {
     try {
       const res = await axios.get(`http://localhost:3000/api/farms/${farmId}`);
->>>>>>> origin/Luhith
       if (res.data.success) {
         setSelectedFarm(res.data.farm);
       }
@@ -97,8 +76,6 @@ export default function FarmHarvestManagement() {
     }
   };
 
-<<<<<<< HEAD
-=======
   // 🔹 Update farm status (activate/deactivate)
   const handleUpdateFarmStatus = async (farmId, newStatus) => {
     const confirmAction = window.confirm(
@@ -125,7 +102,6 @@ export default function FarmHarvestManagement() {
     }
   };
 
->>>>>>> origin/Luhith
   return (
     <div className="p-6 text-white">
       {/* Header */}
@@ -195,11 +171,7 @@ export default function FarmHarvestManagement() {
                   <th className="px-4 py-2">District</th>
                   <th className="px-4 py-2">Hives</th>
                   <th className="px-4 py-2">Status</th>
-<<<<<<< HEAD
-                  <th className="px-4 py-2">Actions</th>
-=======
                   <th className="px-9 py-2">Actions</th>
->>>>>>> origin/Luhith
                 </tr>
               </thead>
               <tbody>
@@ -218,22 +190,13 @@ export default function FarmHarvestManagement() {
                     >
                       {farm.status}
                     </td>
-<<<<<<< HEAD
-                    <td className="px-4 py-2 flex gap-2">
-=======
                     <td className="px-4 py-2 flex gap-10">
->>>>>>> origin/Luhith
                       <button
                         onClick={() => handleViewFarm(farm._id)}
                         className="text-blue-400 hover:underline"
                       >
                         View
                       </button>
-<<<<<<< HEAD
-                      <button className="text-red-400 hover:underline">
-                        Deactivate
-                      </button>
-=======
 
                       {farm.status === "Active" ? (
                       <button
@@ -250,7 +213,6 @@ export default function FarmHarvestManagement() {
                         Activate
                       </button>
                     )}
->>>>>>> origin/Luhith
                     </td>
                   </tr>
                 ))}
@@ -264,43 +226,6 @@ export default function FarmHarvestManagement() {
               </tbody>
             </table>
 
-<<<<<<< HEAD
-            {/* 🔹 Farm Details Modal */}
-            {selectedFarm && (
-              <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-                <div className="bg-[#1A1A1A] p-6 rounded-lg w-[500px] shadow-lg">
-                  <h3 className="text-xl font-bold mb-4">
-                    {selectedFarm.farmName}
-                  </h3>
-                  <p><strong>Owner:</strong> {selectedFarm.owner}</p>
-                  <p><strong>Phone:</strong> {selectedFarm.phone}</p>
-                  <p><strong>Email:</strong> {selectedFarm.email}</p>
-                  <p>
-                    <strong>Address:</strong> {selectedFarm.address},{" "}
-                    {selectedFarm.district}
-                  </p>
-                  <p><strong>Size:</strong> {selectedFarm.size} acres</p>
-                  <p><strong>Hives:</strong> {selectedFarm.numHives}</p>
-                  <p>
-                    <strong>Hive Types:</strong>{" "}
-                    {selectedFarm.hiveTypes?.join(", ")}
-                  </p>
-                  <p><strong>Flora:</strong> {selectedFarm.flora}</p>
-                  <p>
-                    <strong>Date Established:</strong>{" "}
-                    {selectedFarm.dateEstablished
-                      ? new Date(selectedFarm.dateEstablished).toDateString()
-                      : "--"}
-                  </p>
-                  <p>
-                    <strong>Expected Yield:</strong>{" "}
-                    {selectedFarm.expectedAnnualYield} kg
-                  </p>
-                  <div className="mt-4 flex justify-end">
-                    <button
-                      onClick={() => setSelectedFarm(null)}
-                      className="bg-red-600 px-4 py-2 rounded hover:bg-red-700"
-=======
             {/*  Farm Details Modal */}
             {selectedFarm && (
               <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
@@ -392,7 +317,6 @@ export default function FarmHarvestManagement() {
                     <button
                       onClick={() => setSelectedFarm(null)}
                       className="bg-red-600 hover:bg-red-700 px-5 py-2 rounded text-white font-medium"
->>>>>>> origin/Luhith
                     >
                       Close
                     </button>
@@ -400,36 +324,6 @@ export default function FarmHarvestManagement() {
                 </div>
               </div>
             )}
-<<<<<<< HEAD
-          </div>
-        )}
-
-        {/* 🔹 Hives Tab */}
-        {activeTab === "hives" && (
-          <div>
-            <h2 className="text-lg font-semibold mb-4">Hive Management Overview</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-              <div>
-                <p className="text-sm text-gray-400">Total Hives</p>
-                <p className="text-xl font-bold">
-                  {farms.reduce((acc, f) => acc + (f.numHives || 0), 0)}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-400">Productive</p>
-                <p className="text-xl font-bold text-green-400">--</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-400">Low Productive</p>
-                <p className="text-xl font-bold text-red-400">--</p>
-              </div>
-            </div>
-            <div className="mt-6 h-40 flex items-center justify-center text-gray-500">
-              🐝 Pie/Donut Chart goes here
-            </div>
-          </div>
-        )}
-=======
 
           </div>
         )}
@@ -554,7 +448,6 @@ export default function FarmHarvestManagement() {
               </ul>
             </div>
           )}
->>>>>>> origin/Luhith
 
         {/* 🔹 Analytics Tab */}
         {activeTab === "analytics" && (

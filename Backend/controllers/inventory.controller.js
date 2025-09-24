@@ -1,5 +1,6 @@
 // Backend/controllers/inventory.controller.js
 import Inventory from "../models/Inventory.js";
+import Product from "../models/Product.js"; 
 
 // GET /api/inventory
 export async function list(req, res, next) {
@@ -56,6 +57,13 @@ export async function update(req, res, next) {
     });
 
     if (!doc) return res.status(404).json({ message: "Not found" });
+
+    // 🔹 Sync with Product.inStock flag (true if stock > 0)
+    await Product.findOneAndUpdate(
+      { inventoryId: doc._id },
+      { inStock: doc.stock > 0 }
+    );
+
     res.json(doc);
   } catch (err) {
     next(err);

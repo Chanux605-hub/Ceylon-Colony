@@ -1,23 +1,13 @@
-<<<<<<< HEAD
-// src/components/products/ProductCatalogue.jsx
-import React, { useMemo, useState, useEffect } from "react";
-
-import { Link } from "react-router-dom";
-=======
 import React, { useMemo, useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
 import { StoreContext } from '../../context/StoreContext';
->>>>>>> origin/Luhith
 
 const API = "http://localhost:3000/api/products";
 const asset = (file) => new URL(`../../assets/${file}`, import.meta.url).href;
 const PLACEHOLDER = asset("jar.jpeg"); // fallback image
 
 export default function ProductCatalogue() {
-<<<<<<< HEAD
-=======
   const { addToCart, cartItems } = useContext(StoreContext);
->>>>>>> origin/Luhith
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -211,24 +201,6 @@ export default function ProductCatalogue() {
                     <p className="text-white/70 text-sm">{p.weight}</p>
                   )}
 
-<<<<<<< HEAD
-                  
-                 <div className="mt-3 flex items-center justify-between">
-                <span className="text-[#F28C28] font-semibold">
-                  Rs {p.price.toLocaleString()}
-                </span>
-
-                <Link
-                  to={`/product/${p.id}`}  /* or p.slug if you have it */
-                  className="rounded-full bg-[#FBB01A] text-black px-3 py-1.5 text-sm font-semibold hover:opacity-90"
-                >
-                  View
-                </Link>
-              </div>
-
-
-
-=======
                   <div className="mt-3 flex items-center justify-between">
                     <span className="text-[#F28C28] font-semibold">
                       Rs {p.price.toLocaleString()}
@@ -255,7 +227,6 @@ export default function ProductCatalogue() {
                       In cart: {cartItems[p.id]}
                     </div>
                   )}
->>>>>>> origin/Luhith
                 </div>
               </article>
             ))
@@ -268,8 +239,4 @@ export default function ProductCatalogue() {
       </div>
     </section>
   );
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/Luhith

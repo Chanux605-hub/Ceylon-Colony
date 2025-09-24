@@ -54,36 +54,6 @@ export default function ProductDetails() {
     };
   }, [id]);
 
-<<<<<<< HEAD
-  // ✅ Add-to-Cart handler
-const handleAddToCart = async () => {
-  if (!product?.inventoryId?._id) {
-    alert("This product is not linked to inventory");
-    return;
-  }
-  try {
-    const res = await fetch(
-      `${API_BASE}/api/inventory/${product.inventoryId._id}/reduce`,
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ qty }),
-      }
-    );
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(body.message || res.statusText);
-    }
-    const updated = await res.json();
-    alert(`Added ${qty} to cart ✔. Remaining stock: ${updated.stock}`);
-  } catch (err) {
-    alert("Could not add to cart: " + err.message);
-  }
-};
-
-
-=======
->>>>>>> origin/Luhith
   // normalize fields so the UI is stable
   const product = useMemo(() => {
     if (!data) return null;
@@ -329,47 +299,9 @@ const handleAddToCart = async () => {
                 </button>
               </div>
 
-<<<<<<< HEAD
-
-
-
-<div className="flex flex-wrap gap-3 items-center">
-  <div className="inline-flex items-center rounded-xl overflow-hidden border border-white/10">
-    <button
-      onClick={() => setQty((q) => Math.max(1, q - 1))}
-      className="px-3 py-2 bg-white/5 hover:bg-white/10"
-    >
-      −
-    </button>
-    <div className="px-4 py-2 bg-black/60">{qty}</div>
-    <button
-      onClick={() => setQty((q) => q + 1)}
-      className="px-3 py-2 bg-white/5 hover:bg-white/10"
-    >
-      +
-    </button>
-  </div>
-
-  {/* ✅ Corrected Add to Cart */}
-  <button
-    onClick={handleAddToCart}
-    disabled={!product?.inventoryId || (product.inventoryId.stock ?? 0) <= 0}
-    className="flex-1 min-w-[180px] px-5 py-3 rounded-xl bg-amber-400 text-black font-semibold hover:brightness-95 disabled:opacity-50"
-  >
-    Add to Cart
-  </button>
-
-  <button className="px-5 py-3 rounded-xl border border-white/15 hover:bg-white/10">
-    Buy Now
-  </button>
-</div>
-
-
-=======
               <button className="flex-1 min-w-[180px] px-5 py-3 rounded-xl bg-amber-400 text-black font-semibold hover:brightness-95">
                 Add to Cart
               </button>
->>>>>>> origin/Luhith
               <button className="px-5 py-3 rounded-xl border border-white/15 hover:bg-white/10">
                 Buy Now
               </button>

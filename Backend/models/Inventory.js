@@ -16,10 +16,11 @@ inventorySchema.set("toJSON", {
   virtuals: true,
   versionKey: false,
   transform: (_doc, ret) => {
-    ret.id = ret._id.toString();
-    delete ret._id;
+    ret.id = ret._id.toString();   // keep short id for frontend
+    ret._id = ret._id.toString();  // ✅ also keep real MongoDB _id
   },
 });
+
 
 const Inventory = mongoose.model("Inventory", inventorySchema);
 export default Inventory;

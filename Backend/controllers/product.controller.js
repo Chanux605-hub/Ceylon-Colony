@@ -1,4 +1,5 @@
 import Product from "../models/Product.js";
+import Inventory from "../models/Inventory.js";
 
 // GET /api/products
 export async function list(req, res, next) {
@@ -52,7 +53,8 @@ export async function create(req, res, next) {
       return res.status(400).json({ message: "name and price are required" });
     }
 
-    const doc = await Product.create({
+    // 1. Create product first (without inventoryId)
+    const product = await Product.create({
       name: b.name?.trim(),
       category: b.category || "",
       weight: b.weight || "",
@@ -68,10 +70,23 @@ export async function create(req, res, next) {
       attributes: b.attributes || {},
       rating: b.rating || {},
       bestseller: !!b.bestseller,
-      inventoryId: b.inventoryId || null,
     });
 
-    res.status(201).json(doc);
+    // 2. Auto-create inventory for this product
+    const inventory = await Inventory.create({
+      name: product.name,
+      category: product.category,
+      source: "In-house",
+      stock: 0,       // default
+      reorder: 10,    // default
+      img: product.imageUrl || "", // fallback to product image
+    });
+
+    // 3. Link product → inventory
+    product.inventoryId = inventory._id;
+    await product.save();
+
+    res.status(201).json(product);
   } catch (err) {
     next(err);
   }
@@ -102,8 +117,15 @@ export async function remove(req, res, next) {
   try {
     const doc = await Product.findByIdAndDelete(req.params.id);
     if (!doc) return res.status(404).json({ message: "Not found" });
+
+    // ✅ also delete linked inventory
+    if (doc.inventoryId) {
+      await Inventory.findByIdAndDelete(doc.inventoryId);
+    }
+
     res.json({ ok: true });
   } catch (err) {
     next(err);
   }
 }
+
