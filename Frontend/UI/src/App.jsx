@@ -3,10 +3,18 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // Adjust this path to match your real file location:
 import ModernLogin from "./Components/ModernLogin.jsx";
+
 import AdminLayout from "./Components/admin/AdminLayout.jsx";
 import Home from "./pages/Home.jsx"
 import OurProducts from "./pages/OurProducts.jsx"
 import Community from "./pages/Community.jsx"
+
+
+import About from "./pages/About.jsx";
+import Workshops from "./pages/Workshops.jsx";
+
+import BlogPage from "./pages/BlogPage.jsx";
+
 
 // Module pages (rendered inside Layout's <Outlet/>)
 import AdminProducts from "./Components/admin/modules/AdminProducts.jsx";
@@ -19,6 +27,9 @@ import AdminDahboard from "./Components/admin/AdminDahboard.jsx";
 import FarmRegistrationForm from "./HarvestManagement/FarmRegistrationForm.jsx";
 import HiveRegistrationForm from "./HarvestManagement/HiveRegistration.jsx";
 import FarmHarvestManagement from "./HarvestManagement/FarmHarvestManagement.jsx";
+import AddBlogForm from "./HarvestManagement/Blog/AddBlogForm.jsx";
+import ManageBlogs from "./HarvestManagement/Blog/ManageBlog.jsx";
+
 
 
 
@@ -55,6 +66,10 @@ export default function App() {
       <Routes>
         {/* Login (public only) */}
         <Route path="/login" element={<ModernLogin brand="Ceylon Colony" />} />
+        {/* Public marketing page */}
+        <Route path="/about" element={<About />} />
+        <Route path="/workshops" element={<Workshops />} />
+        <Route path="blogs"  element={<BlogPage />} />
 
         {/* Admin shell (protected) */}
         <Route
@@ -71,11 +86,16 @@ export default function App() {
           <Route path="inventory" element={<AdminInventory />} />
           <Route path="stock-analysis" element={<AdminStockAnalysis />} />
           <Route path="workshops" element={<WorkshopScheduleManagement />} />
-        
+          
+          
+          <Route path="blogs" element={<ManageBlogs />} />
+
+      
+
           <Route path="orders"    element={<OrderDeliveryManagement />} />
           <Route path="media"     element={<CustomerMediaManagement />} />
           <Route path="farm-harvest"     element={<FarmHarvestManagement />} />
-
+          <Route path="addblog" element={<AddBlogForm />} />    
         
         </Route>
 
