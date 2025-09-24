@@ -13,11 +13,19 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^2.2.0",
+    "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+<<<<<<< HEAD
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.17.2"
+=======
+    "mongoose": "^8.17.2",
+    "multer": "^2.0.2",
+    "multer-storage-cloudinary": "^4.0.0",
+    "recharts": "^3.1.2"
+>>>>>>> ae3ad73e01efe8e97025e5cc782f54f0176240fa
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from "recharts";
 import axios from "axios";
 import {
   Download,
@@ -17,6 +18,11 @@ export default function FarmHarvestManagement() {
   const [farms, setFarms] = useState([]);
   const [selectedFarm, setSelectedFarm] = useState(null);
 
+// Hive states
+  const [hives, setHives] = useState([]);
+  const [hiveStats, setHiveStats] = useState({ total: 0, productive: 0, lowProductive: 0 });
+  const [hiveAlerts, setHiveAlerts] = useState({ overdueInspections: [], lowProductive: [] });
+
   const tabs = [
     { id: "overview", label: "Overview", icon: Leaf },
     { id: "farms", label: "Farms", icon: Building },
@@ -27,11 +33,11 @@ export default function FarmHarvestManagement() {
     { id: "actions", label: "Admin Actions", icon: Tag },
   ];
 
-  // 🔹 Fetch farms when "farms" tab is active
+  // Fetch farms when "farms" tab is active
   useEffect(() => {
     if (activeTab === "farms" || activeTab === "overview" || activeTab === "hives") {
       axios
-        .get("http://localhost:4000/api/farms")
+        .get("http://localhost:3000/api/farms")
         .then((res) => {
           if (res.data.success) {
             setFarms(res.data.farms);
@@ -41,15 +47,58 @@ export default function FarmHarvestManagement() {
     }
   }, [activeTab]);
 
+  // 🔹 Fetch hive stats & list
+  useEffect(() => {
+    if (activeTab === "hives" || activeTab === "overview") {
+      axios.get("http://localhost:3000/api/hives/stats").then(res => {
+        if (res.data.success) setHiveStats(res.data.stats);
+      });
+    }
+    if (activeTab === "hives") {
+      axios.get("http://localhost:3000/api/hives").then(res => {
+        if (res.data.success) setHives(res.data.hives);
+      });
+      axios.get("http://localhost:3000/api/hives/alerts").then(res => {
+        if (res.data.success) setHiveAlerts(res.data.alerts);
+      });
+    }
+  }, [activeTab]);
+
   // 🔹 View single farm details
   const handleViewFarm = async (farmId) => {
     try {
-      const res = await axios.get(`http://localhost:4000/api/farms/${farmId}`);
+      const res = await axios.get(`http://localhost:3000/api/farms/${farmId}`);
       if (res.data.success) {
         setSelectedFarm(res.data.farm);
       }
     } catch (error) {
       console.error("Error fetching farm details:", error);
+    }
+  };
+
+  // 🔹 Update farm status (activate/deactivate)
+  const handleUpdateFarmStatus = async (farmId, newStatus) => {
+    const confirmAction = window.confirm(
+      `Are you sure you want to ${newStatus.toLowerCase()} this farm?`
+    );
+    if (!confirmAction) return;
+
+    try {
+      const res = await axios.put(`http://localhost:3000/api/farms/${farmId}/status`, {
+        status: newStatus,
+      });
+
+      if (res.data.success) {
+        alert(`✅ Farm ${newStatus.toLowerCase()}d successfully!`);
+        setFarms((prev) =>
+          prev.map((farm) =>
+            farm._id === farmId ? { ...farm, status: newStatus } : farm
+          )
+        );
+      }
+    } catch (error) {
+      console.error(`Error updating farm status:`, error);
+      alert("❌ Failed to update farm status. Check console for details.");
     }
   };
 
@@ -122,7 +171,7 @@ export default function FarmHarvestManagement() {
                   <th className="px-4 py-2">District</th>
                   <th className="px-4 py-2">Hives</th>
                   <th className="px-4 py-2">Status</th>
-                  <th className="px-4 py-2">Actions</th>
+                  <th className="px-9 py-2">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -141,16 +190,29 @@ export default function FarmHarvestManagement() {
                     >
                       {farm.status}
                     </td>
-                    <td className="px-4 py-2 flex gap-2">
+                    <td className="px-4 py-2 flex gap-10">
                       <button
                         onClick={() => handleViewFarm(farm._id)}
                         className="text-blue-400 hover:underline"
                       >
                         View
                       </button>
-                      <button className="text-red-400 hover:underline">
+
+                      {farm.status === "Active" ? (
+                      <button
+                        onClick={() => handleUpdateFarmStatus(farm._id, "Inactive")}
+                        className="text-red-400 hover:underline"
+                      >
                         Deactivate
                       </button>
+                      ) : (
+                      <button
+                        onClick={() => handleUpdateFarmStatus(farm._id, "Active")}
+                        className="text-green-400 hover:underline"
+                      >
+                        Activate
+                      </button>
+                    )}
                     </td>
                   </tr>
                 ))}
@@ -164,41 +226,97 @@ export default function FarmHarvestManagement() {
               </tbody>
             </table>
 
-            {/* 🔹 Farm Details Modal */}
+            {/*  Farm Details Modal */}
             {selectedFarm && (
-              <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-                <div className="bg-[#1A1A1A] p-6 rounded-lg w-[500px] shadow-lg">
-                  <h3 className="text-xl font-bold mb-4">
-                    {selectedFarm.farmName}
-                  </h3>
-                  <p><strong>Owner:</strong> {selectedFarm.owner}</p>
-                  <p><strong>Phone:</strong> {selectedFarm.phone}</p>
-                  <p><strong>Email:</strong> {selectedFarm.email}</p>
-                  <p>
-                    <strong>Address:</strong> {selectedFarm.address},{" "}
-                    {selectedFarm.district}
-                  </p>
-                  <p><strong>Size:</strong> {selectedFarm.size} acres</p>
-                  <p><strong>Hives:</strong> {selectedFarm.numHives}</p>
-                  <p>
-                    <strong>Hive Types:</strong>{" "}
-                    {selectedFarm.hiveTypes?.join(", ")}
-                  </p>
-                  <p><strong>Flora:</strong> {selectedFarm.flora}</p>
-                  <p>
-                    <strong>Date Established:</strong>{" "}
-                    {selectedFarm.dateEstablished
-                      ? new Date(selectedFarm.dateEstablished).toDateString()
-                      : "--"}
-                  </p>
-                  <p>
-                    <strong>Expected Yield:</strong>{" "}
-                    {selectedFarm.expectedAnnualYield} kg
-                  </p>
-                  <div className="mt-4 flex justify-end">
+              <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="bg-[#1A1A1A] rounded-xl shadow-2xl w-[650px] max-h-[85vh] overflow-y-auto border border-gray-700">
+                  
+                  {/* Header */}
+                  <div className="flex justify-between items-center border-b border-gray-700 px-6 py-4">
+                    <h3 className="text-xl font-bold text-[#FBB01A] flex items-center gap-2">
+                      <Building size={18} /> {selectedFarm.farmName}
+                    </h3>
                     <button
                       onClick={() => setSelectedFarm(null)}
-                      className="bg-red-600 px-4 py-2 rounded hover:bg-red-700"
+                      className="text-gray-400 hover:text-white text-lg"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* Body */}
+                  <div className="px-6 py-6 space-y-8">
+                    {/* Owner Info */}
+                    <section>
+                      <h4 className="text-lg font-semibold mb-3 text-white flex items-center gap-2">
+                        <Tag size={16}/> Owner Info
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div><span className="text-gray-400">Owner:</span> {selectedFarm.owner}</div>
+                        <div><span className="text-gray-400">Owner ID:</span> {selectedFarm.ownerId}</div>
+                        <div><span className="text-gray-400">Phone:</span> {selectedFarm.phone}</div>
+                        <div><span className="text-gray-400">Email:</span> {selectedFarm.email || "--"}</div>
+                      </div>
+                    </section>
+
+                    {/* Farm Info */}
+                    <section>
+                      <h4 className="text-lg font-semibold mb-3 text-white flex items-center gap-2">
+                        <Leaf size={16}/> Farm Info
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div><span className="text-gray-400">Address:</span> {selectedFarm.address}</div>
+                        <div><span className="text-gray-400">District:</span> {selectedFarm.district}</div>
+                        <div><span className="text-gray-400">Established:</span> 
+                          {selectedFarm.dateEstablished
+                            ? new Date(selectedFarm.dateEstablished).toDateString()
+                            : "--"}
+                        </div>
+                        <div>
+                          <span className="text-gray-400">Status:</span>{" "}
+                          <span className={selectedFarm.status === "Active" ? "text-green-400" : "text-yellow-400"}>
+                            {selectedFarm.status}
+                          </span>
+                        </div>
+                      </div>
+                    </section>
+
+                    {/* Stats */}
+                    <section>
+                      <h4 className="text-lg font-semibold mb-3 text-white flex items-center gap-2">
+                        <BarChart3 size={16}/> Farm Stats
+                      </h4>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="bg-[#2A2A2A] rounded-lg p-4 text-center">
+                          <p className="text-gray-400 text-sm">Size</p>
+                          <p className="text-xl font-bold">{selectedFarm.size || 0} acres</p>
+                        </div>
+                        <div className="bg-[#2A2A2A] rounded-lg p-4 text-center">
+                          <p className="text-gray-400 text-sm">Hives</p>
+                          <p className="text-xl font-bold">{selectedFarm.numHives || 0}</p>
+                        </div>
+                        <div className="bg-[#2A2A2A] rounded-lg p-4 text-center">
+                          <p className="text-gray-400 text-sm">Expected Yield</p>
+                          <p className="text-xl font-bold">{selectedFarm.expectedAnnualYield || 0} kg</p>
+                        </div>
+                      </div>
+                    </section>
+
+                    {/* Hive Types & Flora */}
+                    <section>
+                      <h4 className="text-lg font-semibold mb-3 text-white flex items-center gap-2">
+                        <Hexagon size={16}/> Hive & Flora
+                      </h4>
+                      <p><span className="text-gray-400">Hive Types:</span> {selectedFarm.hiveTypes?.join(", ") || "--"}</p>
+                      <p><span className="text-gray-400">Flora:</span> {selectedFarm.flora || "--"}</p>
+                    </section>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex justify-end border-t border-gray-700 px-6 py-4 bg-[#161616] rounded-b-xl">
+                    <button
+                      onClick={() => setSelectedFarm(null)}
+                      className="bg-red-600 hover:bg-red-700 px-5 py-2 rounded text-white font-medium"
                     >
                       Close
                     </button>
@@ -206,34 +324,130 @@ export default function FarmHarvestManagement() {
                 </div>
               </div>
             )}
+
           </div>
         )}
 
-        {/* 🔹 Hives Tab */}
+        {/*  Hives Tab */}
         {activeTab === "hives" && (
-          <div>
-            <h2 className="text-lg font-semibold mb-4">Hive Management Overview</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-              <div>
-                <p className="text-sm text-gray-400">Total Hives</p>
-                <p className="text-xl font-bold">
-                  {farms.reduce((acc, f) => acc + (f.numHives || 0), 0)}
-                </p>
+            <div>
+              <h2 className="text-lg font-semibold mb-4">Hive Management Overview</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="text-sm text-gray-400">Total Hives</p>
+                  <p className="text-xl font-bold">{hiveStats.total}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-400">Productive</p>
+                  <p className="text-xl font-bold text-green-400">{hiveStats.productive}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-400">Low Productive</p>
+                  <p className="text-xl font-bold text-red-400">{hiveStats.lowProductive}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-400">Productive</p>
-                <p className="text-xl font-bold text-green-400">--</p>
+
+              {/* Pie/Donut chart */}
+              <div className="mt-6 h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: "Productive", value: hiveStats.productive },
+                        { name: "Low Productive", value: hiveStats.lowProductive },
+                      ]}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={5}
+                    >
+                      <Cell fill="#22c55e" /> {/* Green for productive */}
+                      <Cell fill="#ef4444" /> {/* Red for low productive */}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#1A1A1A",
+                        border: "1px solid #333",
+                        color: "#fff",
+                      }}
+                    />
+                    <Legend
+                      wrapperStyle={{ color: "#ccc" }}
+                      verticalAlign="bottom"
+                      align="center"
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
-              <div>
-                <p className="text-sm text-gray-400">Low Productive</p>
-                <p className="text-xl font-bold text-red-400">--</p>
-              </div>
+
+              {/* Hive list table */}
+              <h3 className="text-lg font-semibold mt-8 mb-4">All Hives</h3>
+              <table className="w-full text-sm border-collapse">
+                <thead className="bg-[#2A2A2A] text-gray-300">
+                  <tr>
+                    <th className="px-4 py-3 text-left">Hive ID</th>
+                    <th className="px-4 py-3 text-left">Name</th>
+                    <th className="px-4 py-3 text-center">Farm</th>
+                    <th className="px-4 py-3 text-center">Status</th>
+                    <th className="px-4 py-3 text-center">Last Inspection</th>
+                    <th className="px-4 py-3 text-center">Next Inspection</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {hives.map((hive) => (
+                    <tr key={hive._id} className="border-b border-gray-700 hover:bg-[#252525]">
+                      <td className="px-4 py-2 text-left font-medium">{hive.hiveId}</td>
+                      <td className="px-4 py-2 text-left">{hive.hiveName}</td>
+                      <td className="px-4 py-2 text-center">{hive.farmId}</td>
+                      <td className="px-4 py-2 text-center">
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-semibold ${
+                            hive.status === "Active"
+                              ? "bg-green-900/30 text-green-400"
+                              : hive.status === "Needs Attention"
+                              ? "bg-red-900/30 text-red-400"
+                              : "bg-yellow-900/30 text-yellow-400"
+                          }`}
+                        >
+                          {hive.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 text-center">
+                        {hive.lastInspection ? new Date(hive.lastInspection).toDateString() : "--"}
+                      </td>
+                      <td className="px-4 py-2 text-center">
+                        {hive.nextInspection ? new Date(hive.nextInspection).toDateString() : "--"}
+                      </td>
+                    </tr>
+                  ))}
+                  {hives.length === 0 && (
+                    <tr>
+                      <td colSpan="6" className="text-center py-4 text-gray-400">
+                        No hives found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+
+              {/* Alerts list */}
+              <h3 className="text-lg font-semibold mt-8 mb-4">Hive Alerts</h3>
+              <ul className="space-y-2 text-sm">
+                {hiveAlerts.overdueInspections.map(h => (
+                  <li key={h._id} className="text-yellow-400">Hive {h.hiveId} → Inspection overdue</li>
+                ))}
+                {hiveAlerts.lowProductive.map(h => (
+                  <li key={h._id} className="text-red-400">Hive {h.hiveId} → Low productivity</li>
+                ))}
+                {hiveAlerts.overdueInspections.length === 0 && hiveAlerts.lowProductive.length === 0 && (
+                  <li className="text-gray-400">No alerts at the moment</li>
+                )}
+              </ul>
             </div>
-            <div className="mt-6 h-40 flex items-center justify-center text-gray-500">
-              🐝 Pie/Donut Chart goes here
-            </div>
-          </div>
-        )}
+          )}
 
         {/* 🔹 Analytics Tab */}
         {activeTab === "analytics" && (

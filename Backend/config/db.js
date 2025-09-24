@@ -4,8 +4,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 
-const dburl =
-  "mongodb+srv://Chanux:12345@cluster0.j6tlgyi.mongodb.net/ceylon_colony?retryWrites=true&w=majority&appName=Cluster0";
+
+const dburl= "mongodb+srv://Chanux:12345@cluster0.j6tlgyi.mongodb.net/ceylon_colony?retryWrites=true&w=majority&appName=Cluster0"
 
 mongoose.set("strictQuery", true)
 
