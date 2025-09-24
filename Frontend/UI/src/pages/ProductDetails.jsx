@@ -54,6 +54,7 @@ export default function ProductDetails() {
     };
   }, [id]);
 
+<<<<<<< HEAD
   // ✅ Add-to-Cart handler
 const handleAddToCart = async () => {
   if (!product?.inventoryId?._id) {
@@ -81,6 +82,8 @@ const handleAddToCart = async () => {
 };
 
 
+=======
+>>>>>>> origin/Luhith
   // normalize fields so the UI is stable
   const product = useMemo(() => {
     if (!data) return null;
@@ -326,6 +329,7 @@ const handleAddToCart = async () => {
                 </button>
               </div>
 
+<<<<<<< HEAD
 
 
 
@@ -361,6 +365,11 @@ const handleAddToCart = async () => {
 </div>
 
 
+=======
+              <button className="flex-1 min-w-[180px] px-5 py-3 rounded-xl bg-amber-400 text-black font-semibold hover:brightness-95">
+                Add to Cart
+              </button>
+>>>>>>> origin/Luhith
               <button className="px-5 py-3 rounded-xl border border-white/15 hover:bg-white/10">
                 Buy Now
               </button>

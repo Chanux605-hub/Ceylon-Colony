@@ -98,6 +98,15 @@ export default function AdminDahboard() {
         </div>
       </div>
 
+<div className="mt-4">
+  <button
+    onClick={() => window.location.href = '/allorders'}
+    className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-4 py-2 rounded"
+  >
+    Orders
+  </button>
+</div>
+
       {/* Recent orders */}
       <div className="rounded-2xl bg-black/40 border border-white/10 p-5">
         <div className="font-semibold mb-3">Recent Orders</div>

@@ -9,6 +9,8 @@ export async function list(req, res, next) {
   } catch (err) {
     next(err);
   }
+
+
 }
 
 // GET /api/inventory/:id
