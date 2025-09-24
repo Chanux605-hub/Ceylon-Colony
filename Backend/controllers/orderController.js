@@ -58,27 +58,28 @@ const placeOrder = async (req, res) => {
     }
 }
 
-// Placing User Order for Frontend using stripe
 const placeOrderCod = async (req, res) => {
+  try {
+    const newOrder = new orderModel({
+      userId: req.body.userId,
+      items: req.body.items,
+      amount: req.body.amount,
+      address: req.body.address,
+      payment: true, // COD is considered paid
+    });
 
-    try {
-        const newOrder = new orderModel({
-            userId: req.body.userId,
-            items: req.body.items,
-            amount: req.body.amount,
-            address: req.body.address,
-            payment: true,
-        })
-        await newOrder.save();
-        await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
+    await newOrder.save();
 
-        res.json({ success: true, message: "Order Placed" });
+    // Clear cart in user model
+    await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
 
-    } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: "Error" })
-    }
-}
+    res.json({ success: true, message: "Order Placed Successfully!" }); // ✅ success message
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: "Error placing order" });
+  }
+};
+
 
 // Listing Order for Admin panel
 const listOrders = async (req, res) => {

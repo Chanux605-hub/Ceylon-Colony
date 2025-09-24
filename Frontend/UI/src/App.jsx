@@ -4,9 +4,10 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 // Adjust this path to match your real file location:
 import ModernLogin from "./Components/ModernLogin.jsx";
 import AdminLayout from "./Components/admin/AdminLayout.jsx";
-import Home from "./pages/Home.jsx"
-import OurProducts from "./pages/OurProducts.jsx"
-import Community from "./pages/Community.jsx"
+import Home from "./pages/Home.jsx";
+import OurProducts from "./pages/OurProducts.jsx";
+import Community from "./pages/Community.jsx";
+import StoreContextProvider from "./context/StoreContext.jsx";
 
 // Module pages (rendered inside Layout's <Outlet/>)
 import AdminProducts from "./Components/admin/modules/AdminProducts.jsx";
@@ -19,13 +20,10 @@ import AdminDahboard from "./Components/admin/AdminDahboard.jsx";
 import FarmRegistrationForm from "./HarvestManagement/FarmRegistrationForm.jsx";
 import HiveRegistrationForm from "./HarvestManagement/HiveRegistration.jsx";
 import FarmHarvestManagement from "./HarvestManagement/FarmHarvestManagement.jsx";
-
-
-
-
+import Cart from "./Components/User/Cart.jsx";
+import PlaceOrder from "./Components/User/PlaceOrder.jsx";
 import ProductDetails from "./pages/ProductDetails";
-
-
+import AdminOrders from "./Components/admin/modules/AdminOrders.jsx";
 
 // --- Simple auth helpers ---
 const isAuthed = () => !!localStorage.getItem("token");
@@ -33,14 +31,16 @@ const isAuthed = () => !!localStorage.getItem("token");
 function RequireAuth({ children }) {
   return isAuthed() ? children : <Navigate to="/login" replace />;
 }
+
 function PublicOnly({ children }) {
   return isAuthed() ? <Navigate to="/admin" replace /> : children;
 }
+
 function AuthedRedirect() {
   return <Navigate to={isAuthed() ? "/admin" : "/home"} replace />;
 }
 
- {/* Done by Gima - do not delete this is for admin page acess in web browser */}
+/* Dev helper for auto-login in dev environment */
 function DevLogin() {
   React.useEffect(() => {
     localStorage.setItem("token", "dev");
@@ -48,58 +48,54 @@ function DevLogin() {
   return <Navigate to="/admin" replace />;
 }
 
-
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Login (public only) */}
-        <Route path="/login" element={<ModernLogin brand="Ceylon Colony" />} />
+    <StoreContextProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Login (public only) */}
+          <Route path="/login" element={<ModernLogin brand="Ceylon Colony" />} />
+            <Route path="cart" element={<Cart />} />
 
-        {/* Admin shell (protected) */}
-        <Route
-          path="/admin"
-          element={
-            <RequireAuth>
-              <AdminLayout />
-            </RequireAuth>
-          }
-        >
-          <Route index element={<Navigate to="admindashboard" replace />} />
-          <Route path="admindashboard"  element={<AdminDahboard />} />
-          <Route path="products"  element={<AdminProducts />} />
-          <Route path="inventory" element={<AdminInventory />} />
-          <Route path="stock-analysis" element={<AdminStockAnalysis />} />
-          <Route path="workshops" element={<WorkshopScheduleManagement />} />
-        
-          <Route path="orders"    element={<OrderDeliveryManagement />} />
-          <Route path="media"     element={<CustomerMediaManagement />} />
-          <Route path="farm-harvest"     element={<FarmHarvestManagement />} />
+          {/* Admin shell (protected) */}
+          <Route
+            path="/admin"
+            element={
+              <RequireAuth>
+                <AdminLayout />
+              </RequireAuth>
+            }
+          >
+            <Route index element={<Navigate to="admindashboard" replace />} />
+            <Route path="admindashboard" element={<AdminDahboard />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="inventory" element={<AdminInventory />} />
+            <Route path="stock-analysis" element={<AdminStockAnalysis />} />
+            <Route path="workshops" element={<WorkshopScheduleManagement />} />
+            <Route path="orders" element={<OrderDeliveryManagement />} />
+            <Route path="media" element={<CustomerMediaManagement />} />
+                        <Route path="allorders" element={<AdminOrders />} />
 
-        
-        </Route>
+            <Route path="farm-harvest" element={<FarmHarvestManagement />} />AdminOrders
+          </Route>
 
-          
-       {/* Done by Gima - do not delete this is for admin page acess in web browser */}
-     {/* Dev helper route (remove later if you want) */}
-        <Route path="/dev-login" element={<DevLogin />} />
+          {/* Dev login */}
+          <Route path="/dev-login" element={<DevLogin />} />
 
+          {/* Root & fallback */}
+          <Route path="/" element={<AuthedRedirect />} />
+          <Route path="*" element={<AuthedRedirect />} />
+<Route path="placeorder" element = {<PlaceOrder/>}/>
+          {/* Public pages */}
+          <Route path="/home" element={<Home />} />
+          <Route path="/products" element={<OurProducts />} />
+          <Route path="/community" element={<Community />} />
+          <Route path="/farmRegistration" element={<FarmRegistrationForm />} />
+          <Route path="/hiveRegistration" element={<HiveRegistrationForm />} />
 
-
-        {/* Root & fallback */}
-        <Route path="/" element={<AuthedRedirect />} />
-        <Route path="*" element={<AuthedRedirect />} />
-
-        <Route path="/home" element={<Home />} />
-        <Route path="/products" element={<OurProducts />} />
-        <Route path="/community" element={<Community />} />
-        <Route path="/farmRegistration" element ={<FarmRegistrationForm/>}/>
-        <Route path="/hiveRegistration" element ={<HiveRegistrationForm/>}/>
-
-
-         <Route path="/product/:id" element={<ProductDetails />} />
-
-      </Routes>
-    </BrowserRouter>
+          <Route path="/product/:id" element={<ProductDetails />} />
+        </Routes>
+      </BrowserRouter>
+    </StoreContextProvider>
   );
 }

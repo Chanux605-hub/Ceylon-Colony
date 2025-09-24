@@ -46,6 +46,8 @@ export default function Sidebar() {
         {item("/admin/suppliers", "Suppliers", Truck)}
         {item("/admin/customers", "Customers", Users)}
         {item("/admin/farm-harvest", "Farm & Harvest", Leaf)}
+          {item("/admin/allorders", "All Orders", Truck)}
+
 
       </nav>
 
