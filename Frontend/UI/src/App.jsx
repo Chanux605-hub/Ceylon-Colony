@@ -7,6 +7,7 @@ import ModernLogin from "./Components/ModernLogin.jsx";
 import AdminLayout from "./Components/admin/AdminLayout.jsx";
 import Home from "./pages/Home.jsx"
 import OurProducts from "./pages/OurProducts.jsx"
+import Community from "./pages/Community.jsx"
 
 
 import About from "./pages/About.jsx";
@@ -18,6 +19,7 @@ import BlogPage from "./pages/BlogPage.jsx";
 // Module pages (rendered inside Layout's <Outlet/>)
 import AdminProducts from "./Components/admin/modules/AdminProducts.jsx";
 import AdminInventory from "./Components/admin/modules/AdminInventory.jsx";
+import AdminStockAnalysis from "./Components/admin/modules/AdminStockAnalysis";
 import OrderDeliveryManagement from "./Components/admin/modules/OrderDeliveryManagement.jsx";
 import WorkshopScheduleManagement from "./Components/admin/modules/WorkshopScheduleManagement.jsx";
 import CustomerMediaManagement from "./Components/admin/modules/CustomerMediaManagement.jsx";
@@ -27,6 +29,12 @@ import HiveRegistrationForm from "./HarvestManagement/HiveRegistration.jsx";
 import FarmHarvestManagement from "./HarvestManagement/FarmHarvestManagement.jsx";
 import AddBlogForm from "./HarvestManagement/Blog/AddBlogForm.jsx";
 import ManageBlogs from "./HarvestManagement/Blog/ManageBlog.jsx";
+
+
+
+
+
+import ProductDetails from "./pages/ProductDetails";
 
 
 
@@ -76,6 +84,7 @@ export default function App() {
           <Route path="admindashboard"  element={<AdminDahboard />} />
           <Route path="products"  element={<AdminProducts />} />
           <Route path="inventory" element={<AdminInventory />} />
+          <Route path="stock-analysis" element={<AdminStockAnalysis />} />
           <Route path="workshops" element={<WorkshopScheduleManagement />} />
           
           
@@ -103,9 +112,12 @@ export default function App() {
 
         <Route path="/home" element={<Home />} />
         <Route path="/products" element={<OurProducts />} />
+        <Route path="/community" element={<Community />} />
         <Route path="/farmRegistration" element ={<FarmRegistrationForm/>}/>
         <Route path="/hiveRegistration" element ={<HiveRegistrationForm/>}/>
 
+
+         <Route path="/product/:id" element={<ProductDetails />} />
 
       </Routes>
     </BrowserRouter>

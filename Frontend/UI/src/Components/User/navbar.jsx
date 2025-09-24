@@ -31,6 +31,7 @@ const Navbar = () => {
             <a href="#" className="text-white hover:text-[#FBB01A] transition">About Us</a>
              <Link to="/blogs" className="text-white hover:text-[#FBB01A] transition">Blog</Link>
             <a href="#" className="text-white hover:text-[#FBB01A] transition">WorkShops</a>
+            <Link to="/community" className="text-white hover:text-[#FBB01A]">Community</Link>
           </div>
 
           {/* Search + Cart */}
