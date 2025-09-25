@@ -4,9 +4,13 @@ import Inventory from "../models/Inventory.js";
 // GET /api/products
 export async function list(req, res, next) {
   try {
-    const { q, category, sort = "createdAt:desc", page = 1, limit = 12 } = req.query;
+    const { q, category, sort = "createdAt:desc", page = 1, limit = 12, includeDraft = false } = req.query;
+
     const [sortField, sortDir] = String(sort).split(":");
     const filter = {};
+
+    // 🔹 Always show only Active products unless explicitly asked
+    if (!includeDraft) filter.status = "Active";
 
     if (q) filter.name = { $regex: q, $options: "i" };
     if (category) filter.category = category;
@@ -29,6 +33,7 @@ export async function list(req, res, next) {
     next(err);
   }
 }
+
 
 // GET /api/products/:id
 export async function getOne(req, res, next) {

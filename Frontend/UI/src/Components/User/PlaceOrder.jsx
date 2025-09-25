@@ -59,6 +59,10 @@ const PlaceOrder = () => {
       address: data,
       paymentMethod: payment
     };
+      
+    
+    // ✅ Add this log here
+  console.log("Order data being sent:", orderData);
 
     try {
       setLoading(true);

@@ -1,9 +1,12 @@
 
 import orderDetailsModel from "../models/orderDetailsModel.js";
+import Inventory from "../models/Inventory.js";
+
 
 export const createOrderDetails = async (req, res) => {
   try {
     const { userId, items, amount, address, paymentMethod } = req.body;
+       console.log("📦 Incoming Order Data:", req.body);  // 👈 add this
 
     if (!items || items.length === 0) {
       return res.status(400).json({ success: false, message: "No items in order" });

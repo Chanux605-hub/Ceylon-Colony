@@ -10,19 +10,25 @@ const currency = "usd";
 const deliveryCharge = 5;
 const frontend_URL = "http://localhost:5173";
 
-// 🔹 Helper: reduce stock when order is placed
 async function reduceStockForItems(items) {
   for (const item of items) {
-    const inventory = await Inventory.findOne({ productId: item.productId });
-    if (inventory) {
-      if (inventory.stock < item.quantity) {
-        throw new Error(`Not enough stock for ${inventory.name}`);
-      }
-      inventory.stock -= item.quantity;
-      await inventory.save();
+    // Find the product
+    const product = await Product.findById(item.productId);
+    if (!product || !product.inventoryId) continue;
+
+    // Find linked inventory
+    const inventory = await Inventory.findById(product.inventoryId);
+    if (!inventory) continue;
+
+    if (inventory.stock < item.quantity) {
+      throw new Error(`Not enough stock for ${product.name}`);
     }
+
+    inventory.stock -= item.quantity;
+    await inventory.save();
   }
 }
+
 
 // Stripe order
 const placeOrder = async (req, res) => {
@@ -72,7 +78,6 @@ const placeOrder = async (req, res) => {
   }
 };
 
-// COD order
 const placeOrderCod = async (req, res) => {
   try {
     const newOrder = new orderModel({
@@ -80,20 +85,18 @@ const placeOrderCod = async (req, res) => {
       items: req.body.items,
       amount: req.body.amount,
       address: req.body.address,
-      payment: true, // COD = paid
+      payment: true,
     });
 
     await newOrder.save();
 
-    // 🔹 Reduce stock after saving
+    // 🔹 Reduce stock immediately
     await reduceStockForItems(req.body.items);
 
-    // 🔹 Clear cart
     await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
-
     res.json({ success: true, message: "Order Placed Successfully!" });
   } catch (error) {
-    console.error("❌ placeOrderCod error:", error);
+    console.error("❌ COD error:", error);
     res.json({ success: false, message: error.message || "Error placing order" });
   }
 };
@@ -132,19 +135,18 @@ const updateStatus = async (req, res) => {
   }
 };
 
-// Stripe verify
 const verifyOrder = async (req, res) => {
   const { orderId, success } = req.body;
   try {
     if (success === "true") {
-      await orderModel.findByIdAndUpdate(orderId, { payment: true });
-
-      // 🔹 Fetch order and reduce stock
       const order = await orderModel.findById(orderId);
       if (order) {
+        order.payment = true;
+        await order.save();
+
+        // 🔹 Reduce stock now that payment succeeded
         await reduceStockForItems(order.items);
       }
-
       res.json({ success: true, message: "Paid" });
     } else {
       await orderModel.findByIdAndDelete(orderId);
