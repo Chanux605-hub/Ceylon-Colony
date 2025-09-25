@@ -250,6 +250,50 @@ export default function CustomerMediaManagement() {
     return arr;
   }, [pieRows]);
 
+  /* ---------------- Announcements ---------------- */
+  const [announcements, setAnnouncements] = useState([]);
+  const [annLoading, setAnnLoading] = useState(true);
+  const [annFilter, setAnnFilter] = useState("all"); // today | week | month | all
+  const [selectedAnn, setSelectedAnn] = useState(null);
+
+  const loadAnnouncements = async () => {
+    try {
+      setAnnLoading(true);
+      const data = await fetchJson(`${API}/api/admin/announcements?status=published`);
+      const items = Array.isArray(data?.items) ? data.items : [];
+      setAnnouncements(items);
+    } catch (err) {
+      alert(`Failed to load announcements: ${err.message}`);
+    } finally {
+      setAnnLoading(false);
+    }
+  };
+
+  useEffect(() => { loadAnnouncements(); }, []);
+
+  const filteredAnnouncements = useMemo(() => {
+  if (!Array.isArray(announcements)) return [];
+  const now = new Date();
+
+  return announcements.filter((a) => {
+    const d = new Date(a.date);
+    if (annFilter === "today") {
+      return d.toDateString() === now.toDateString();
+    } else if (annFilter === "week") {
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay());
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 7);
+      return d >= startOfWeek && d < endOfWeek;
+    } else if (annFilter === "month") {
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }
+    return true; // all
+  });
+}, [announcements, annFilter]);
+
+
+
   /* ---------------- Top-5 shorts (backend) ---------------- */
   const top5Videos = useMemo(() => {
     let vids = shorts;
@@ -472,12 +516,6 @@ export default function CustomerMediaManagement() {
   ========================================================================================= */
   return (
     <div className="space-y-6 text-white">
-      <AnnouncementForm onSubmit={(data) => {
-  console.log("New announcement:", data);
-  // TODO: send to backend API (e.g., POST /api/admin/announcements)
-}} />
-
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Kpi title="Submissions Today" icon={<BarChart2 className="h-4 w-4" />} value={submissionsToday} />
         <Kpi
@@ -507,6 +545,126 @@ export default function CustomerMediaManagement() {
           monthlyAverage={monthlyAverage}
         />
       </div>
+
+      <AnnouncementForm onSubmit={async (data) => {
+        try {
+          const fd = new FormData();
+          fd.append("title", data.title);
+          fd.append("description", data.description);
+          fd.append("date", data.date);
+          fd.append("time", data.time);
+          if (data.flyer) fd.append("flyer", data.flyer);
+
+          const res = await fetch(`${API}/api/admin/announcements`, {
+            method: "POST",
+            body: fd,
+          });
+
+          if (!res.ok) throw new Error(await res.text());
+          alert("Announcement published!");
+        } catch (err) {
+          alert(`Failed: ${err.message}`);
+        }
+      }} />
+
+      {/* =================== Announcements Table =================== */}
+    <div className="rounded-2xl bg-black/40 border border-white/10 p-4 mt-6">
+      <div className="flex items-center justify-between mb-3">
+        <div className="text-sm font-semibold">Announcements</div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setAnnFilter("all")}
+            className={`px-3 py-1.5 rounded-lg text-xs border ${
+              annFilter === "all" ? "bg-[#FBB01A] text-black" : "bg-white/5 text-white/70"
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setAnnFilter("today")}
+            className={`px-3 py-1.5 rounded-lg text-xs border ${
+              annFilter === "today" ? "bg-[#FBB01A] text-black" : "bg-white/5 text-white/70"
+            }`}
+          >
+            Today
+          </button>
+          <button
+            onClick={() => setAnnFilter("week")}
+            className={`px-3 py-1.5 rounded-lg text-xs border ${
+              annFilter === "week" ? "bg-[#FBB01A] text-black" : "bg-white/5 text-white/70"
+            }`}
+          >
+            This Week
+          </button>
+          <button
+            onClick={() => setAnnFilter("month")}
+            className={`px-3 py-1.5 rounded-lg text-xs border ${
+              annFilter === "month" ? "bg-[#FBB01A] text-black" : "bg-white/5 text-white/70"
+            }`}
+          >
+            This Month
+          </button>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-[800px] w-full text-sm">
+          <thead className="bg-white/5 text-white/70">
+            <tr>
+              <th className="py-3 px-4">Title</th>
+              <th className="py-3 px-4">Date</th>
+              <th className="py-3 px-4">Time</th>
+              <th className="py-3 px-4">Status</th>
+              <th className="py-3 px-4">Created</th>
+              <th className="py-3 px-4 text-right pr-5">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/10 text-white">
+            {annLoading && (
+              <tr>
+                <td colSpan="6" className="py-10 text-center text-white/60">Loading…</td>
+              </tr>
+            )}
+            {!annLoading && filteredAnnouncements.map((row) => (
+              <tr key={row._id} className="hover:bg-white/5">
+                <td className="py-3 px-4">{row.title}</td>
+                <td className="py-3 px-4 whitespace-nowrap">{row.date}</td>
+                <td className="py-3 px-4">{row.time}</td>
+                <td className="py-3 px-4 capitalize">{row.status}</td>
+                <td className="py-3 px-4">{new Date(row.createdAt).toLocaleDateString()}</td>
+                <td className="py-3 px-4 text-right">
+                  <button
+                    onClick={() => setSelectedAnn(row)}
+                    className="px-3 py-1.5 mr-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10"
+                  >
+                    Review
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (!confirm("Delete this announcement?")) return;
+                      try {
+                        await fetchJson(`${API}/api/admin/announcements/${row._id}`, { method: "DELETE" });
+                        setAnnouncements((prev) => prev.filter((a) => a._id !== row._id));
+                      } catch (err) {
+                        alert(`Delete failed: ${err.message}`);
+                      }
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-red-500/20 border border-red-400/30 text-red-300 hover:bg-red-500/30"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {!annLoading && filteredAnnouncements.length === 0 && (
+              <tr>
+                <td colSpan="6" className="py-10 text-center text-white/60">No announcements for this filter.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
 
       <Top5Videos
         top5Videos={top5Videos}
@@ -552,7 +710,7 @@ export default function CustomerMediaManagement() {
         item={previewShort}
         onClose={() => setPreviewShort(null)}
       />
-
+    <AnnouncementReviewModal item={selectedAnn} onClose={() => setSelectedAnn(null)} />
     </div>
   );
 }
@@ -1315,3 +1473,28 @@ function PieDonut({ data = [], size = 200, strokeWidth = 20 }) {
     </svg>
   );
 }
+
+function AnnouncementReviewModal({ item, onClose }) {
+  if (!item) return null;
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3">
+      <div className="w-full max-w-md rounded-2xl bg-[#111] border border-white/10 shadow-neon overflow-hidden">
+        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+          <h3 className="font-semibold">Announcement Review</h3>
+          <button onClick={onClose} className="text-white/70 hover:text-white">✕</button>
+        </div>
+        <div className="p-4">
+          <h4 className="text-lg font-bold">{item.title}</h4>
+          <p className="text-white/70 mt-2">{item.description}</p>
+          <p className="text-sm text-white/60 mt-2">📅 {item.date} at {item.time}</p>
+          {item.flyerUrl && (
+            <div className="mt-3 rounded-xl overflow-hidden border border-white/10 bg-black">
+              <img src={item.flyerUrl} alt="Flyer" className="w-full object-contain max-h-[50vh]" />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+

@@ -2,7 +2,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Navbar from "../Components/User/navbar";
 import Footer from "../Components/User/Footer";
-
+import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
 /* ============================================
    CONFIG
 ============================================ */
@@ -358,6 +359,7 @@ function ShortVideosRow({ videos, products }) {
    PAGE
 ============================================ */
 export default function Community() {
+  const { user } = useAuth();   // ✅ get auth state
   const [tab, setTab] = useState("All");
   const [q, setQ] = useState("");
 
@@ -369,6 +371,28 @@ export default function Community() {
 
   // start-post modal
   const [openCreate, setOpenCreate] = useState(false);
+
+  // announcements
+  const [announcements, setAnnouncements] = useState([]);
+  const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
+
+  const loadAnnouncements = async () => {
+    try {
+      setLoadingAnnouncements(true);
+      const data = await fetchJson(`${API}/api/admin/announcements?status=published&sortBy=date&order=asc&limit=5`);
+      const items = Array.isArray(data?.items) ? data.items : [];
+      setAnnouncements(items);
+    } catch (err) {
+      alert(`Failed to load announcements: ${err.message}`);
+    } finally {
+      setLoadingAnnouncements(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAnnouncements();
+  }, []);
+
 
   // Replace with your real logged-in user data
   const currentUser = {
@@ -471,13 +495,22 @@ export default function Community() {
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">Community</h1>
               <p className="text-white/70 mt-1">Share tips, ask questions, join events — all things Ceylon Colony 🍯</p>
             </div>
-            <button
-              className="rounded-xl bg-[#FBB01A] text-black font-semibold px-4 py-2 shadow-neon hover:brightness-95"
-              onClick={() => setOpenCreate(true)}
-            >
-              + Start a post
-            </button>
-          </div>
+            {user ? (
+              <button
+                className="rounded-xl bg-[#FBB01A] text-black font-semibold px-4 py-2 shadow-neon hover:brightness-95"
+                onClick={() => setOpenCreate(true)}
+              >
+                + Start a post
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                className="rounded-xl bg-[#FBB01A] text-black font-semibold px-4 py-2 shadow-neon hover:brightness-95"
+              >
+                Login to Post
+              </Link>
+            )}
+            </div>
 
           {/* SEARCH + TABS */}
           <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -517,20 +550,46 @@ export default function Community() {
           <div className="lg:col-span-8 space-y-6">
             {/* Composer (mock) */}
             <div className="rounded-2xl bg-black/50 border border-white/10 p-4 shadow-inset-neon">
-              <div className="flex gap-3">
-                <div className="h-10 w-10 rounded-full grid place-items-center bg-black/60 border border-white/10">🐝</div>
-                <input
-                  placeholder="Share a tip, question, recipe…"
-                  className="flex-1 rounded-xl px-3 py-2 bg-white/5 border border-white/10 placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]/30"
-                />
-                <button
-                  onClick={() => setOpenCreate(true)}
-                  className="rounded-xl bg-[#FBB01A] text-black font-semibold px-4 py-2 hover:brightness-95"
-                >
-                  Post
-                </button>
-              </div>
+              {user ? (
+                <div className="flex gap-3">
+                  <div className="h-10 w-10 rounded-full overflow-hidden bg-black/60 border border-white/10">
+                    {user.avatarUrl ? (
+                      <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="grid place-items-center h-full w-full">🐝</span>
+                    )}
+                  </div>
+                  <input
+                    placeholder="Share a tip, question, recipe…"
+                    className="flex-1 rounded-xl px-3 py-2 bg-white/5 border border-white/10 placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]/30"
+                  />
+                  <button
+                    onClick={() => setOpenCreate(true)}
+                    className="rounded-xl bg-[#FBB01A] text-black font-semibold px-4 py-2 hover:brightness-95"
+                  >
+                    Post
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center text-white/70">
+                  <p className="mb-3">You must be logged in to share a post.</p>
+                  <Link
+                    to="/login"
+                    className="px-4 py-2 bg-[#FBB01A] text-black rounded-lg font-semibold hover:bg-[#d99815]"
+                  >
+                    Login
+                  </Link>
+                  <span className="mx-2">or</span>
+                  <Link
+                    to="/signup"
+                    className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg font-semibold hover:bg-white/20"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )}
             </div>
+
 
             {/* Posts (REAL: Discussions + Gallery) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -600,27 +659,51 @@ export default function Community() {
           {/* RIGHT / SIDEBAR */}
           <aside className="lg:col-span-4 space-y-6">
             {/* Events */}
+            {/* Announcements */}
             <div className="rounded-2xl bg-black/60 border border-white/10 p-4 shadow-inset-neon">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold">Upcoming events</h3>
-                <a href="#" className="text-sm text-amber-300 hover:underline">View all</a>
+                <h3 className="font-semibold">Announcements</h3>
+                <button
+                  onClick={loadAnnouncements}
+                  className="text-sm text-amber-300 hover:underline"
+                >
+                  Refresh
+                </button>
               </div>
+
               <div className="mt-3 space-y-3">
-                {EVENTS.map((e) => (
-                  <div key={e.id} className="rounded-xl bg-white/5 border border-white/10 p-3">
-                    <div className="text-xs text-white/60">{e.when} • {e.where}</div>
-                    <div className="font-medium">{e.title}</div>
-                    <div className="text-xs text-white/60 mt-1">Spots left: <span className="text-amber-300">{e.spots}</span></div>
-                    <button
-                      onClick={() => alert("RSVP (mock)")}
-                      className="mt-2 rounded-lg bg-[#FBB01A] text-black text-sm font-semibold px-3 py-1 hover:brightness-95"
-                    >
-                      RSVP
-                    </button>
+                {loadingAnnouncements && (
+                  <div className="text-white/60 py-4 text-center">Loading…</div>
+                )}
+
+                {!loadingAnnouncements && announcements.length === 0 && (
+                  <div className="text-white/60 py-4 text-center">No announcements available.</div>
+                )}
+
+                {announcements.map((a) => (
+                  <div key={a._id} className="rounded-xl bg-white/5 border border-white/10 p-3">
+                    <div className="text-xs text-white/60">
+                      {new Date(a.date).toLocaleDateString()} • {a.time}
+                    </div>
+                    <div className="font-medium">{a.title}</div>
+                    {a.description && (
+                      <div className="text-xs text-white/70 mt-1">{a.description}</div>
+                    )}
+
+                    {a.flyerUrl && (
+                      <div className="mt-2 rounded-lg overflow-hidden border border-white/10">
+                        <img
+                          src={a.flyerUrl}
+                          alt={a.title}
+                          className="w-full max-h-40 object-contain"
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
+
 
             {/* Trending tags */}
             <div className="rounded-2xl bg-black/60 border border-white/10 p-4">
@@ -688,12 +771,14 @@ export default function Community() {
       <Footer />
 
       {/* Start Post modal */}
-      <StartPostForm
-        open={openCreate}
-        onClose={() => setOpenCreate(false)}
-        onCreated={() => { loadShorts(); loadFeed(); }}  // refresh both after posting
-        currentUser={{ userId: "u001", username: "Nishan", avatarUrl: "https://i.pravatar.cc/100?img=5" }}
-      />
+      {user && (
+        <StartPostForm
+          open={openCreate}
+          onClose={() => setOpenCreate(false)}
+          onCreated={() => { loadShorts(); loadFeed(); }}
+          currentUser={user}
+        />
+      )}
     </div>
   );
 }
