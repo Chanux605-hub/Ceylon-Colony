@@ -33,29 +33,29 @@ export default function AdminProducts() {
       .catch(console.error);
   }, []);
 
-  // load products
-  const load = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(API);
-      const { items = [] } = await res.json();
-      const list = items.map((p) => ({
-        id: p.id || p._id,
-        name: p.name,
-        category: p.category || "Raw Honey",
-        weight: p.weight || "",
-        price: Number(p.price) || 0,
-        status: p.status || "Active",
-        imageUrl: (p.imageUrl || p.img || "").trim(),
-        _ts: p.createdAt ? Date.parse(p.createdAt) : Date.now(),
-      }));
-      setProducts(list);
-    } catch (e) {
-      console.error("Failed to load products:", e);
-    } finally {
-      setLoading(false);
-    }
-  };
+  
+const load = async () => {
+  try {
+    setLoading(true);
+    const res = await fetch(`${API}?includeDraft=true`);
+    const { items = [] } = await res.json();
+    const list = items.map((p) => ({
+      id: p.id || p._id,
+      name: p.name,
+      category: p.category || "Raw Honey",
+      weight: p.weight || "",
+      price: Number(p.price) || 0,
+      status: p.status || "Active",
+      imageUrl: (p.imageUrl || p.img || "").trim(),
+      _ts: p.createdAt ? Date.parse(p.createdAt) : Date.now(),
+    }));
+    setProducts(list);
+  } catch (e) {
+    console.error("Failed to load products:", e);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     load();

@@ -1,6 +1,8 @@
 import Product from "../models/Product.js";
 import Inventory from "../models/Inventory.js";
 
+// controllers/product.controller.js
+
 // GET /api/products
 export async function list(req, res, next) {
   try {
@@ -9,7 +11,7 @@ export async function list(req, res, next) {
     const [sortField, sortDir] = String(sort).split(":");
     const filter = {};
 
-    // 🔹 Always show only Active products unless explicitly asked
+    // Only Active unless includeDraft=true
     if (!includeDraft) filter.status = "Active";
 
     if (q) filter.name = { $regex: q, $options: "i" };
@@ -28,7 +30,23 @@ export async function list(req, res, next) {
       Product.countDocuments(filter),
     ]);
 
-    res.json({ items, total, page: pageNum, limit: pageSize });
+    // ✅ add stockStatus
+    const withStatus = items.map((p) => {
+      let stockStatus = "In stock";
+      if (p.inventoryId) {
+        if (p.inventoryId.stock <= 0) {
+          stockStatus = "Out of stock";
+        } else if (p.inventoryId.stock <= p.inventoryId.reorder) {
+          stockStatus = "Low stock";
+        }
+      }
+      return {
+        ...p.toObject(),
+        stockStatus,
+      };
+    });
+
+    res.json({ items: withStatus, total, page: pageNum, limit: pageSize });
   } catch (err) {
     next(err);
   }
