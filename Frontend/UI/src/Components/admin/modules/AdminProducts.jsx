@@ -114,39 +114,40 @@ export default function AdminProducts() {
     }
   };
 
-  const onSave = async (data) => {
-    const payload = {
-      name: data.name?.trim(),
-      category: data.category || "",
-      weight: data.weight || "",
-      price: Number(data.price),
-      status: data.status || "Active",
-      imageUrl: (data.imageUrl || "").trim(),
-      inventoryId: data.inventoryId || null, // ✅ include inventory link
-    };
-
-    try {
-      const url = data.id ? `${API}/${data.id}` : API;
-      const method = data.id ? "PUT" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(`${res.status} ${body.message || res.statusText}`);
-
-      setOpen(false);
-      setEditing(null);
-      await load();
-      alert(data.id ? "Updated ✔" : "Created ✔");
-    } catch (e) {
-      console.error("Save failed:", e, { payload });
-      alert(e.message || "Save failed");
-    }
+const onSave = async (data) => {
+  const payload = {
+    name: data.name?.trim(),
+    category: data.category || "",
+    weight: data.weight || "",
+    price: Number(data.price),
+    status: data.status || "Active",
+    imageUrl: (data.imageUrl || "").trim(),
+    inventoryId: data.inventoryId || null,   // ✅ include this
   };
+
+  try {
+    const url = data.id ? `${API}/${data.id}` : API;
+    const method = data.id ? "PUT" : "POST";
+
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(`${res.status} ${body.message || res.statusText}`);
+
+    setOpen(false);
+    setEditing(null);
+    await load(); // refresh products
+    alert(data.id ? "Updated ✔" : "Created ✔");
+  } catch (e) {
+    console.error("Save failed:", e, { payload });
+    alert(e.message || "Save failed");
+  }
+};
+
 
   const openDetailsFor = async (id) => {
     try {

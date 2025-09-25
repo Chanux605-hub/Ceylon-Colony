@@ -7,6 +7,8 @@ import farmRouter from "./routes/farmRoutes.js";
 import hiveRouter from "./routes/hiveRoutes.js";
 
 import inventoryRoutes from "./routes/inventoryRoutes.js";
+import orderDetailsRouter from "./routes/orderDetailsRouter.js";
+
 
 
 
@@ -32,6 +34,9 @@ app.use("/api/hives", hiveRouter)
 
 app.use("/api/products", productRouter);
 app.use("/api/inventory", inventoryRoutes);
+
+app.use("/api/orderdetails", orderDetailsRouter);
+
 
 // Connect to DB
 connection();   

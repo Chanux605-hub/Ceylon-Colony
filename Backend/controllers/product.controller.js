@@ -5,12 +5,9 @@ import Inventory from "../models/Inventory.js";
 export async function list(req, res, next) {
   try {
     const { q, category, sort = "createdAt:desc", page = 1, limit = 12 } = req.query;
-
-
     const [sortField, sortDir] = String(sort).split(":");
     const filter = {};
 
-    
     if (q) filter.name = { $regex: q, $options: "i" };
     if (category) filter.category = category;
 
@@ -36,8 +33,7 @@ export async function list(req, res, next) {
 // GET /api/products/:id
 export async function getOne(req, res, next) {
   try {
-    const doc = await Product.findById(req.params.id)
-      .populate("inventoryId", "stock reorder");
+    const doc = await Product.findById(req.params.id).populate("inventoryId", "stock reorder");
     if (!doc) return res.status(404).json({ message: "Not found" });
     res.json(doc);
   } catch (err) {
@@ -53,7 +49,7 @@ export async function create(req, res, next) {
       return res.status(400).json({ message: "name and price are required" });
     }
 
-    // 1. Create product first (without inventoryId)
+    // 1. Create product (without inventoryId yet)
     const product = await Product.create({
       name: b.name?.trim(),
       category: b.category || "",
@@ -72,15 +68,17 @@ export async function create(req, res, next) {
       bestseller: !!b.bestseller,
     });
 
-    // 2. Auto-create inventory for this product
-    const inventory = await Inventory.create({
-      name: product.name,
-      category: product.category,
-      source: "In-house",
-      stock: 0,       // default
-      reorder: 10,    // default
-      img: product.imageUrl || "", // fallback to product image
-    });
+ // 2. Auto-create inventory for this product
+const inventory = await Inventory.create({
+  productId: product._id,   // 🔑 store link
+  name: product.name,
+  category: product.category,
+  source: "In-house",
+  stock: 0,
+  reorder: 10,
+  img: product.imageUrl || "",
+});
+
 
     // 3. Link product → inventory
     product.inventoryId = inventory._id;
@@ -128,4 +126,3 @@ export async function remove(req, res, next) {
     next(err);
   }
 }
-

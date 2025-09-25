@@ -9,6 +9,7 @@ export const createOrderDetails = async (req, res) => {
       return res.status(400).json({ success: false, message: "No items in order" });
     }
 
+    // 1️⃣ Save new order
     const newOrder = new orderDetailsModel({
       userId: userId || "guest",
       items,
@@ -18,6 +19,15 @@ export const createOrderDetails = async (req, res) => {
     });
 
     await newOrder.save();
+
+    // 2️⃣ Reduce stock in Inventory
+    for (const item of items) {
+      const inv = await Inventory.findOne({ productId: item.productId });
+      if (inv) {
+        inv.stock = Math.max(0, inv.stock - item.quantity);
+        await inv.save();
+      }
+    }
 
     res.json({ success: true, message: "Order placed successfully", order: newOrder });
   } catch (error) {
