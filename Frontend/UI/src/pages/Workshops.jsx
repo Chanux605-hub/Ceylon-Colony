@@ -1,15 +1,25 @@
 // src/pages/Workshops.jsx
 import React from "react";
 import aboutHero from "../assets/about-hero2.jpg";
+import chatIcon from "../assets/chatbot01.png"; // chatbot button image
 
-/* -------- tiny inline API helper (no api/ folder needed) -------- */
+/* -------- tiny inline API helper -------- */
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
-async function listWorkshops() {
-  const res = await fetch(`${BASE}/api/workshops`);
-  const data = await res.json().catch(() => []);
-  if (!res.ok) throw new Error(data?.error || `Failed to load workshops`);
+async function jfetch(url, opts = {}) {
+  const res = await fetch(url, {
+    headers: { "Content-Type": "application/json" },
+    ...opts,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || `Request failed: ${res.status}`);
   return data;
 }
+const listWorkshops = () => jfetch(`${BASE}/api/workshops`);
+const createParticipant = (payload) =>
+  jfetch(`${BASE}/api/participants`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 /* ---------------------------------------------------------------- */
 
 export default function Workshops() {
@@ -23,15 +33,15 @@ export default function Workshops() {
   const [location, setLocation] = React.useState("All");
   const [date, setDate] = React.useState("");
 
-  const [openId, setOpenId] = React.useState(null);      // details modal
-  const [booking, setBooking] = React.useState(null);    // booking modal
+  const [openId, setOpenId] = React.useState(null); // details modal
+  const [booking, setBooking] = React.useState(null); // booking modal
 
   React.useEffect(() => {
     (async () => {
       try {
         const rows = await listWorkshops();
-        // normalize id shape for React keys
-        setData(rows.map(w => ({ ...w, id: w._id || w.id })));
+        const published = rows.filter((w) => w.status === "Published");
+        setData(published.map((w) => ({ ...w, id: w._id || w.id })));
         setError("");
       } catch (e) {
         setError(e?.message || "Could not load workshops");
@@ -41,17 +51,17 @@ export default function Workshops() {
     })();
   }, []);
 
-  // derive distinct filter options from data
+  // derive filter options
   const levelOptions = React.useMemo(() => {
-    const s = new Set(data.map(d => d.level).filter(Boolean));
+    const s = new Set(data.map((d) => d.level).filter(Boolean));
     return ["All", ...Array.from(s)];
   }, [data]);
   const locationOptions = React.useMemo(() => {
-    const s = new Set(data.map(d => d.location).filter(Boolean));
+    const s = new Set(data.map((d) => d.location).filter(Boolean));
     return ["All", ...Array.from(s)];
   }, [data]);
 
-  // ---------- DERIVED LIST (filters) ----------
+  // filtered list
   const list = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     return data.filter((w) => {
@@ -60,7 +70,7 @@ export default function Workshops() {
         [w.title, w.blurb, w.location].filter(Boolean).join(" ").toLowerCase().includes(q);
       const passL = level === "All" || w.level === level;
       const passLoc = location === "All" || w.location === location;
-      const passDate = !date || (w.date || "") >= date; // naive compare on YYYY-MM-DD
+      const passDate = !date || (w.date || "") >= date;
       return passQ && passL && passLoc && passDate;
     });
   }, [data, query, level, location, date]);
@@ -102,8 +112,8 @@ export default function Workshops() {
         </div>
       </section>
 
+      {/* ---------- FILTERS ---------- */}
       <main id="workshops" className="mx-auto max-w-7xl px-4 pt-8 pb-16">
-        {/* ---------- FILTERS ---------- */}
         <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
           <div className="grid gap-3 md:grid-cols-4">
             <div className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2">
@@ -115,23 +125,24 @@ export default function Workshops() {
                 className="w-full bg-transparent text-sm outline-none placeholder:text-neutral-400"
               />
             </div>
-
             <select
               value={level}
               onChange={(e) => setLevel(e.target.value)}
               className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none"
             >
-              {levelOptions.map(opt => <option key={opt}>{opt}</option>)}
+              {levelOptions.map((opt) => (
+                <option key={opt}>{opt}</option>
+              ))}
             </select>
-
             <select
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none"
             >
-              {locationOptions.map(opt => <option key={opt}>{opt}</option>)}
+              {locationOptions.map((opt) => (
+                <option key={opt}>{opt}</option>
+              ))}
             </select>
-
             <input
               type="date"
               value={date}
@@ -141,38 +152,40 @@ export default function Workshops() {
           </div>
         </section>
 
-        {/* ---------- LIST (cards) ---------- */}
+        {/* ---------- LIST ---------- */}
         {error && (
           <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">
             {error}
           </div>
         )}
-
         <section className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {loading ? (
             <div className="col-span-full text-neutral-600">Loading…</div>
           ) : list.length === 0 ? (
             <div className="col-span-full rounded-2xl border border-neutral-200 bg-white p-10 text-center text-neutral-600">
-              No workshops match your filters. {data.length === 0 ? "Check back soon!" : "Try clearing filters."}
+              No workshops match your filters.{" "}
+              {data.length === 0 ? "Check back soon!" : "Try clearing filters."}
             </div>
           ) : (
             list.map((w) => {
-              const pct = Math.round((Number(w.seatsTaken || 0) / Math.max(Number(w.capacity || 1), 1)) * 100);
-              const spotsLeft = Math.max(Number(w.capacity || 0) - Number(w.seatsTaken || 0), 0);
-
+              const pct = Math.round(
+                (Number(w.seatsTaken || 0) / Math.max(Number(w.capacity || 1), 1)) * 100
+              );
+              const spotsLeft = Math.max(
+                Number(w.capacity || 0) - Number(w.seatsTaken || 0),
+                0
+              );
               return (
                 <article
                   key={w.id}
                   className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                 >
-                  {/* Cover */}
                   <div className="relative aspect-[4/3] w-full overflow-hidden">
                     {w.coverUrl ? (
                       <img
                         src={w.coverUrl}
                         alt={w.title}
                         className="h-full w-full object-cover transition duration-500 hover:scale-105"
-                        loading="lazy"
                       />
                     ) : (
                       <div className="h-full w-full bg-neutral-200" />
@@ -183,46 +196,47 @@ export default function Workshops() {
                       </span>
                     )}
                   </div>
-
-                  {/* Content */}
                   <div className="p-5">
                     <h3 className="text-lg font-semibold text-stone-900">{w.title}</h3>
-                    {w.blurb && <p className="mt-1 text-sm text-neutral-600">{w.blurb}</p>}
-
+                    {w.blurb && (
+                      <p className="mt-1 text-sm text-neutral-600">{w.blurb}</p>
+                    )}
                     <div className="mt-3 grid gap-1 text-sm text-neutral-700">
-                      <div>📅 {w.date} — {w.time}{w.duration ? ` (${w.duration})` : ""}</div>
-                      <div>📍 {w.location}</div>
                       <div>
-                        💰 {w.price || "N/A"}{" "}
-                        <span className="text-neutral-500">(per person)</span>
+                        📅 {w.date} — {w.time} {w.duration ? `(${w.duration})` : ""}
                       </div>
+                      <div>📍 {w.location}</div>
+                      <div>💰 {w.price || "N/A"} per person</div>
                     </div>
-
-                    {/* Capacity */}
                     <div className="mt-3">
                       <div className="flex items-center justify-between text-xs text-neutral-600">
                         <span>Spots</span>
-                        <span>{w.seatsTaken}/{w.capacity}</span>
+                        <span>
+                          {w.seatsTaken}/{w.capacity}
+                        </span>
                       </div>
                       <div className="mt-1 h-2 w-full rounded-full bg-neutral-200">
-                        <div className="h-2 rounded-full bg-[#fbb01a]" style={{ width: `${pct}%` }} />
+                        <div
+                          className="h-2 rounded-full bg-[#fbb01a]"
+                          style={{ width: `${pct}%` }}
+                        />
                       </div>
                       <div className="mt-1 text-xs text-neutral-600">
-                        {spotsLeft > 0 ? `${spotsLeft} seats left` : "Full — join waitlist"}
+                        {spotsLeft > 0
+                          ? `${spotsLeft} seats left`
+                          : "Full — join waitlist"}
                       </div>
                     </div>
-
-                    {/* Actions */}
                     <div className="mt-4 flex items-center gap-2">
                       <button
                         onClick={() => setOpenId(w.id)}
-                        className="inline-flex items-center justify-center rounded-full border border-neutral-300 px-4 py-2 text-sm font-semibold hover:bg-neutral-50"
+                        className="rounded-full border border-neutral-300 px-4 py-2 text-sm font-semibold hover:bg-neutral-50"
                       >
                         Details
                       </button>
                       <button
                         onClick={() => setBooking(w)}
-                        className="inline-flex items-center justify-center rounded-full bg-[#fbb01a] px-4 py-2 text-sm font-semibold text-black hover:brightness-95"
+                        className="rounded-full bg-[#fbb01a] px-4 py-2 text-sm font-semibold text-black hover:brightness-95"
                       >
                         Book
                       </button>
@@ -235,7 +249,7 @@ export default function Workshops() {
         </section>
       </main>
 
-      {/* ---------- DETAILS MODAL ---------- */}
+      {/* DETAILS MODAL */}
       {open && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
@@ -253,30 +267,30 @@ export default function Workshops() {
               )}
               <button
                 onClick={() => setOpenId(null)}
-                className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1 text-sm font-semibold ring-1 ring-black/5 hover:bg-white"
+                className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1 text-sm font-semibold"
               >
                 Close
               </button>
             </div>
             <div className="p-6">
-              <h3 className="text-xl font-bold text-stone-900">{open.title}</h3>
-              {open.blurb && <p className="mt-2 text-neutral-700">{open.blurb}</p>}
-              <div className="mt-4 grid gap-2 text-sm text-neutral-700">
-                <div>📅 {open.date} — {open.time}{open.duration ? ` (${open.duration})` : ""}</div>
+              <h3 className="text-xl font-bold">{open.title}</h3>
+              {open.blurb && <p className="mt-2">{open.blurb}</p>}
+              <div className="mt-4 text-sm text-neutral-700">
+                <div>📅 {open.date} — {open.time}</div>
                 <div>📍 {open.location}</div>
-                <div>🎓 Level: {open.level}</div>
-                <div>💰 {open.price || "N/A"} per person</div>
+                <div>🎓 {open.level}</div>
+                <div>💰 {open.price || "N/A"}</div>
               </div>
-              <div className="mt-6 flex items-center gap-2">
+              <div className="mt-6 flex gap-2">
                 <button
                   onClick={() => setBooking(open)}
-                  className="inline-flex items-center justify-center rounded-full bg-[#fbb01a] px-5 py-2 font-semibold text-black hover:brightness-95"
+                  className="rounded-full bg-[#fbb01a] px-5 py-2 font-semibold text-black"
                 >
                   Book this workshop
                 </button>
                 <button
                   onClick={() => setOpenId(null)}
-                  className="inline-flex items-center justify-center rounded-full border border-neutral-300 px-5 py-2 font-semibold hover:bg-neutral-50"
+                  className="rounded-full border px-5 py-2 font-semibold"
                 >
                   Close
                 </button>
@@ -286,8 +300,11 @@ export default function Workshops() {
         </div>
       )}
 
-      {/* ---------- BOOKING MODAL (same UI as before) ---------- */}
+      {/* BOOKING MODAL */}
       {booking && <BookingModal workshop={booking} onClose={() => setBooking(null)} />}
+
+      {/* CHATBOT */}
+      <Chatbot workshops={list} />
     </div>
   );
 }
@@ -295,7 +312,6 @@ export default function Workshops() {
 /* ======================= Booking Modal ======================= */
 function BookingModal({ workshop, onClose }) {
   const spotsLeft = Math.max((workshop.capacity || 0) - (workshop.seatsTaken || 0), 0);
-
   const [form, setForm] = React.useState({
     name: "",
     email: "",
@@ -306,29 +322,33 @@ function BookingModal({ workshop, onClose }) {
     agree: false,
   });
   const [submitted, setSubmitted] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
   const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.phone || !form.agree) return;
-    setSubmitted(true);
+    setLoading(true);
+    try {
+      await createParticipant({
+        ...form,
+        workshopId: workshop.id,
+        status: "Registered",
+      });
+      setSubmitted(true);
+    } catch (err) {
+      alert(err.message || "Failed to register");
+    } finally {
+      setLoading(false);
+    }
   };
-
-  
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div className="w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="border-b border-neutral-200 bg-neutral-50 px-5 py-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-stone-900">Register for {workshop.title}</h3>
-            <button onClick={onClose} className="rounded-full border border-neutral-300 px-3 py-1 text-sm hover:bg-neutral-100">
-              Close
-            </button>
-          </div>
-          <p className="mt-1 text-sm text-neutral-600">
-            📅 {workshop.date} • {workshop.time} • {workshop.location} • {workshop.level}
-          </p>
+      <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="border-b bg-neutral-50 px-5 py-4 flex justify-between">
+          <h3 className="font-semibold">Register for {workshop.title}</h3>
+          <button onClick={onClose} className="rounded border px-3 py-1 text-sm">Close</button>
         </div>
 
         <div className="p-5">
@@ -336,59 +356,49 @@ function BookingModal({ workshop, onClose }) {
             <div className="rounded-xl bg-green-50 p-5 text-green-700">
               <div className="text-lg font-semibold">Thanks! 🎉</div>
               <p className="mt-1 text-sm">
-                We’ve received your registration request for <strong>{workshop.title}</strong>. We’ll email you
-                confirmation shortly.
+                We’ve received your registration for <strong>{workshop.title}</strong>.
               </p>
-              <button onClick={onClose} className="mt-4 inline-flex items-center justify-center rounded-full bg-[#fbb01a] px-5 py-2 font-semibold text-black hover:brightness-95">
+              <button onClick={onClose} className="mt-4 rounded-full bg-[#fbb01a] px-5 py-2 font-semibold text-black">
                 Done
               </button>
             </div>
           ) : (
             <form onSubmit={onSubmit} className="grid gap-3">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="grid gap-1 text-sm">
+              <div className="grid sm:grid-cols-2 gap-3">
+                <label className="text-sm">
                   Full name
-                  <input value={form.name} onChange={(e) => update("name", e.target.value)} required className="rounded-xl border border-neutral-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#fbb01a]/40" />
+                  <input value={form.name} onChange={(e) => update("name", e.target.value)} required className="w-full rounded-xl border px-3 py-2" />
                 </label>
-                <label className="grid gap-1 text-sm">
+                <label className="text-sm">
                   Phone
-                  <input value={form.phone} onChange={(e) => update("phone", e.target.value)} required className="rounded-xl border border-neutral-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#fbb01a]/40" />
+                  <input value={form.phone} onChange={(e) => update("phone", e.target.value)} required className="w-full rounded-xl border px-3 py-2" />
                 </label>
               </div>
-
-              <label className="grid gap-1 text-sm">
+              <label className="text-sm">
                 Email
-                <input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} required className="rounded-xl border border-neutral-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#fbb01a]/40" />
+                <input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} required className="w-full rounded-xl border px-3 py-2" />
               </label>
-
-              <label className="grid gap-1 text-sm">
+              <label className="text-sm">
                 Address
-                <input value={form.address} onChange={(e) => update("address", e.target.value)} placeholder="Street, city, district" className="rounded-xl border border-neutral-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#fbb01a]/40" />
+                <input value={form.address} onChange={(e) => update("address", e.target.value)} className="w-full rounded-xl border px-3 py-2" />
               </label>
-
-              <label className="grid gap-1 text-sm">
+              <label className="text-sm">
                 Seats
-                <input type="number" min={1} max={Math.max(spotsLeft, 1)} value={form.seats} onChange={(e) => update("seats", Number(e.target.value))} required className="rounded-xl border border-neutral-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#fbb01a]/40" />
-                <span className="text-xs text-neutral-500">
-                  {spotsLeft > 0 ? `${spotsLeft} seats available` : "Currently full — we’ll add you to the waitlist"}
-                </span>
+                <input type="number" min={1} max={Math.max(spotsLeft, 1)} value={form.seats} onChange={(e) => update("seats", Number(e.target.value))} className="w-full rounded-xl border px-3 py-2" />
               </label>
-
-              <label className="grid gap-1 text-sm">
-                Notes (optional)
-                <textarea rows={3} value={form.notes} onChange={(e) => update("notes", e.target.value)} className="rounded-xl border border-neutral-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#fbb01a]/40" placeholder="Allergies, accessibility, etc." />
+              <label className="text-sm">
+                Notes
+                <textarea rows={3} value={form.notes} onChange={(e) => update("notes", e.target.value)} className="w-full rounded-xl border px-3 py-2" />
               </label>
-
-              <label className="mt-1 flex items-start gap-2 text-sm">
-                <input type="checkbox" checked={form.agree} onChange={(e) => update("agree", e.target.checked)} required className="mt-0.5" />
-                I agree to the event guidelines and consent to be contacted about my registration.
+              <label className="flex gap-2 text-sm">
+                <input type="checkbox" checked={form.agree} onChange={(e) => update("agree", e.target.checked)} required />
+                I agree to the event guidelines.
               </label>
-
-              <div className="mt-2 flex items-center gap-2">
-                <button type="submit" className="inline-flex items-center justify-center rounded-full bg-[#fbb01a] px-5 py-2 font-semibold text-black hover:brightness-95">
-                  Submit registration
+              <div className="flex gap-2 mt-2">
+                <button type="submit" disabled={loading} className="rounded-full bg-[#fbb01a] px-5 py-2 font-semibold text-black disabled:opacity-50">
+                  {loading ? "Submitting…" : "Submit registration"}
                 </button>
-                <button type="button" onClick={onClose} className="inline-flex items-center justify-center rounded-full border border-neutral-300 px-5 py-2 font-semibold hover:bg-neutral-50">
+                <button type="button" onClick={onClose} className="rounded-full border px-5 py-2 font-semibold">
                   Cancel
                 </button>
               </div>
@@ -396,6 +406,168 @@ function BookingModal({ workshop, onClose }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ======================= Chatbot ======================= */
+function Chatbot({ workshops }) {
+  const [open, setOpen] = React.useState(false);
+  const [messages, setMessages] = React.useState([
+    { from: "bot", text: "Hello! 🐝 Ask me anything about our workshops." },
+  ]);
+  const [input, setInput] = React.useState("");
+
+  const getReply = (msg) => {
+    const text = msg.toLowerCase();
+
+    // greetings
+    if (text.includes("hello") || text.includes("hi")) {
+      return "Hello 👋! How can I help you with our workshops?";
+    }
+
+    // general info
+    if (text.includes("workshop") || text.includes("information") || text.includes("details")) {
+      return "📚 We offer beginner and intermediate workshops on beekeeping, hive care, and honey processing. You can view schedules above.";
+    }
+
+    // duration
+    if (text.includes("duration") || text.includes("long") || text.includes("hours")) {
+      return "⏳ Most workshops last between 2 to 4 hours depending on the topic.";
+    }
+
+    // trainers
+    if (text.includes("trainer") || text.includes("instructor") || text.includes("teacher")) {
+      return "👩‍🏫 Our workshops are led by certified beekeeping experts with hands-on experience.";
+    }
+
+    // booking
+    if (
+      text.includes("register") ||
+      text.includes("enroll") ||
+      text.includes("book") ||
+      text.includes("join") ||
+      text.includes("sign up")
+    ) {
+      return "✅ To register, click the 'Book' button under your chosen workshop card.";
+    }
+
+    // cancellation
+    if (text.includes("cancel") || text.includes("withdraw")) {
+      return "❌ You can cancel your registration from your account page or by contacting support.";
+    }
+
+    // payment
+    if (text.includes("payment") || text.includes("pay") || text.includes("fees")) {
+      return "💳 Payments are accepted online or at the venue. Most workshops are Rs. 2500, some are Free.";
+    }
+
+    // refund
+    if (text.includes("refund") || text.includes("money back")) {
+      return "↩️ Refunds are available if you cancel at least 48 hours before the workshop.";
+    }
+
+    // location
+    if (text.includes("location") || text.includes("venue") || text.includes("where")) {
+      return "📍 Workshops are held in Colombo, Kandy, and also Online.";
+    }
+
+    // timing
+    if (text.includes("time") || text.includes("schedule") || text.includes("when")) {
+      return "🗓️ You can check exact dates and times in the workshop list above.";
+    }
+
+    // try match by workshop title
+    const match = workshops.find((w) => w.title.toLowerCase().includes(text));
+    if (match) {
+      return `📌 "${match.title}" is scheduled on ${match.date} at ${match.location}. Price: ${match.price}.`;
+    }
+
+    // fallback
+    return "🤖 Sorry, I couldn’t find that. Try asking about workshop topics, time, price, or location.";
+  };
+
+  const sendMessage = () => {
+    if (!input.trim()) return;
+    setMessages((prev) => [...prev, { from: "user", text: input }]);
+    const reply = getReply(input);
+    setTimeout(() => {
+      setMessages((prev) => [...prev, { from: "bot", text: reply }]);
+    }, 400);
+    setInput("");
+  };
+
+  return (
+    <div>
+      {/* Floating button */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="fixed bottom-6 right-6 rounded-full shadow-lg p-2 bg-white border-4 border-yellow-400 hover:scale-110 transition-transform duration-300"
+      >
+        <img src={chatIcon} alt="Chat" className="w-14 h-14 object-contain" />
+      </button>
+
+      {/* Chat window */}
+      {open && (
+        <div className="fixed bottom-24 right-6 w-80 rounded-2xl overflow-hidden shadow-2xl bg-neutral-900 border border-[#fbb01a]">
+          {/* Header */}
+          <div className="bg-[#fbb01a] px-4 py-3 font-bold text-black flex justify-between items-center">
+            🐝 Workshop Assistant
+            <button onClick={() => setOpen(false)} className="font-bold">
+              ✕
+            </button>
+          </div>
+
+          {/* Messages */}
+          <div
+            className="flex-1 p-3 overflow-y-auto text-sm space-y-3 max-h-80"
+            style={{
+              backgroundImage:
+                "linear-gradient(45deg, rgba(255,176,26,0.05) 25%, transparent 25%), linear-gradient(-45deg, rgba(255,176,26,0.05) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(255,176,26,0.05) 75%), linear-gradient(-45deg, transparent 75%, rgba(255,176,26,0.05) 75%)",
+              backgroundSize: "20px 20px",
+            }}
+          >
+            {messages.map((m, i) => (
+              <div
+                key={i}
+                className={`flex items-end ${
+                  m.from === "user" ? "justify-end" : "justify-start"
+                }`}
+              >
+                {m.from === "bot" && (
+                  <span className="mr-2 text-lg">🐝</span>
+                )}
+                <div
+                  className={`px-3 py-2 rounded-2xl relative max-w-[70%] ${
+                    m.from === "user"
+                      ? "bg-[#fbb01a] text-black rounded-br-none"
+                      : "bg-neutral-800 text-white rounded-bl-none"
+                  }`}
+                >
+                  {m.text}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Input */}
+          <div className="flex border-t border-neutral-700 bg-neutral-800">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+              placeholder="Ask about a workshop..."
+              className="flex-1 px-3 py-2 text-sm outline-none bg-transparent text-white placeholder:text-neutral-400"
+            />
+            <button
+              onClick={sendMessage}
+              className="px-4 text-[#fbb01a] font-bold hover:text-white transition-colors"
+            >
+              ➤
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import connection from "./config/db.js";
 import farmRouter from "./routes/farmRoutes.js";
 import hiveRouter from "./routes/hiveRoutes.js";
 import workshopRouter from "./routes/workshopRoutes.js";
+import participantRoutes from "./routes/participantRoutes.js";
 
 const app = express();
 const allowOrigins = ["http://localhost:5173"];
@@ -18,6 +19,7 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use("/api/farms", farmRouter);
 app.use("/api/hives", hiveRouter);
 app.use("/api/workshops", workshopRouter);
+app.use("/api/participants", participantRoutes);
 
 // ✅ Catch-all 404 must be LAST
 app.use((req, res) => {
