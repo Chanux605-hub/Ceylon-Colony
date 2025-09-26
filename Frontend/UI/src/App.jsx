@@ -77,7 +77,7 @@ export default function App() {
           <Route path="customer-media"     element={<CustomerMediaManagement />} />
           <Route path="farm-harvest"     element={<FarmHarvestManagement />} />
 
-          <Route path="orders"    element={<OrderDeliveryManagement />} />
+          
           
         
         </Route>
