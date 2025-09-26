@@ -7,6 +7,7 @@ import ModernLogin from "./Components/ModernLogin.jsx";
 import AdminLayout from "./Components/admin/AdminLayout.jsx";
 import Home from "./pages/Home.jsx"
 import OurProducts from "./pages/OurProducts.jsx"
+import Community from "./pages/Community.jsx"
 
 
 import About from "./pages/About.jsx";
@@ -73,9 +74,11 @@ export default function App() {
           <Route path="workshops" element={<WorkshopScheduleManagement />} />
       
           <Route path="orders"    element={<OrderDeliveryManagement />} />
-          <Route path="media"     element={<CustomerMediaManagement />} />
+          <Route path="customer-media"     element={<CustomerMediaManagement />} />
           <Route path="farm-harvest"     element={<FarmHarvestManagement />} />
 
+          <Route path="orders"    element={<OrderDeliveryManagement />} />
+          
         
         </Route>
 
@@ -95,6 +98,7 @@ export default function App() {
         <Route path="/farmRegistration" element ={<FarmRegistrationForm/>}/>
         <Route path="/hiveRegistration" element ={<HiveRegistrationForm/>}/>
 
+        <Route path="/community" element={<Community />} />
 
       </Routes>
     </BrowserRouter>

@@ -1,17 +1,32 @@
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
 
-import connection from "./config/db.js"; 
+import { connectDB } from "./config/db.js";
 import farmRouter from "./routes/farmRoutes.js";
 import hiveRouter from "./routes/hiveRoutes.js";
 import workshopRouter from "./routes/workshopRoutes.js";
 import participantRoutes from "./routes/participantRoutes.js";
+import postRoutes from "./routes/postRoutes.js";
+
+dotenv.config();
 
 const app = express();
-const allowOrigins = ["http://localhost:5173"];
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+];
 
 // Middleware
-app.use(cors({ origin: allowOrigins }));
+app.use(
+  cors({
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
+
 app.use(express.json({ limit: "50mb" }));               
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
@@ -20,6 +35,9 @@ app.use("/api/farms", farmRouter);
 app.use("/api/hives", hiveRouter);
 app.use("/api/workshops", workshopRouter);
 app.use("/api/participants", participantRoutes);
+app.use("/api", postRoutes);
+
+app.get("/health", (req, res) => res.json({ ok: true }));
 
 // ✅ Catch-all 404 must be LAST
 app.use((req, res) => {
@@ -28,9 +46,19 @@ app.use((req, res) => {
 });
 
 // Connect to DB
-connection();
+connectDB();
 
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+const port = process.env.PORT || 3000;
+  app.listen(port, () =>
+    console.log(`✅ API listening on http://localhost:${port}`)
+);
+
+
+
+
+
+
+
+
+
+
