@@ -701,24 +701,24 @@ function AnalyticsTab() {
   return (
     <div className="grid gap-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-4 gap-6">
-        <div className="bg-neutral-900 p-4 h-24 rounded-lg text-center w-full">
-          <h4 className="text-sm text-neutral-400">Total Workshops</h4>
-          <p className="text-2xl font-bold text-yellow-400">{totalWorkshops}</p>
+        <div className="flex gap-6">
+          <div className="flex-1 bg-neutral-900 px-6 py-4 h-28 rounded-lg text-center">
+            <h4 className="text-sm text-neutral-400">Total Workshops</h4>
+            <p className="text-2xl font-bold text-yellow-400">{totalWorkshops}</p>
+          </div>
+          <div className="flex-1 bg-neutral-900 px-6 py-4 h-28 rounded-lg text-center">
+            <h4 className="text-sm text-neutral-400">Published</h4>
+            <p className="text-2xl font-bold text-green-500">{published}</p>
+          </div>
+          <div className="flex-1 bg-neutral-900 px-6 py-4 h-28 rounded-lg text-center">
+            <h4 className="text-sm text-neutral-400">Cancelled</h4>
+            <p className="text-2xl font-bold text-red-500">{cancelled}</p>
+          </div>
+          <div className="flex-1 bg-neutral-900 px-6 py-4 h-28 rounded-lg text-center">
+            <h4 className="text-sm text-neutral-400">Draft</h4>
+            <p className="text-2xl font-bold text-blue-400">{draft}</p>
+          </div>
         </div>
-        <div className="bg-neutral-900 p-4 h-24 rounded-lg text-center w-full">
-          <h4 className="text-sm text-neutral-400">Published</h4>
-          <p className="text-2xl font-bold text-green-500">{published}</p>
-        </div>
-        <div className="bg-neutral-900 p-4 h-24 rounded-lg text-center w-full">
-          <h4 className="text-sm text-neutral-400">Cancelled</h4>
-          <p className="text-2xl font-bold text-red-500">{cancelled}</p>
-        </div>
-        <div className="bg-neutral-900 p-4 h-24 rounded-lg text-center w-full">
-          <h4 className="text-sm text-neutral-400">Draft</h4>
-          <p className="text-2xl font-bold text-blue-400">{draft}</p>
-        </div>
-      </div>
 
       {/* Workshops per Month */}
       <div className="bg-neutral-900 p-4 rounded-xl mt-4 col-span-full">
