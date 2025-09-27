@@ -1,3 +1,4 @@
+// Backend/routes/inventory.routes.js
 import { Router } from "express";
 import * as ctrl from "../controllers/inventory.controller.js";
 
