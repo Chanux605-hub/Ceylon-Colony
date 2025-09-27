@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-// ---------- constants (must match schema enums) ----------
+// ---------- constants ----------
 const HIVE_TYPES = ["Langstroth", "Top-bar", "Warre", "Traditional Box"];
 const MATERIALS = ["Wood", "Plastic", "Clay", "Other"];
 const STATUSES = ["Active", "Dormant", "Needs Attention", "Retired"];
@@ -9,6 +10,7 @@ const STRENGTHS = ["Strong", "Medium", "Weak"];
 const COLONY_SOURCES = ["Swarm", "Split", "Purchased", "Other"];
 
 export default function HiveRegistrationForm() {
+  const navigate = useNavigate();
   const [form, setForm] = useState(defaultForm());
   const [errors, setErrors] = useState({});
   const [farms, setFarms] = useState([]);
@@ -16,7 +18,7 @@ export default function HiveRegistrationForm() {
   // auto ID
   const hiveId = useMemo(() => makeHiveId(form.hiveName), [form.hiveName]);
 
-  // hardcoded farms for now
+  // temporary farms list
   useEffect(() => {
     setFarms([
       { farmId: "FARM-001", farmName: "Mahaweli Apiary" },
@@ -60,40 +62,44 @@ export default function HiveRegistrationForm() {
       const res = await axios.post("http://localhost:3000/api/hives/register", payload);
 
       if (res.data.success) {
-        alert("Hive registered successfully!");
-        console.log("Saved hive:", res.data.hive);
-        setForm(defaultForm()); // reset form after success
+        alert("✅ Hive registered successfully!");
+        setForm(defaultForm()); // reset
         setErrors({});
       } else {
-        alert("Failed to register hive: " + res.data.message);
+        alert("❌ Failed to register hive: " + res.data.message);
       }
     } catch (err) {
       console.error("Error saving hive:", err);
-      alert("Error saving hive. Check console.");
+      alert("❌ Error saving hive. Check console.");
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 p-6">
-      <div className="mx-auto max-w-5xl">
+    <div className="min-h-screen bg-[#0B0B0B] text-white py-10 px-4 flex flex-col items-center">
+      {/* 🔙 Back button */}
+      <div className="w-full max-w-5xl mb-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="px-5 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
+        >
+          ← Back
+        </button>
+      </div>
+
+      <div className="mx-auto max-w-5xl w-full bg-[#1a1a1a] border border-[#FBB01A]/40 rounded-2xl p-8 shadow-lg">
         {/* Header */}
         <header className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <span className="px-2 py-1 text-xs rounded-full border border-slate-700 text-amber-300">
-              Farm & Harvest Management
-            </span>
-            <h1 className="text-2xl font-bold">Hive Registration</h1>
+            
+            <h1 className="text-2xl font-bold text-[#FBB01A]">Hive Registration</h1>
           </div>
-          <code className="text-emerald-300 bg-slate-800 border border-slate-700 px-3 py-1 rounded-md text-xs">
+          <code className="text-emerald-300 bg-[#0B0B0B] border border-gray-600 px-3 py-1 rounded-md text-xs">
             {hiveId}
           </code>
         </header>
 
         {/* Form */}
-        <form
-          onSubmit={handleSubmit}
-          className="bg-slate-950/70 border border-slate-800 rounded-2xl p-5 shadow-xl"
-        >
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Hive Information */}
           <Section title="Basic Hive Information">
             <Grid>
@@ -180,13 +186,13 @@ export default function HiveRegistrationForm() {
                   name="dateEstablished"
                   value={form.dateEstablished}
                   onChange={handleChange}
-                  className={inputCls}
+                  className={inputCls + " text-black"} // white calendar picker
                 />
               </FormField>
             </Grid>
           </Section>
 
-          {/* Bee Colony Information */}
+          {/* Colony Info */}
           <Section title="Bee Colony Information">
             <Grid>
               <FormField label="Bee Species">
@@ -231,7 +237,7 @@ export default function HiveRegistrationForm() {
                 {COLONY_SOURCES.map((src) => (
                   <label
                     key={src}
-                    className="inline-flex items-center gap-2 text-sm bg-slate-900 border border-slate-700 rounded-xl px-3 py-2"
+                    className="inline-flex items-center gap-2 text-sm bg-[#0B0B0B] border border-gray-600 rounded-xl px-3 py-2"
                   >
                     <input
                       type="checkbox"
@@ -247,84 +253,6 @@ export default function HiveRegistrationForm() {
             </FormField>
           </Section>
 
-          {/* Operational Information */}
-          <Section title="Operational Information">
-            <Grid>
-              <FormField label="Current Status" required error={errors.status}>
-                <select
-                  name="status"
-                  value={form.status}
-                  onChange={handleChange}
-                  className={inputCls}
-                >
-                  {STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
-
-              <FormField label="Expected Annual Yield (kg)">
-                <input
-                  type="number"
-                  min="0"
-                  step="0.1"
-                  name="expectedYield"
-                  value={form.expectedYield}
-                  onChange={handleChange}
-                  placeholder="Eg: 25"
-                  className={inputCls}
-                />
-              </FormField>
-
-              <FormField label="Primary Flora Source">
-                <input
-                  name="flora"
-                  value={form.flora}
-                  onChange={handleChange}
-                  placeholder="Eg: Coconut, Lovi-lovi"
-                  className={inputCls}
-                />
-              </FormField>
-            </Grid>
-          </Section>
-
-          {/* Inspections */}
-          <Section title="Inspections">
-            <Grid>
-              <FormField label="Last Inspection Date">
-                <input
-                  type="date"
-                  name="lastInspection"
-                  value={form.lastInspection}
-                  onChange={handleChange}
-                  className={inputCls}
-                />
-              </FormField>
-
-              <FormField label="Next Inspection Due">
-                <input
-                  type="date"
-                  name="nextInspection"
-                  value={form.nextInspection}
-                  onChange={handleChange}
-                  className={inputCls}
-                />
-              </FormField>
-            </Grid>
-
-            <FormField label="Notes" span={2}>
-              <textarea
-                name="notes"
-                value={form.notes}
-                onChange={handleChange}
-                placeholder="Any additional observations..."
-                className={inputCls}
-              />
-            </FormField>
-          </Section>
-
           {/* Actions */}
           <div className="flex justify-end gap-3 mt-6">
             <button
@@ -333,13 +261,13 @@ export default function HiveRegistrationForm() {
                 setForm(defaultForm());
                 setErrors({});
               }}
-              className="px-4 py-2 rounded-xl border border-slate-700 hover:bg-slate-800"
+              className="px-4 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600"
             >
               Reset
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl font-semibold text-slate-900 bg-amber-400 hover:bg-amber-300"
+              className="px-4 py-2 rounded-lg bg-[#FBB01A] text-black font-semibold hover:bg-yellow-500"
             >
               Register Hive
             </button>
@@ -350,9 +278,9 @@ export default function HiveRegistrationForm() {
   );
 }
 
-// ---------- helpers ----------
+// helpers 
 const inputCls =
-  "w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-400";
+  "w-full rounded-lg bg-[#0B0B0B] border border-gray-600 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-[#FBB01A]";
 
 function makeHiveId(name) {
   const slug = String(name || "HIVE")
@@ -390,8 +318,8 @@ function Section({ title, children }) {
   return (
     <section className="mb-6">
       <div className="flex items-center gap-2 mb-3">
-        <h2 className="text-base font-semibold text-slate-200">{title}</h2>
-        <span className="h-px flex-1 bg-slate-800" />
+        <h2 className="text-lg font-semibold text-[#FBB01A]">{title}</h2>
+        <span className="h-px flex-1 bg-gray-700" />
       </div>
       {children}
     </section>
@@ -405,11 +333,11 @@ function Grid({ children }) {
 function FormField({ label, required, error, span = 1, children }) {
   return (
     <label className={`grid gap-1 ${span === 2 ? "md:col-span-2" : ""}`}>
-      <span className="text-xs text-slate-300">
-        {label} {required && <span className="text-rose-400">*</span>}
+      <span className="text-sm text-gray-300">
+        {label} {required && <span className="text-red-400">*</span>}
       </span>
       {children}
-      {error && <div className="text-[11px] text-rose-400">{error}</div>}
+      {error && <div className="text-xs text-red-400">{error}</div>}
     </label>
   );
 }

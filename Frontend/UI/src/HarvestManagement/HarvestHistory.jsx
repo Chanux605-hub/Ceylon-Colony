@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Edit3, Trash2 } from "lucide-react";
+import UpdateHarvestForm from "./UpdateHarvestForm";
 
 export default function HarvestHistory() {
   const [harvests, setHarvests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingHarvest, setEditingHarvest] = useState(null);
 
   // Fetch all harvests
   const fetchHarvests = async () => {
@@ -30,59 +32,86 @@ export default function HarvestHistory() {
         method: "DELETE",
       });
       const data = await res.json();
-      if (data.success) {
+
+      if (res.ok && data.success) {
         alert("✅ Harvest deleted");
-        fetchHarvests();
+        setHarvests((prev) => prev.filter((h) => h._id !== id));
       } else {
-        alert("❌ " + data.message);
+        alert("❌ " + (data.message || "Failed to delete harvest"));
       }
     } catch (err) {
       console.error("Delete error:", err);
+      alert("❌ Server error while deleting");
     }
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-4">Harvest History</h2>
+    <div className="p-6 bg-[#1a1a1a] rounded-xl shadow-lg text-white">
+      <h2 className="text-2xl font-bold mb-6 text-[#FBB01A] border-b border-gray-700 pb-2">
+        Harvest History
+      </h2>
       {loading ? (
-        <p>Loading...</p>
+        <p className="text-gray-400">Loading...</p>
       ) : harvests.length === 0 ? (
-        <p>No harvest records found</p>
+        <p className="text-gray-400">No harvest records found</p>
       ) : (
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-100 text-left">
-              <th className="p-3 border">Farm</th>
-              <th className="p-3 border">Hive</th>
-              <th className="p-3 border">Quantity (kg)</th>
-              <th className="p-3 border">Date</th>
-              <th className="p-3 border">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {harvests.map((h) => (
-              <tr key={h._id} className="hover:bg-gray-50">
-                <td className="p-3 border">{h.farmName || h.farmId}</td>
-                <td className="p-3 border">{h.hiveName || h.hiveId}</td>
-                <td className="p-3 border">{h.quantity}</td>
-                <td className="p-3 border">
-                  {new Date(h.date).toLocaleDateString()}
-                </td>
-                <td className="p-3 border flex gap-2">
-                  <button className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">
-                    <Edit3 className="w-4 h-4" /> Update
-                  </button>
-                  <button
-                    onClick={() => handleDelete(h._id)}
-                    className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                  >
-                    <Trash2 className="w-4 h-4" /> Delete
-                  </button>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-sm rounded-lg overflow-hidden">
+            <thead>
+              <tr className="bg-[#2a2a2a] text-gray-300 text-left">
+                <th className="p-3">Farm</th>
+                <th className="p-3">Hive</th>
+                <th className="p-3">Quantity (kg)</th>
+                <th className="p-3">Date</th>
+                <th className="p-3">Quality</th>
+                <th className="p-3">Notes</th>
+                <th className="p-3 text-center">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {harvests.map((h, idx) => (
+                <tr
+                  key={h._id}
+                  className={`transition ${
+                    idx % 2 === 0 ? "bg-[#0B0B0B]" : "bg-[#111111]"
+                  } hover:bg-[#2a2a2a]`}
+                >
+                  <td className="p-3">{h.farmName || h.farmId}</td>
+                  <td className="p-3">{h.hiveName || h.hiveId}</td>
+                  <td className="p-3">{h.quantity}</td>
+                  <td className="p-3">
+                    {new Date(h.date).toLocaleDateString()}
+                  </td>
+                  <td className="p-3">{h.quality}</td>
+                  <td className="p-3">{h.notes}</td>
+                  <td className="p-3 flex gap-2 justify-center">
+                    <button
+                      onClick={() => setEditingHarvest(h)}
+                      className="flex items-center gap-1 px-3 py-1 bg-[#10B981] text-white rounded-lg font-medium hover:bg-[#059669] transition shadow"
+                    >
+                      <Edit3 className="w-4 h-4" /> Update
+                    </button>
+                    <button
+                      onClick={() => handleDelete(h._id)}
+                      className="flex items-center gap-1 px-3 py-1 bg-[#EF4444] text-white rounded-lg font-medium hover:bg-[#DC2626] transition shadow"
+                    >
+                      <Trash2 className="w-4 h-4" /> Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Update Modal */}
+      {editingHarvest && (
+        <UpdateHarvestForm
+          harvest={editingHarvest}
+          onClose={() => setEditingHarvest(null)}
+          onSuccess={fetchHarvests}
+        />
       )}
     </div>
   );

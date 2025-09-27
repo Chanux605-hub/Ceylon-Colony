@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 export default function HiveUpdateForm() {
   const { hiveId } = useParams();
@@ -92,33 +93,44 @@ export default function HiveUpdateForm() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-2xl bg-white p-8 rounded-2xl shadow-lg border border-gray-200">
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+    <div className="min-h-screen bg-[#0B0B0B] flex flex-col items-center justify-center px-4 py-10">
+      {/* 🔹 Back Button (outside form) */}
+      <div className="w-full max-w-3xl mb-6 flex justify-start">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition"
+        >
+          <ArrowLeft className="w-5 h-5" /> Back
+        </button>
+      </div>
+
+      {/* 🔹 Form */}
+      <div className="w-full max-w-3xl bg-[#1a1a1a] p-8 rounded-2xl shadow-lg border border-[#FBB01A]/40">
+        <h2 className="text-3xl font-bold text-center text-[#FBB01A] mb-6">
           🐝 Update Hive
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5 text-white">
           {/* Hive Name */}
           <div>
-            <label className="block font-medium">Hive Name</label>
+            <label className="block font-medium mb-1 text-[#FBB01A]">Hive Name</label>
             <input
               type="text"
               name="hiveName"
               value={formData.hiveName}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2"
             />
           </div>
 
           {/* Hive Type */}
           <div>
-            <label className="block font-medium">Hive Type</label>
+            <label className="block font-medium mb-1 text-[#FBB01A]">Hive Type</label>
             <select
               name="hiveType"
               value={formData.hiveType}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2"
             >
               <option value="">Select type</option>
               <option value="Langstroth">Langstroth</option>
@@ -129,24 +141,24 @@ export default function HiveUpdateForm() {
 
           {/* Bee Species */}
           <div>
-            <label className="block font-medium">Bee Species</label>
+            <label className="block font-medium mb-1 text-[#FBB01A]">Bee Species</label>
             <input
               type="text"
               name="beeSpecies"
               value={formData.beeSpecies}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2"
             />
           </div>
 
           {/* Colony Strength */}
           <div>
-            <label className="block font-medium">Colony Strength</label>
+            <label className="block font-medium mb-1 text-[#FBB01A]">Colony Strength</label>
             <select
               name="colonyStrength"
               value={formData.colonyStrength}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2"
             >
               <option value="">Select strength</option>
               <option value="Strong">Strong</option>
@@ -157,12 +169,12 @@ export default function HiveUpdateForm() {
 
           {/* Status */}
           <div>
-            <label className="block font-medium">Status</label>
+            <label className="block font-medium mb-1 text-[#FBB01A]">Status</label>
             <select
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2"
             >
               <option value="">Select status</option>
               <option value="Active">Active</option>
@@ -173,131 +185,80 @@ export default function HiveUpdateForm() {
 
           {/* Location */}
           <div>
-            <label className="block font-medium">Location</label>
+            <label className="block font-medium mb-1 text-[#FBB01A]">Location</label>
             <input
               type="text"
               name="location"
               value={formData.location}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2"
             />
           </div>
 
           {/* Material */}
           <div>
-            <label className="block font-medium">Material</label>
+            <label className="block font-medium mb-1 text-[#FBB01A]">Material</label>
             <input
               type="text"
               name="material"
               value={formData.material}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2"
             />
           </div>
 
           {/* Date Established */}
           <div>
-            <label className="block font-medium">Date Established</label>
+            <label className="block font-medium mb-1 text-[#FBB01A]">Date Established</label>
             <input
               type="date"
               name="dateEstablished"
               value={formData.dateEstablished}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          {/* Queen ID */}
-          <div>
-            <label className="block font-medium">Queen ID</label>
-            <input
-              type="text"
-              name="queenId"
-              value={formData.queenId}
-              onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          {/* Flora */}
-          <div>
-            <label className="block font-medium">Flora</label>
-            <input
-              type="text"
-              name="flora"
-              value={formData.flora}
-              onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          {/* Colony Source */}
-          <div>
-            <label className="block font-medium">Colony Source</label>
-            <input
-              type="text"
-              name="colonySource"
-              value={formData.colonySource}
-              onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
-              placeholder="e.g., Split from Hive A, Package Bees"
-            />
-          </div>
-
-          {/* Last Inspection */}
-          <div>
-            <label className="block font-medium">Last Inspection</label>
-            <input
-              type="date"
-              name="lastInspection"
-              value={formData.lastInspection}
-              onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          {/* Next Inspection */}
-          <div>
-            <label className="block font-medium">Next Inspection</label>
-            <input
-              type="date"
-              name="nextInspection"
-              value={formData.nextInspection}
-              onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          {/* Notes */}
-          <div>
-            <label className="block font-medium">Notes</label>
-            <textarea
-              name="notes"
-              value={formData.notes}
-              onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2"
             />
           </div>
 
           {/* Expected Yield */}
           <div>
-            <label className="block font-medium">Expected Yield (kg)</label>
+            <label className="block font-medium mb-1 text-[#FBB01A]">Expected Yield (kg)</label>
             <input
               type="number"
               name="expectedYield"
               value={formData.expectedYield}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2"
             />
           </div>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            className="w-full bg-green-700 text-white py-2 rounded-lg font-medium hover:bg-green-800 transition"
-          >
-            Update Hive
-          </button>
+          {/* Notes */}
+          <div>
+            <label className="block font-medium mb-1 text-[#FBB01A]">Notes</label>
+            <textarea
+              name="notes"
+              value={formData.notes}
+              onChange={handleChange}
+              className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2"
+              rows="3"
+            />
+          </div>
+
+          {/* Buttons */}
+          <div className="flex justify-between gap-4 pt-4">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="w-1/2 bg-gray-700 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="w-1/2 bg-[#FBB01A] text-black py-2 rounded-lg font-semibold hover:bg-yellow-500 transition"
+            >
+              Update Hive
+            </button>
+          </div>
         </form>
       </div>
     </div>
