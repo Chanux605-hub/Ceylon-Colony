@@ -41,6 +41,7 @@ app.use("/api/hives", hiveRouter);
 app.use("/api/workshops", workshopRouter);
 app.use("/api/blogs", blogRouter);
 app.use("/api/harvests", harvestRoutes);
+app.use("/api/products", productRouter);
 
 // Catch-all 404 must be LAST
 app.use((req, res) => {

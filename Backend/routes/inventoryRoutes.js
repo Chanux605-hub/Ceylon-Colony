@@ -11,3 +11,4 @@ router.delete("/:id", ctrl.remove);
 router.patch("/:id/reduce", ctrl.reduceStock);
 
 export default router;
+ 
