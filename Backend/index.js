@@ -6,6 +6,7 @@ import farmRouter from "./routes/farmRoutes.js";
 import hiveRouter from "./routes/hiveRoutes.js";
 import workshopRouter from "./routes/workshopRoutes.js";
 import blogRouter from "./routes/blogRoutes.js";
+import harvestRoutes from "./routes/harvestRoutes.js";
 
 //gima's crud
 import productRouter from "./routes/product.routes.js"; // or productRoutes.js depending on your filename
@@ -33,6 +34,7 @@ app.use("/api/farms", farmRouter);
 app.use("/api/hives", hiveRouter);
 app.use("/api/workshops", workshopRouter);
 app.use("/api/blogs", blogRouter);
+app.use("/api/harvests", harvestRoutes);
 
 // Catch-all 404 must be LAST
 app.use((req, res) => {
