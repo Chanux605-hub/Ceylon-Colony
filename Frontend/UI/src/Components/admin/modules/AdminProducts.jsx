@@ -418,10 +418,27 @@ function ProductModal({ initial, onClose, onSave, inventoryOptions }) {
                      className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 focus:outline-none" placeholder="e.g., 500g / 50ml" />
             </Field>
 
-            <Field label="Price (Rs)">
-              <input type="number" min="0" value={form.price} onChange={(e) => handleChange("price", e.target.value)}
-                     className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 focus:outline-none" placeholder="e.g., 1900" />
-            </Field>
+         <Field label="Price (Rs)">
+  <input
+    type="number"
+    name="price"
+    value={form.price}
+    onChange={(e) => {
+      if (e.target.value === "0") return; // block single 0
+      handleChange("price", e.target.value);
+    }}
+    onKeyDown={(e) => {
+      if (e.key === "0" && e.currentTarget.value === "") {
+        e.preventDefault(); // stop typing 0 as first digit
+      }
+    }}
+    min="1"
+    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 focus:outline-none"
+    placeholder="e.g., 1900"
+    required
+  />
+</Field>
+
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4">

@@ -72,7 +72,12 @@ export async function create(req, res, next) {
       return res.status(400).json({ message: "name and price are required" });
     }
 
-    // 1. Create product (without inventoryId yet)
+    // ✅ price must be > 0
+    if (Number(b.price) <= 0) {
+      return res.status(400).json({ message: "Price must be greater than 0" });
+    }
+
+    // 1. Create product
     const product = await Product.create({
       name: b.name?.trim(),
       category: b.category || "",
@@ -91,17 +96,16 @@ export async function create(req, res, next) {
       bestseller: !!b.bestseller,
     });
 
- // 2. Auto-create inventory for this product
-const inventory = await Inventory.create({
-  productId: product._id,   // 🔑 store link
-  name: product.name,
-  category: product.category,
-  source: "In-house",
-  stock: 0,
-  reorder: 10,
-  img: product.imageUrl || "",
-});
-
+    // 2. Auto-create inventory
+    const inventory = await Inventory.create({
+      productId: product._id,
+      name: product.name,
+      category: product.category,
+      source: "In-house",
+      stock: 0,
+      reorder: 10,
+      img: product.imageUrl || "",
+    });
 
     // 3. Link product → inventory
     product.inventoryId = inventory._id;

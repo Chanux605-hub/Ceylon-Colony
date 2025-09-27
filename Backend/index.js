@@ -8,6 +8,7 @@ import hiveRouter from "./routes/hiveRoutes.js";
 
 import inventoryRoutes from "./routes/inventoryRoutes.js";
 import orderDetailsRouter from "./routes/orderDetailsRouter.js";
+import analyticsRouter from "./routes/analytics.routes.js";
 
 
 
@@ -34,6 +35,7 @@ app.use("/api/hives", hiveRouter)
 
 app.use("/api/products", productRouter);
 app.use("/api/inventory", inventoryRoutes);
+app.use("/api/analytics", analyticsRouter);
 
 app.use("/api/orderdetails", orderDetailsRouter);
 

@@ -25,7 +25,7 @@ const productSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     category: { type: String, trim: true },
     weight: { type: String, trim: true },
-    price: { type: Number, required: true, min: 0 },
+    price: { type: Number, required: true, min: 1 },
     status: {
       type: String,
       enum: ["Active", "Draft", "Archived"],

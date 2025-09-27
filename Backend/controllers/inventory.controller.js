@@ -26,23 +26,31 @@ export async function getOne(req, res, next) {
 }
 
 // POST /api/inventory
+// POST /api/inventory
 export async function create(req, res, next) {
   try {
     const b = req.body || {};
-    if (!b.name) return res.status(400).json({ message: "Name is required" });
+    if (!b.name) {
+      return res.status(400).json({ message: "Name is required" });
+    }
 
     const doc = await Inventory.create({
+      productId: b.productId || null, // optional link to Product
       name: b.name.trim(),
       category: b.category || "",
+      source: b.source || "In-house",   // ✅ added
       stock: b.stock !== undefined ? Math.max(0, Number(b.stock)) : 0,
       reorder: b.reorder !== undefined ? Number(b.reorder) : 0,
+      img: b.img || "",                 // ✅ added
     });
 
     res.status(201).json(doc);
   } catch (err) {
+    console.error("❌ Inventory create error:", err.message);
     next(err);
   }
 }
+
 
 // PUT /api/inventory/:id
 export async function update(req, res, next) {
