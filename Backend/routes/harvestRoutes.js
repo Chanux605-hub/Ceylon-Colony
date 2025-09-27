@@ -2,7 +2,7 @@ import express from "express";
 import {
   addHarvest,
   getHarvests,
-  getHarvestsByFarm,   // ✅ import it here
+  getHarvestsByFarm,   
   updateHarvest,
   deleteHarvest,
 } from "../controllers/harvestController.js";
