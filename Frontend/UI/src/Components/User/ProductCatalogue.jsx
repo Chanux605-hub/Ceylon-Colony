@@ -1,3 +1,4 @@
+// src/Components/User/ProductCatalogue.jsx
 import React, { useMemo, useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
 import { StoreContext } from '../../context/StoreContext';
