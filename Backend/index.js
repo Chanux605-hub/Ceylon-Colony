@@ -7,7 +7,7 @@ import farmRouter from "./routes/farmRoutes.js";
 import hiveRouter from "./routes/hiveRoutes.js";
 
 
-import inventoryRoutes from "./routes/inventoryRoutes.js";
+import inventoryRoutes from "./routes/inventory.routes.js";
 import orderDetailsRouter from "./routes/orderDetailsRouter.js";
 import analyticsRouter from "./routes/analytics.routes.js";
 
@@ -41,21 +41,20 @@ app.use("/api/hives", hiveRouter);
 app.use("/api/workshops", workshopRouter);
 app.use("/api/blogs", blogRouter);
 app.use("/api/harvests", harvestRoutes);
-
-// Catch-all 404 must be LAST
-app.use((req, res) => {
-  console.log("Request came in:", req.method, req.url);
-  res.status(404).json({ message: "Not Found" });
-});
-
-
-
+app.use("/api/products", productRouter);
 app.use("/api/products", productRouter);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/analytics", analyticsRouter);
 
 app.use("/api/orderdetails", orderDetailsRouter);
 
+
+
+// Catch-all 404 must be LAST
+app.use((req, res) => {
+  console.log("Request came in:", req.method, req.url);
+  res.status(404).json({ message: "Not Found" });
+});
 
 // Connect to DB
 connection();   

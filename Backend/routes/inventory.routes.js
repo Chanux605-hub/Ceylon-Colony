@@ -1,3 +1,4 @@
+// Backend/routes/inventory.routes.js
 import { Router } from "express";
 import * as ctrl from "../controllers/inventory.controller.js";
 
@@ -11,3 +12,4 @@ router.delete("/:id", ctrl.remove);
 router.patch("/:id/reduce", ctrl.reduceStock);
 
 export default router;
+ 

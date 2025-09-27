@@ -57,64 +57,66 @@ function DevLogin() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Login (public only) */}
-        <Route path="/login" element={<ModernLogin brand="Ceylon Colony" />} />
+    <StoreContextProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Login (public only) */}
+          <Route path="/login" element={<ModernLogin brand="Ceylon Colony" />} />
 
-        {/* Cart & Orders */}
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/placeorder" element={<PlaceOrder />} />
+          {/* Cart & Orders */}
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/placeorder" element={<PlaceOrder />} />
 
-        {/* Public pages */}
-        <Route path="/home" element={<Home />} />
-        <Route path="/products" element={<OurProducts />} />
-        <Route path="/community" element={<Community />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/workshops" element={<Workshops />} />
-        <Route path="/blogs" element={<BlogPage />} />
-        <Route path="/product/:id" element={<ProductDetails />} />
+          {/* Public pages */}
+          <Route path="/home" element={<Home />} />
+          <Route path="/products" element={<OurProducts />} />
+          <Route path="/community" element={<Community />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/workshops" element={<Workshops />} />
+          <Route path="/blogs" element={<BlogPage />} />
+          <Route path="/product/:id" element={<ProductDetails />} />
 
-        {/* Farm & Harvest management */}
-        <Route path="/farmRegistration" element={<FarmRegistrationForm />} />
-        <Route path="/hiveRegistration" element={<HiveRegistrationForm />} />
-        <Route path="/farmerProfile" element={<FarmOwnerProfile farmerId="F001" />} />
-        <Route path="/farm/:farmId" element={<FarmDetails />} />
-        <Route path="/farm/update/:farmId" element={<UpdateFarmForm />} />
-        <Route path="/hive/update/:hiveId" element={<HiveUpdateForm />} />
-        <Route path="/harvest/:hiveId" element={<AddHarvestForm />} />
-        <Route path="/harvestHistory" element={<HarvestHistory />} />
+          {/* Farm & Harvest management */}
+          <Route path="/farmRegistration" element={<FarmRegistrationForm />} />
+          <Route path="/hiveRegistration" element={<HiveRegistrationForm />} />
+          <Route path="/farmerProfile" element={<FarmOwnerProfile farmerId="F001" />} />
+          <Route path="/farm/:farmId" element={<FarmDetails />} />
+          <Route path="/farm/update/:farmId" element={<UpdateFarmForm />} />
+          <Route path="/hive/update/:hiveId" element={<HiveUpdateForm />} />
+          <Route path="/harvest/:hiveId" element={<AddHarvestForm />} />
+          <Route path="/harvestHistory" element={<HarvestHistory />} />
 
-        {/* Admin shell (protected) */}
-        <Route
-          path="/admin"
-          element={
-            <RequireAuth>
-              <AdminLayout />
-            </RequireAuth>
-          }
-        >
-          <Route index element={<Navigate to="admindashboard" replace />} />
-          <Route path="admindashboard" element={<AdminDahboard />} />
-          <Route path="products" element={<AdminProducts />} />
-          <Route path="inventory" element={<AdminInventory />} />
-          <Route path="stock-analysis" element={<AdminStockAnalysis />} />
-          <Route path="workshops" element={<WorkshopScheduleManagement />} />
-          <Route path="orders" element={<OrderDeliveryManagement />} />
-          <Route path="allorders" element={<AdminOrders />} />
-          <Route path="media" element={<CustomerMediaManagement />} />
-          <Route path="farm-harvest" element={<FarmHarvestManagement />} />
-          <Route path="addblog" element={<AddBlogForm />} />
-          <Route path="blogs" element={<ManageBlogs />} />
-        </Route>
+          {/* Admin shell (protected) */}
+          <Route
+            path="/admin"
+            element={
+              <RequireAuth>
+                <AdminLayout />
+              </RequireAuth>
+            }
+          >
+            <Route index element={<Navigate to="admindashboard" replace />} />
+            <Route path="admindashboard" element={<AdminDahboard />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="inventory" element={<AdminInventory />} />
+            <Route path="stock-analysis" element={<AdminStockAnalysis />} />
+            <Route path="workshops" element={<WorkshopScheduleManagement />} />
+            <Route path="orders" element={<OrderDeliveryManagement />} />
+            <Route path="allorders" element={<AdminOrders />} />
+            <Route path="media" element={<CustomerMediaManagement />} />
+            <Route path="farm-harvest" element={<FarmHarvestManagement />} />
+            <Route path="addblog" element={<AddBlogForm />} />
+            <Route path="blogs" element={<ManageBlogs />} />
+          </Route>
 
-        {/* Dev login helper */}
-        <Route path="/dev-login" element={<DevLogin />} />
+          {/* Dev login helper */}
+          <Route path="/dev-login" element={<DevLogin />} />
 
-        {/* Root & fallback */}
-        <Route path="/" element={<AuthedRedirect />} />
-        <Route path="*" element={<AuthedRedirect />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Root & fallback */}
+          <Route path="/" element={<AuthedRedirect />} />
+          <Route path="*" element={<AuthedRedirect />} />
+        </Routes>
+      </BrowserRouter>
+    </StoreContextProvider>
   );
 }
