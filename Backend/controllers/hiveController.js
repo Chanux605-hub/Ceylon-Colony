@@ -111,6 +111,8 @@ export const getHiveAlerts = async (req, res) => {
   }
 };
 
+
+
 //  Get hives by farmId or Mongo _id
 export const getHivesByFarm = async (req, res) => {
   try {
@@ -195,4 +197,5 @@ export const deleteHive = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
 

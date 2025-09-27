@@ -20,33 +20,42 @@ export default function AdminProducts() {
   // modals
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-
   const [openDetails, setOpenDetails] = useState(false);
   const [detailsProduct, setDetailsProduct] = useState(null);
 
-  // load from API
-  const load = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(API);
-      const { items = [] } = await res.json();
-      const list = items.map((p) => ({
-        id: p.id || p._id,
-        name: p.name,
-        category: p.category || "Raw Honey",
-        weight: p.weight || "",
-        price: Number(p.price) || 0,
-        status: p.status || "Active",
-        imageUrl: (p.imageUrl || p.img || "").trim(),
-        _ts: p.createdAt ? Date.parse(p.createdAt) : Date.now(),
-      }));
-      setProducts(list);
-    } catch (e) {
-      console.error("Failed to load products:", e);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // ✅ inventory options
+  const [inventoryOptions, setInventoryOptions] = useState([]);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/inventory`)
+      .then((r) => r.json())
+      .then(setInventoryOptions)
+      .catch(console.error);
+  }, []);
+
+  
+const load = async () => {
+  try {
+    setLoading(true);
+    const res = await fetch(`${API}?includeDraft=true`);
+    const { items = [] } = await res.json();
+    const list = items.map((p) => ({
+      id: p.id || p._id,
+      name: p.name,
+      category: p.category || "Raw Honey",
+      weight: p.weight || "",
+      price: Number(p.price) || 0,
+      status: p.status || "Active",
+      imageUrl: (p.imageUrl || p.img || "").trim(),
+      _ts: p.createdAt ? Date.parse(p.createdAt) : Date.now(),
+    }));
+    setProducts(list);
+  } catch (e) {
+    console.error("Failed to load products:", e);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     load();
@@ -105,40 +114,40 @@ export default function AdminProducts() {
     }
   };
 
-  const onSave = async (data) => {
-    const payload = {
-      name: data.name?.trim(),
-      category: data.category || "",
-      weight: data.weight || "",
-      price: Number(data.price),
-      status: data.status || "Active",
-      imageUrl: (data.imageUrl || "").trim(),
-    };
-
-    try {
-      const url = data.id ? `${API}/${data.id}` : API;
-      const method = data.id ? "PUT" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(`${res.status} ${body.message || res.statusText}`);
-      }
-
-      setOpen(false);
-      setEditing(null);
-      await load();
-      alert(data.id ? "Updated ✔" : "Created ✔");
-    } catch (e) {
-      console.error("Save failed:", e, { payload });
-      alert(e.message || "Save failed");
-    }
+const onSave = async (data) => {
+  const payload = {
+    name: data.name?.trim(),
+    category: data.category || "",
+    weight: data.weight || "",
+    price: Number(data.price),
+    status: data.status || "Active",
+    imageUrl: (data.imageUrl || "").trim(),
+    inventoryId: data.inventoryId || null,   // ✅ include this
   };
+
+  try {
+    const url = data.id ? `${API}/${data.id}` : API;
+    const method = data.id ? "PUT" : "POST";
+
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(`${res.status} ${body.message || res.statusText}`);
+
+    setOpen(false);
+    setEditing(null);
+    await load(); // refresh products
+    alert(data.id ? "Updated ✔" : "Created ✔");
+  } catch (e) {
+    console.error("Save failed:", e, { payload });
+    alert(e.message || "Save failed");
+  }
+};
+
 
   const openDetailsFor = async (id) => {
     try {
@@ -155,7 +164,7 @@ export default function AdminProducts() {
   const saveDetails = async (id, details) => {
     try {
       const res = await fetch(`${API}/${id}`, {
-        method: "PUT", // or PATCH if you added it
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(details),
       });
@@ -323,6 +332,7 @@ export default function AdminProducts() {
           initial={editing}
           onClose={() => { setOpen(false); setEditing(null); }}
           onSave={onSave}
+          inventoryOptions={inventoryOptions}
         />
       )}
 
@@ -337,9 +347,9 @@ export default function AdminProducts() {
   );
 }
 
-/* ---------------- Basic Add/Edit Modal (unchanged) ---------------- */
+/* ---------------- Basic Add/Edit Modal ---------------- */
 
-function ProductModal({ initial, onClose, onSave }) {
+function ProductModal({ initial, onClose, onSave, inventoryOptions }) {
   const [form, setForm] = useState(
     initial || {
       name: "",
@@ -348,6 +358,7 @@ function ProductModal({ initial, onClose, onSave }) {
       price: "",
       status: "Active",
       imageUrl: "",
+      inventoryId: "",
     }
   );
   const [preview, setPreview] = useState(initial?.imageUrl || "");
@@ -407,10 +418,27 @@ function ProductModal({ initial, onClose, onSave }) {
                      className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 focus:outline-none" placeholder="e.g., 500g / 50ml" />
             </Field>
 
-            <Field label="Price (Rs)">
-              <input type="number" min="0" value={form.price} onChange={(e) => handleChange("price", e.target.value)}
-                     className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 focus:outline-none" placeholder="e.g., 1900" />
-            </Field>
+         <Field label="Price (Rs)">
+  <input
+    type="number"
+    name="price"
+    value={form.price}
+    onChange={(e) => {
+      if (e.target.value === "0") return; // block single 0
+      handleChange("price", e.target.value);
+    }}
+    onKeyDown={(e) => {
+      if (e.key === "0" && e.currentTarget.value === "") {
+        e.preventDefault(); // stop typing 0 as first digit
+      }
+    }}
+    min="1"
+    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 focus:outline-none"
+    placeholder="e.g., 1900"
+    required
+  />
+</Field>
+
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4">
@@ -423,6 +451,21 @@ function ProductModal({ initial, onClose, onSave }) {
               </select>
             </Field>
           </div>
+
+          <Field label="Link Inventory">
+            <select
+              value={form.inventoryId || ""}
+              onChange={(e) => handleChange("inventoryId", e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 focus:outline-none"
+            >
+              <option value="">— None —</option>
+              {inventoryOptions.map((inv) => (
+                <option key={inv._id} value={inv._id}>
+                  {inv.name} (stock {inv.stock})
+                </option>
+              ))}
+            </select>
+          </Field>
 
           <div className="pt-2 flex items-center justify-end gap-2">
             <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10">Cancel</button>
@@ -443,7 +486,7 @@ function Field({ label, children }) {
   );
 }
 
-/* ---------------- Details Modal (new) ---------------- */
+/* ---------------- Details Modal ---------------- */
 
 function DetailsModal({ product, onClose, onSave }) {
   const [desc, setDesc] = useState(product.description || "");

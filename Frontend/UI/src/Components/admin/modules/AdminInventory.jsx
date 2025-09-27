@@ -23,13 +23,21 @@ const SEED = [
 ];
 
 export default function AdminInventory() {
-  const [items, setItems] = useState(() => {
-    const saved = localStorage.getItem("inventory_items");
-    return saved ? JSON.parse(saved) : SEED;
-  });
-  useEffect(() => {
-    localStorage.setItem("inventory_items", JSON.stringify(items));
-  }, [items]);
+ const [items, setItems] = useState([]); // start empty array
+
+useEffect(() => {
+  (async () => {
+    try {
+      const res = await fetch("http://localhost:3000/api/inventory");
+      if (!res.ok) throw new Error("Failed to fetch inventory");
+      const json = await res.json();
+      setItems(json);
+    } catch (err) {
+      console.error("Inventory fetch error:", err);
+    }
+  })();
+}, []);
+
 
   // toolbar state
   const [q, setQ] = useState("");
@@ -69,19 +77,55 @@ export default function AdminInventory() {
     return list;
   }, [items, q, cat, src, sort]);
 
-  const onDelete = (id) => {
-    if (confirm("Delete this item?")) setItems((prev) => prev.filter((i) => i.id !== id));
-  };
+ const onDelete = async (id) => {
+  if (!confirm("Delete this item?")) return;
+  try {
+    const res = await fetch(`http://localhost:3000/api/inventory/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error("Delete failed");
 
-  const onSave = (data) => {
-    if (data.id) {
-      setItems((prev) => prev.map((i) => (i.id === data.id ? { ...i, ...data } : i)));
+    const refreshed = await fetch("http://localhost:3000/api/inventory").then((r) => r.json());
+    setItems(refreshed);
+  } catch (err) {
+    console.error("Delete error:", err);
+    alert("Failed to delete item: " + err.message);
+  }
+};
+
+
+const onSave = async (data) => {
+  try {
+    const id = data._id || data.id;   // ✅ handle both
+
+    if (id) {
+      // Update existing
+      const res = await fetch(`http://localhost:3000/api/inventory/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Update failed");
     } else {
-      setItems((prev) => [{ ...data, id: crypto.randomUUID(), _ts: Date.now() }, ...prev]);
+      // Create new
+      const res = await fetch("http://localhost:3000/api/inventory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Create failed");
     }
-    setOpen(false);
-    setEditing(null);
-  };
+
+    // Refresh list
+    const refreshed = await fetch("http://localhost:3000/api/inventory").then((r) => r.json());
+    setItems(refreshed);
+  } catch (err) {
+    console.error("Save error:", err);
+    alert("Failed to save item: " + err.message);
+  }
+
+  setOpen(false);
+  setEditing(null);
+};
+
 
   return (
     <div className="space-y-6 text-white">

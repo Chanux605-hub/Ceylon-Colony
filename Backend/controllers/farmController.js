@@ -1,9 +1,6 @@
 import mongoose from "mongoose";
 import farmModel from "../models/farmModel.js";
 
-/**
- * Register a new farm
- */
 export const registerFarm = async (req, res) => {
   try {
     const {
@@ -24,12 +21,14 @@ export const registerFarm = async (req, res) => {
       expectedAnnualYield,
     } = req.body;
 
+
     if (!farmId || !farmName || !owner || !phone || !address || !district) {
-      return res.status(400).json({
+      return res.json({
         success: false,
         message: "Please fill all required fields",
       });
     }
+
 
     const newFarm = await farmModel.create({
       farmId,
@@ -49,32 +48,28 @@ export const registerFarm = async (req, res) => {
       expectedAnnualYield,
     });
 
-    return res.status(201).json({
+    return res.json({
       success: true,
       message: "Farm registered successfully",
       farm: newFarm,
     });
   } catch (error) {
     console.error("Error registering farm:", error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.json({ success: false, message: error.message });
   }
 };
 
-/**
- * Get all farms
- */
+//get all farm details
 export const getAllFarms = async (req, res) => {
   try {
     const farms = await farmModel.find();
-    res.status(200).json({ success: true, farms });
+    res.json({ success: true, farms });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-/**
- * Get a single farm by farmId OR Mongo _id
- */
+
 export const getFarmById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -95,6 +90,7 @@ export const getFarmById = async (req, res) => {
     }
 
     res.status(200).json({ success: true, farm });
+    
   } catch (error) {
     console.error("Error fetching farm:", error);
     res.status(500).json({ success: false, message: error.message });
