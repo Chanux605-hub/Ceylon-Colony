@@ -27,6 +27,14 @@ import HiveRegistrationForm from "./HarvestManagement/HiveRegistration.jsx";
 import FarmHarvestManagement from "./HarvestManagement/FarmHarvestManagement.jsx";
 import AddBlogForm from "./HarvestManagement/Blog/AddBlogForm.jsx";
 import ManageBlogs from "./HarvestManagement/Blog/ManageBlog.jsx";
+import FarmOwnerProfile from "./HarvestManagement/FarmOwnerProfile.jsx";
+import FarmDetails from "./HarvestManagement/FarmDetails.jsx";
+import UpdateFarmForm from "./HarvestManagement/UpdateFarmForm.jsx";
+import HiveUpdateForm from "./HarvestManagement/UpdateHiveForm.jsx";
+import AddHarvestForm from "./HarvestManagement/AddHarvestForm.jsx";
+import HarvestHistory from "./HarvestManagement/HarvestHistory.jsx";
+
+
 
 
 
@@ -105,6 +113,14 @@ export default function App() {
         <Route path="/products" element={<OurProducts />} />
         <Route path="/farmRegistration" element ={<FarmRegistrationForm/>}/>
         <Route path="/hiveRegistration" element ={<HiveRegistrationForm/>}/>
+        {/*<Route path="/farmerProfile" element ={<FarmOwnerProfile/>}/>*/}
+        <Route path="/farmerProfile" element={<FarmOwnerProfile farmerId="F001" />} />
+          {/* Example with a specific farmerId */}
+        <Route path="/farm/:farmId" element={<FarmDetails />} />
+        <Route path="/farm/update/:farmId" element={<UpdateFarmForm />} />
+        <Route path="/hive/update/:hiveId" element={<HiveUpdateForm />} />
+        <Route path="/harvest/:hiveId" element={<AddHarvestForm />} />
+         <Route path="/harvestHistory" element={<HarvestHistory />} /> 
 
 
       </Routes>
