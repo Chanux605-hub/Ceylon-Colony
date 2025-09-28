@@ -6,13 +6,13 @@ const asset = (file) => new URL(`../assets/${file}`, import.meta.url).href;
 
 const products = [
   { id: 1, name: "Wildflower Honey", weight: "350g", price: "Rs 1,200", img:  asset("jar.jpeg") },
-  { id: 2, name: "Cinnamon Infused",  weight: "350g", price: "Rs 1,450", img: "../../assets.jar.jpeg" },
-  { id: 3, name: "Lime Blossom",      weight: "350g", price: "Rs 1,350", img: "/images/honey3.jpg" },
-  { id: 4, name: "Forest Honey",      weight: "500g", price: "Rs 1,900", img: "/images/honey4.jpg" },
-  { id: 5, name: "Organic Raw",       weight: "350g", price: "Rs 1,600", img: "/images/honey5.jpg" },
-  { id: 6, name: "Multi-Floral",      weight: "500g", price: "Rs 2,050", img: "/images/honey6.jpg" },
-  { id: 7, name: "Bee Pollen Honey",  weight: "250g", price: "Rs 1,150", img: "/images/honey7.jpg" },
-  { id: 8, name: "Ginger Infused",    weight: "350g", price: "Rs 1,480", img: "/images/honey8.jpg" },
+  { id: 2, name: "Cinnamon Infused",  weight: "350g", price: "Rs 1,450", img: "../assets/balm.jpg" },
+  { id: 3, name: "Lime Blossom",      weight: "350g", price: "Rs 1,350", img: "../../assets/balm.jpg" },
+  { id: 4, name: "Forest Honey",      weight: "500g", price: "Rs 1,900", img: "../../assets/balm.jpg" },
+  { id: 5, name: "Organic Raw",       weight: "350g", price: "Rs 1,600", img: "../../assets/balm.jpg" },
+  { id: 6, name: "Multi-Floral",      weight: "500g", price: "Rs 2,050", img: "../../assets/balm.jpg" },
+  { id: 7, name: "Bee Pollen Honey",  weight: "250g", price: "Rs 1,150", img: "../../assets/balm.jpg" },
+  { id: 8, name: "Ginger Infused",    weight: "350g", price: "Rs 1,480", img: "../../assets/balm.jpg" },
 ];
 
 export default function LatestProducts() {

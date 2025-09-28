@@ -1,12 +1,12 @@
 import express from "express";
-// import userAuth from "../middleware/userAuth.js"; 
-// (uncomment above if you want farm creation tied to logged-in user authentication)
-
 import { 
   getAllFarms, 
   getFarmById, 
   registerFarm, 
-  updateFarmStatus 
+  updateFarmStatus, 
+  getFarmsByOwner, 
+  updateFarm, 
+  deleteFarm
 } from "../controllers/farmController.js";
 
 const farmRouter = express.Router();
@@ -17,10 +17,19 @@ farmRouter.post("/register", registerFarm);
 // Get all farms
 farmRouter.get("/", getAllFarms);
 
-// Get a single farm by ID
+// Get all farms for a specific owner
+farmRouter.get("/owner/:ownerId", getFarmsByOwner);
+
+// Get a single farm by ID or farmId
 farmRouter.get("/:id", getFarmById);
 
-// Update farm status (activate/deactivate/maintenance)
+// Update farm status
 farmRouter.put("/:id/status", updateFarmStatus);
+
+// Update farm details
+farmRouter.put("/:id", updateFarm);
+
+// Delete a farm
+farmRouter.delete("/:id", deleteFarm);
 
 export default farmRouter;

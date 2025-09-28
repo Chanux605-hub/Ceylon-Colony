@@ -1,4 +1,4 @@
-// routes/workshop.routes.js
+
 import { Router } from "express";
 import { create, list, get, update, remove, setStatus, cancel } from "../controllers/workshopController.js";
 
