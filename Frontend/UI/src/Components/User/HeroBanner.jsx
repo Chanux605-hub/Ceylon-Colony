@@ -1,17 +1,14 @@
-// src/components/HeroBanner.jsx
-import React, { useState } from "react";
+// src/components/User/HeroBanner.jsx
+import React from "react";
 import herobanner from "../../assets/background102.jpeg";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
-// import the modals you created
-import LoginModal from "./LoginModal";
-import SignupModal from "./SignupModal";
+// import the global trigger
+import { openLoginModal } from "./AuthModals";
 
-const HeroBanner = () => {
+const HeroBanner = ({ onSignupClick }) => {
   const { user } = useAuth();  // ✅ auth state
-  const [showLogin, setShowLogin] = useState(false);
-  const [showSignup, setShowSignup] = useState(false);
 
   return (
     <section
@@ -59,10 +56,10 @@ const HeroBanner = () => {
                 </Link>
               </>
             ) : (
-              // 🔹 Visitor → open modals
+              // 🔹 Visitor → trigger global modals
               <>
                 <button
-                  onClick={() => setShowLogin(true)}
+                  onClick={openLoginModal}   // ✅ use global login trigger
                   className="inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold bg-[#FBB01A] text-black shadow-md transition
                     hover:opacity-90 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]/60"
                 >
@@ -70,7 +67,7 @@ const HeroBanner = () => {
                 </button>
 
                 <button
-                  onClick={() => setShowSignup(true)}
+                  onClick={onSignupClick}   // ✅ still handled by Home.jsx
                   className="inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold border border-white/20 text-white
                     bg-white/10 backdrop-blur-sm transition hover:bg-white/15 hover:-translate-y-0.5
                     focus:outline-none focus:ring-2 focus:ring-white/40"
@@ -82,10 +79,6 @@ const HeroBanner = () => {
           </div>
         </div>
       </div>
-
-      {/* ✅ Modals */}
-      <LoginModal open={showLogin} onClose={() => setShowLogin(false)} />
-      <SignupModal open={showSignup} onClose={() => setShowSignup(false)} />
     </section>
   );
 };

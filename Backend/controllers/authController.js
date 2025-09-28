@@ -66,9 +66,18 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ error: "Invalid credentials" });
+    if (!user) {
+      console.log("❌ No user found with email:", email);
+      return res.status(400).json({ error: "Invalid credentials" });
+    }
+
+    console.log("🔹 Incoming login for:", email);
+    console.log("🔹 Plain password:", password);
+    console.log("🔹 Stored hash:", user.password);
 
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log("🔹 Password match result:", isMatch);
+
     if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
 
     const token = jwt.sign(
@@ -76,6 +85,8 @@ export const login = async (req, res) => {
       JWT_SECRET,
       { expiresIn: "7d" }
     );
+
+    console.log("✅ Login successful for:", email);
 
     res.json({
       message: "Login successful",
@@ -91,6 +102,72 @@ export const login = async (req, res) => {
       },
     });
   } catch (err) {
+    console.error("❌ Login error:", err.message);
     res.status(500).json({ error: err.message });
   }
 };
+
+// GET CURRENT USER
+export const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json({ user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// UPDATE PROFILE
+export const updateProfile = async (req, res) => {
+  try {
+    const fields = ["name", "username", "email", "phone", "address", "avatarUrl"];
+    const updates = {};
+    fields.forEach((f) => {
+      if (req.body[f] !== undefined) updates[f] = req.body[f];
+    });
+
+    const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true }).select("-password");
+
+    res.json({ message: "Profile updated successfully", user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// UPLOAD PROFILE PICTURE
+export const uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file || !req.file.path) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    // Save new avatar URL to user
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { avatarUrl: req.file.path },
+      { new: true }
+    ).select("-password");
+
+    res.json({ message: "Profile picture updated successfully", user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// DELETE ACCOUNT
+export const deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user.id; // comes from JWT middleware
+
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ message: "Account deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+

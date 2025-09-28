@@ -6,6 +6,10 @@ import AdminLayout from "./Components/admin/AdminLayout.jsx";
 import Home from "./pages/Home.jsx";
 import OurProducts from "./pages/OurProducts.jsx";
 import Community from "./pages/Community.jsx";
+import AuthModals from "./Components/User/AuthModals.jsx";
+import Dashboard from "./Components/User/dashboard.jsx";
+import PrivateRoute from "./Components/User/userDashboard/PrivateRoute.jsx";
+
 
 // Admin modules...
 import AdminProducts from "./Components/admin/modules/AdminProducts.jsx";
@@ -57,6 +61,16 @@ export default function App() {
           <Route path="customer-media" element={<CustomerMediaManagement />} />
         </Route>
 
+        {/* ✅ User Dashboard (separate route, not inside admin) */}
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
+
         {/* Dev helper */}
         <Route path="/dev-login" element={<DevLogin />} />
 
@@ -69,6 +83,8 @@ export default function App() {
         <Route path="/products" element={<OurProducts />} />
         <Route path="/community" element={<Community />} />
       </Routes>
+
+      <AuthModals />
     </BrowserRouter>
   );
 }

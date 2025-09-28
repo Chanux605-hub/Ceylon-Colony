@@ -1,3 +1,4 @@
+// src/pages/Home.jsx
 import React, { useState } from "react";
 import Navbar from "../Components/User/navbar";
 import HeroBanner from "../Components/User/HeroBanner";
@@ -7,24 +8,21 @@ import WorkshopsBanner from "../Components/User/WorkshopsBanner";
 import Footer from "../Components/User/Footer";
 
 // ✅ Import modals
-import LoginModal from "../Components/User/LoginModal";
 import SignupModal from "../Components/User/SignupModal";
 
 export default function Home() {
-  const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
 
   return (
     <>
       <Navbar />
-      <HeroBanner onLoginClick={() => setShowLogin(true)} onSignupClick={() => setShowSignup(true)} />
+      <HeroBanner onSignupClick={() => setShowSignup(true)} />
       <AboutBanner />
       <OurLatestProducts />
       <WorkshopsBanner />
       <Footer />
 
-      {/* ✅ Modals */}
-      <LoginModal open={showLogin} onClose={() => setShowLogin(false)} />
+      {/* ✅ Signup modal still local to Home */}
       <SignupModal open={showSignup} onClose={() => setShowSignup(false)} />
     </>
   );

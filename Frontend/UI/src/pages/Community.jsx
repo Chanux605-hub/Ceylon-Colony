@@ -4,6 +4,8 @@ import Navbar from "../Components/User/navbar";
 import Footer from "../Components/User/Footer";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
+import LoginModal from "../components/User/LoginModal";   // adjust path if needed
+
 /* ============================================
    CONFIG
 ============================================ */
@@ -369,6 +371,8 @@ export default function Community() {
   // FEED from backend (your two types merged): Discussions (reviews) + Gallery (images)
   const [posts, setPosts] = useState([]);
 
+  const [openLogin, setOpenLogin] = useState(false);
+
   // start-post modal
   const [openCreate, setOpenCreate] = useState(false);
 
@@ -503,13 +507,16 @@ export default function Community() {
                 + Start a post
               </button>
             ) : (
-              <Link
-                to="/login"
+              <button
+                onClick={() => setOpenLogin(true)}
                 className="rounded-xl bg-[#FBB01A] text-black font-semibold px-4 py-2 shadow-neon hover:brightness-95"
               >
                 Login to Post
-              </Link>
+              </button>
+
             )}
+            <LoginModal open={openLogin} onClose={() => setOpenLogin(false)} />
+
             </div>
 
           {/* SEARCH + TABS */}

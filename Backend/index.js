@@ -5,7 +5,8 @@ import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
 import postRoutes from "./routes/postRoutes.js";
 import announcementRoutes from "./routes/announcementRoutes.js";
-import authRoutes from "./routes/authRoutes.js"; 
+import userRoutes from "./routes/authRoutes.js"; 
+import authRoutes from "./routes/auth.routes.js";
 import path from "path";
 
 dotenv.config();
@@ -20,7 +21,7 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: allowedOrigins,
-    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
@@ -33,6 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // Routes
+app.use("/api/auth", userRoutes);
 app.use("/api/auth", authRoutes);
 
 app.get("/health", (req, res) => res.json({ ok: true }));
