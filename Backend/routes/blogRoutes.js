@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
-import cloudinary from "../config/cloudinary.js";
+import { cloudinary } from "../config/cloudinary.js";
 import { addBlog, getAllBlogs, getBlogById, updateBlog , deleteBlog} from "../controllers/blogController.js";
 
 const blogRouter = express.Router();

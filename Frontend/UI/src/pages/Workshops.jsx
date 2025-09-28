@@ -1,5 +1,7 @@
 // src/pages/Workshops.jsx
 import React from "react";
+import Navbar from "../Components/User/navbar";
+import Footer from "../Components/User/Footer";
 import aboutHero from "../assets/about-hero2.jpg";
 
 /* -------- tiny inline API helper (no api/ folder needed) -------- */
@@ -69,6 +71,7 @@ export default function Workshops() {
 
   return (
     <div className="min-h-screen bg-white text-neutral-900">
+      <Navbar/>
       {/* ---------- HERO ---------- */}
       <section
         className="relative isolate w-full"
@@ -394,7 +397,7 @@ function BookingModal({ workshop, onClose }) {
               </div>
             </form>
           )}
-        </div>
+        </div>         
       </div>
     </div>
   );

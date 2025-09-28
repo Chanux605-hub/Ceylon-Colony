@@ -10,7 +10,6 @@ import Community from "./pages/Community.jsx";
 import About from "./pages/About.jsx";
 import Workshops from "./pages/Workshops.jsx";
 import BlogPage from "./pages/BlogPage.jsx";
-import Community from "./pages/Community.jsx";
 import AuthModals from "./Components/User/AuthModals.jsx";
 import Dashboard from "./Components/User/dashboard.jsx";
 import PrivateRoute from "./Components/User/userDashboard/PrivateRoute.jsx";

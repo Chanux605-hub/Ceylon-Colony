@@ -61,7 +61,7 @@ app.use("/api/orderdetails", orderDetailsRouter);
 app.use("/api/analytics", analyticsRouter);
 
 // 🔹 Chanuka’s Routes
-app.use("/api/posts", postRoutes);
+app.use("/api", postRoutes);
 app.use("/api/admin/announcements", announcementRoutes);
 app.use("/api/auth", userRoutes);
 app.use("/api/auth", authRoutes);
