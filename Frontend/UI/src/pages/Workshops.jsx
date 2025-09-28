@@ -2,7 +2,7 @@
 import React from "react";
 import aboutHero from "../assets/about-hero2.jpg";
 import Navbar from "../Components/User/navbar";
-import Footer from "../Components/User/Footer";
+//import Footer from "../Components/User/Footer";
 
 /* -------- tiny inline API helper (no api/ folder needed) -------- */
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";

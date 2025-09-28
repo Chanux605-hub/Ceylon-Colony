@@ -57,6 +57,7 @@ function DevLogin() {
 
 export default function App() {
   return (
+      <StoreContextProvider>
     <BrowserRouter>
       <Routes>
         {/* Login (public only) */}
@@ -116,5 +117,6 @@ export default function App() {
         <Route path="*" element={<AuthedRedirect />} />
       </Routes>
     </BrowserRouter>
+    </StoreContextProvider>
   );
 }
