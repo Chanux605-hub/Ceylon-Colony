@@ -47,7 +47,7 @@ const Navbar = () => {
           <div className="hidden lg:flex items-center space-x-8 font-medium">
             <Link to="/home" className="text-white hover:text-[#FBB01A]">Home</Link>
             <Link to="/about" className="text-white hover:text-[#FBB01A]">About Us</Link>
-            <Link to="/blog" className="text-white hover:text-[#FBB01A]">Blog</Link>
+            <Link to="/blogs" className="text-white hover:text-[#FBB01A]">Blog</Link>
             <Link to="/workshops" className="text-white hover:text-[#FBB01A]">WorkShops</Link>
             <Link to="/products" className="text-white hover:text-[#FBB01A]">Our Products</Link>
             <Link to="/community" className="text-white hover:text-[#FBB01A]">Community</Link>

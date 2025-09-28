@@ -128,9 +128,6 @@ export default function App() {
       <Route path="/" element={<Navigate to="/home" replace />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
-
-    {/* Auth popups */}
-    <AuthModals />
   </BrowserRouter>
 </StoreContextProvider>
 )}

@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import {
   Plus, Search, Filter, Eye, Trash2,
   Heart, MessageCircle, PlayCircle, User, Tag as TagIcon, BarChart2,
   CheckCircle2, XCircle
 } from "lucide-react";
+
 
 /* =========================================================================================
    CONFIG & UTILS
@@ -91,14 +93,35 @@ function makeSeed() {
 ========================================================================================= */
 
 export default function CustomerMediaManagement() {
-  /* ---------------- Mock state (for KPIs / charts / top cards) ---------------- */
-  const [contents, setContents] = useState(() => {
-    const saved = localStorage.getItem("admin_media_contents");
-    return saved ? JSON.parse(saved) : makeSeed();
-  });
+// ---------------- Live state (for KPIs / charts / top cards) ----------------
+  const [contents, setContents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    localStorage.setItem("admin_media_contents", JSON.stringify(contents));
-  }, [contents]);
+    const fetchPosts = async () => {
+      try {
+        const res = await axios.get("http://localhost:3000/api/admin/list?limit=100");
+
+        // Map backend "author" → frontend "user"
+        const items = res.data.items.map((p) => ({
+          ...p,
+          user: {
+            id: p.author.userId,
+            name: p.author.username,
+            avatar: p.author.avatarUrl,
+          },
+        }));
+
+        setContents(items);
+      } catch (err) {
+        console.error("Error fetching posts:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
 
   /* ---------------- Backend: Approved SHORTS (declare EARLY) ------------------ */
   const [shorts, setShorts] = useState([]);
@@ -110,7 +133,7 @@ export default function CustomerMediaManagement() {
     try {
       setShortsLoading(true);
       const data = await fetchJson(
-        `${API}/api/admin/posts?contentType=short&status=approved&sortBy=createdAt&order=desc&limit=200`
+        `${API}/api/admin/list?contentType=short&status=approved&sortBy=createdAt&order=desc&limit=200`
       );
       const items = Array.isArray(data?.items) ? data.items : data;
       const shaped = items.map((p) => ({
@@ -314,7 +337,7 @@ export default function CustomerMediaManagement() {
   const loadPending = async () => {
     try {
       setPendingLoading(true);
-      const data = await fetchJson(`${API}/api/admin/posts?status=pending&sortBy=createdAt&order=desc&limit=200`);
+      const data = await fetchJson(`${API}/api/admin/list?status=pending&sortBy=createdAt&order=desc&limit=200`);
       const items = Array.isArray(data?.items) ? data.items : [];
       const shaped = items
         .filter((p) => p?.contentType === "image" || p?.contentType === "short")
@@ -398,7 +421,7 @@ export default function CustomerMediaManagement() {
   const loadAllContent = async () => {
     try {
       setAllLoading(true);
-      const data = await fetchJson(`${API}/api/admin/posts?sortBy=createdAt&order=desc&limit=500`);
+      const data = await fetchJson(`${API}/api/admin/list?sortBy=createdAt&order=desc&limit=500`);
       const items = Array.isArray(data?.items) ? data.items : [];
       const filtered = items
         .filter(
