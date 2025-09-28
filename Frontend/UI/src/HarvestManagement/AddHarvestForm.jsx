@@ -5,9 +5,45 @@ export default function AddHarvestForm({ hive, onClose, onSuccess }) {
   const [quantity, setQuantity] = useState("");
   const [quality, setQuality] = useState("High");
   const [notes, setNotes] = useState("");
+  const [errors, setErrors] = useState({});
+
+  const validate = () => {
+    const next = {};
+
+    // Date
+    if (!date) {
+      next.date = "Harvest date is required";
+    } else {
+      const d = new Date(date);
+      if (d > new Date()) next.date = "Date cannot be in the future";
+    }
+
+    // Quantity
+    if (!quantity) {
+      next.quantity = "Quantity is required";
+    } else if (Number(quantity) <= 0) {
+      next.quantity = "Quantity must be greater than 0";
+    } else if (Number(quantity) > 1000) {
+      next.quantity = "Quantity is unrealistically high (max 1000kg)";
+    }
+
+    // Quality
+    if (!["High", "Medium", "Low"].includes(quality)) {
+      next.quality = "Select a valid quality";
+    }
+
+    // Notes
+    if (notes.length > 300) {
+      next.notes = "Notes cannot exceed 300 characters";
+    }
+
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validate()) return;
 
     try {
       const res = await fetch("http://localhost:3000/api/harvests/add", {
@@ -58,6 +94,7 @@ export default function AddHarvestForm({ hive, onClose, onSuccess }) {
               onChange={(e) => setDate(e.target.value)}
               required
             />
+            {errors.date && <p className="text-red-400 text-xs">{errors.date}</p>}
           </div>
 
           {/* Quantity */}
@@ -74,6 +111,9 @@ export default function AddHarvestForm({ hive, onClose, onSuccess }) {
               min="0"
               step="0.1"
             />
+            {errors.quantity && (
+              <p className="text-red-400 text-xs">{errors.quantity}</p>
+            )}
           </div>
 
           {/* Quality */}
@@ -90,6 +130,9 @@ export default function AddHarvestForm({ hive, onClose, onSuccess }) {
               <option>Medium</option>
               <option>Low</option>
             </select>
+            {errors.quality && (
+              <p className="text-red-400 text-xs">{errors.quality}</p>
+            )}
           </div>
 
           {/* Notes */}
@@ -103,6 +146,7 @@ export default function AddHarvestForm({ hive, onClose, onSuccess }) {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
+            {errors.notes && <p className="text-red-400 text-xs">{errors.notes}</p>}
           </div>
 
           {/* Buttons */}

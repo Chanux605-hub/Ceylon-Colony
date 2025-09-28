@@ -24,6 +24,9 @@ export default function HiveUpdateForm() {
     notes: "",
   });
 
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const fetchHive = async () => {
       try {
@@ -59,6 +62,8 @@ export default function HiveUpdateForm() {
         }
       } catch (err) {
         console.error("Error fetching hive:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -69,8 +74,49 @@ export default function HiveUpdateForm() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // ✅ Validation
+  const validate = () => {
+    const next = {};
+
+    if (!formData.hiveName.trim() || formData.hiveName.length < 2) {
+      next.hiveName = "Hive name must be at least 2 characters";
+    }
+
+    if (!formData.hiveType) next.hiveType = "Hive type is required";
+    if (!formData.beeSpecies || formData.beeSpecies.length < 3)
+      next.beeSpecies = "Bee species must be at least 3 characters";
+
+    if (!formData.colonyStrength)
+      next.colonyStrength = "Colony strength is required";
+    if (!formData.status) next.status = "Status is required";
+
+    if (formData.location && formData.location.length < 2)
+      next.location = "Location must be at least 2 characters";
+
+    if (!formData.material) next.material = "Material is required";
+
+    if (formData.dateEstablished) {
+      const est = new Date(formData.dateEstablished);
+      if (est > new Date()) next.dateEstablished = "Date cannot be in the future";
+    }
+
+    if (
+      formData.expectedYield !== "" &&
+      (Number(formData.expectedYield) < 0 || Number(formData.expectedYield) > 5000)
+    ) {
+      next.expectedYield = "Expected yield must be between 0 and 5000 kg";
+    }
+
+    if (formData.notes && formData.notes.length > 500)
+      next.notes = "Notes cannot exceed 500 characters";
+
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validate()) return;
 
     try {
       const res = await fetch(`http://localhost:3000/api/hives/${hiveId}`, {
@@ -92,9 +138,15 @@ export default function HiveUpdateForm() {
     }
   };
 
+  if (loading) {
+    return (
+      <p className="text-center mt-10 text-gray-400">Loading hive data...</p>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0B0B0B] flex flex-col items-center justify-center px-4 py-10">
-      {/* 🔹 Back Button (outside form) */}
+      {/* 🔹 Back Button */}
       <div className="w-full max-w-3xl mb-6 flex justify-start">
         <button
           onClick={() => navigate(-1)}
@@ -113,7 +165,9 @@ export default function HiveUpdateForm() {
         <form onSubmit={handleSubmit} className="space-y-5 text-white">
           {/* Hive Name */}
           <div>
-            <label className="block font-medium mb-1 text-[#FBB01A]">Hive Name</label>
+            <label className="block font-medium mb-1 text-[#FBB01A]">
+              Hive Name
+            </label>
             <input
               type="text"
               name="hiveName"
@@ -121,11 +175,16 @@ export default function HiveUpdateForm() {
               onChange={handleChange}
               className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2"
             />
+            {errors.hiveName && (
+              <p className="text-red-400 text-xs">{errors.hiveName}</p>
+            )}
           </div>
 
           {/* Hive Type */}
           <div>
-            <label className="block font-medium mb-1 text-[#FBB01A]">Hive Type</label>
+            <label className="block font-medium mb-1 text-[#FBB01A]">
+              Hive Type
+            </label>
             <select
               name="hiveType"
               value={formData.hiveType}
@@ -137,11 +196,16 @@ export default function HiveUpdateForm() {
               <option value="Top-bar">Top-bar</option>
               <option value="Warre">Warre</option>
             </select>
+            {errors.hiveType && (
+              <p className="text-red-400 text-xs">{errors.hiveType}</p>
+            )}
           </div>
 
           {/* Bee Species */}
           <div>
-            <label className="block font-medium mb-1 text-[#FBB01A]">Bee Species</label>
+            <label className="block font-medium mb-1 text-[#FBB01A]">
+              Bee Species
+            </label>
             <input
               type="text"
               name="beeSpecies"
@@ -149,11 +213,16 @@ export default function HiveUpdateForm() {
               onChange={handleChange}
               className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2"
             />
+            {errors.beeSpecies && (
+              <p className="text-red-400 text-xs">{errors.beeSpecies}</p>
+            )}
           </div>
 
           {/* Colony Strength */}
           <div>
-            <label className="block font-medium mb-1 text-[#FBB01A]">Colony Strength</label>
+            <label className="block font-medium mb-1 text-[#FBB01A]">
+              Colony Strength
+            </label>
             <select
               name="colonyStrength"
               value={formData.colonyStrength}
@@ -165,11 +234,16 @@ export default function HiveUpdateForm() {
               <option value="Medium">Medium</option>
               <option value="Weak">Weak</option>
             </select>
+            {errors.colonyStrength && (
+              <p className="text-red-400 text-xs">{errors.colonyStrength}</p>
+            )}
           </div>
 
           {/* Status */}
           <div>
-            <label className="block font-medium mb-1 text-[#FBB01A]">Status</label>
+            <label className="block font-medium mb-1 text-[#FBB01A]">
+              Status
+            </label>
             <select
               name="status"
               value={formData.status}
@@ -181,11 +255,16 @@ export default function HiveUpdateForm() {
               <option value="Inactive">Inactive</option>
               <option value="Needs Attention">Needs Attention</option>
             </select>
+            {errors.status && (
+              <p className="text-red-400 text-xs">{errors.status}</p>
+            )}
           </div>
 
           {/* Location */}
           <div>
-            <label className="block font-medium mb-1 text-[#FBB01A]">Location</label>
+            <label className="block font-medium mb-1 text-[#FBB01A]">
+              Location
+            </label>
             <input
               type="text"
               name="location"
@@ -193,11 +272,16 @@ export default function HiveUpdateForm() {
               onChange={handleChange}
               className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2"
             />
+            {errors.location && (
+              <p className="text-red-400 text-xs">{errors.location}</p>
+            )}
           </div>
 
           {/* Material */}
           <div>
-            <label className="block font-medium mb-1 text-[#FBB01A]">Material</label>
+            <label className="block font-medium mb-1 text-[#FBB01A]">
+              Material
+            </label>
             <input
               type="text"
               name="material"
@@ -205,11 +289,16 @@ export default function HiveUpdateForm() {
               onChange={handleChange}
               className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2"
             />
+            {errors.material && (
+              <p className="text-red-400 text-xs">{errors.material}</p>
+            )}
           </div>
 
           {/* Date Established */}
           <div>
-            <label className="block font-medium mb-1 text-[#FBB01A]">Date Established</label>
+            <label className="block font-medium mb-1 text-[#FBB01A]">
+              Date Established
+            </label>
             <input
               type="date"
               name="dateEstablished"
@@ -217,11 +306,16 @@ export default function HiveUpdateForm() {
               onChange={handleChange}
               className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2"
             />
+            {errors.dateEstablished && (
+              <p className="text-red-400 text-xs">{errors.dateEstablished}</p>
+            )}
           </div>
 
           {/* Expected Yield */}
           <div>
-            <label className="block font-medium mb-1 text-[#FBB01A]">Expected Yield (kg)</label>
+            <label className="block font-medium mb-1 text-[#FBB01A]">
+              Expected Yield (kg)
+            </label>
             <input
               type="number"
               name="expectedYield"
@@ -229,11 +323,16 @@ export default function HiveUpdateForm() {
               onChange={handleChange}
               className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2"
             />
+            {errors.expectedYield && (
+              <p className="text-red-400 text-xs">{errors.expectedYield}</p>
+            )}
           </div>
 
           {/* Notes */}
           <div>
-            <label className="block font-medium mb-1 text-[#FBB01A]">Notes</label>
+            <label className="block font-medium mb-1 text-[#FBB01A]">
+              Notes
+            </label>
             <textarea
               name="notes"
               value={formData.notes}
@@ -241,6 +340,9 @@ export default function HiveUpdateForm() {
               className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2"
               rows="3"
             />
+            {errors.notes && (
+              <p className="text-red-400 text-xs">{errors.notes}</p>
+            )}
           </div>
 
           {/* Buttons */}

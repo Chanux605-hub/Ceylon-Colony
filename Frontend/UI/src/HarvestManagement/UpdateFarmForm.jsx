@@ -19,6 +19,7 @@ export default function UpdateFarmForm() {
   });
 
   const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState({});
 
   // Fetch farm details
   useEffect(() => {
@@ -51,8 +52,58 @@ export default function UpdateFarmForm() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // ✅ Validation
+  const validate = () => {
+    const next = {};
+
+    if (!formData.farmName.trim() || formData.farmName.length < 3) {
+      next.farmName = "Farm name must be at least 3 characters";
+    }
+
+    if (!formData.district.trim()) {
+      next.district = "District is required";
+    }
+
+    if (formData.size !== "" && (formData.size < 0 || formData.size > 500)) {
+      next.size = "Size must be between 0 and 500 acres";
+    }
+
+    if (
+      formData.numHives !== "" &&
+      (formData.numHives < 0 || formData.numHives > 5000)
+    ) {
+      next.numHives = "Number of hives must be between 0 and 5000";
+    }
+
+    if (formData.owner.trim().length < 3) {
+      next.owner = "Owner name must be at least 3 characters";
+    }
+
+    if (
+      formData.phone &&
+      !/^(\+94\d{9}|0\d{9})$/.test(formData.phone.trim())
+    ) {
+      next.phone = "Invalid phone format (use +94XXXXXXXXX or 07XXXXXXXX)";
+    }
+
+    if (
+      formData.email &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())
+    ) {
+      next.email = "Invalid email address";
+    }
+
+    if (!formData.address.trim()) {
+      next.address = "Address is required";
+    }
+
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validate()) return;
 
     try {
       const res = await fetch(`http://localhost:3000/api/farms/${farmId}`, {
@@ -115,6 +166,9 @@ export default function UpdateFarmForm() {
               className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]"
               required
             />
+            {errors.farmName && (
+              <p className="text-red-400 text-xs">{errors.farmName}</p>
+            )}
           </div>
 
           {/* District */}
@@ -129,6 +183,9 @@ export default function UpdateFarmForm() {
               onChange={handleChange}
               className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]"
             />
+            {errors.district && (
+              <p className="text-red-400 text-xs">{errors.district}</p>
+            )}
           </div>
 
           {/* Size */}
@@ -143,6 +200,9 @@ export default function UpdateFarmForm() {
               onChange={handleChange}
               className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]"
             />
+            {errors.size && (
+              <p className="text-red-400 text-xs">{errors.size}</p>
+            )}
           </div>
 
           {/* Number of Hives */}
@@ -157,6 +217,9 @@ export default function UpdateFarmForm() {
               onChange={handleChange}
               className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]"
             />
+            {errors.numHives && (
+              <p className="text-red-400 text-xs">{errors.numHives}</p>
+            )}
           </div>
 
           {/* Flora */}
@@ -202,6 +265,9 @@ export default function UpdateFarmForm() {
               onChange={handleChange}
               className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]"
             />
+            {errors.owner && (
+              <p className="text-red-400 text-xs">{errors.owner}</p>
+            )}
           </div>
 
           {/* Phone */}
@@ -216,6 +282,9 @@ export default function UpdateFarmForm() {
               onChange={handleChange}
               className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]"
             />
+            {errors.phone && (
+              <p className="text-red-400 text-xs">{errors.phone}</p>
+            )}
           </div>
 
           {/* Email */}
@@ -230,6 +299,9 @@ export default function UpdateFarmForm() {
               onChange={handleChange}
               className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]"
             />
+            {errors.email && (
+              <p className="text-red-400 text-xs">{errors.email}</p>
+            )}
           </div>
 
           {/* Address */}
@@ -244,6 +316,9 @@ export default function UpdateFarmForm() {
               onChange={handleChange}
               className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]"
             />
+            {errors.address && (
+              <p className="text-red-400 text-xs">{errors.address}</p>
+            )}
           </div>
 
           {/* Buttons */}

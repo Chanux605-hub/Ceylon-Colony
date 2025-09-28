@@ -5,6 +5,7 @@ import cors from "cors";
 import connection from "./config/db.js"; 
 import farmRouter from "./routes/farmRoutes.js";
 import hiveRouter from "./routes/hiveRoutes.js";
+import farmAnalyticsRoutes from "./routes/farmAnalyticsRoutes.js";
 
 
 import inventoryRoutes from "./routes/inventory.routes.js";
@@ -45,6 +46,7 @@ app.use("/api/products", productRouter);
 app.use("/api/products", productRouter);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/analytics", analyticsRouter);
+app.use("/api/farm-analytics", farmAnalyticsRoutes);
 
 app.use("/api/orderdetails", orderDetailsRouter);
 

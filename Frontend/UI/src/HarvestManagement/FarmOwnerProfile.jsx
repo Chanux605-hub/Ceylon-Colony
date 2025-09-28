@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import HarvestHistory from "../HarvestManagement/HarvestHistory.jsx"; // ✅ Harvest Tab
+import FarmAnalyticsDashboard from "../HarvestManagement/FarmAnalyticsDashboard.jsx"; // ✅ Analytics Tab
 
 export default function FarmOwnerProfile() {
   const [farmer, setFarmer] = useState(null);
@@ -64,9 +65,7 @@ export default function FarmOwnerProfile() {
       if (data.success) {
         setFarmer((prev) => ({
           ...prev,
-          farms: prev.farms.filter(
-            (f) => f._id.toString() !== id.toString()
-          ),
+          farms: prev.farms.filter((f) => f._id.toString() !== id.toString()),
         }));
         alert("✅ Farm deleted successfully!");
       } else {
@@ -218,6 +217,13 @@ export default function FarmOwnerProfile() {
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {/* ✅ Analytics Tab */}
+        {activeTab === "analytics" && (
+          <div className="bg-[#1a1a1a] rounded-xl shadow-lg p-6 h-full">
+            <FarmAnalyticsDashboard ownerId={farmer.farmerId} />
           </div>
         )}
 
