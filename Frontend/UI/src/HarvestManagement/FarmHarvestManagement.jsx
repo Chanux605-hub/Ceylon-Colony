@@ -424,13 +424,14 @@ export default function FarmHarvestManagement() {
                     <th className="px-4 py-3 text-left">Name</th>
                     <th className="px-4 py-3 text-center">Farm</th>
                     <th className="px-4 py-3 text-center">Status</th>
-                    <th className="px-4 py-3 text-center">Last Inspection</th>
-                    <th className="px-4 py-3 text-center">Next Inspection</th>
                   </tr>
                 </thead>
                 <tbody>
                   {hives.map((hive) => (
-                    <tr key={hive._id} className="border-b border-gray-700 hover:bg-[#252525]">
+                    <tr
+                      key={hive._id}
+                      className="border-b border-gray-700 hover:bg-[#252525]"
+                    >
                       <td className="px-4 py-2 text-left font-medium">{hive.hiveId}</td>
                       <td className="px-4 py-2 text-left">{hive.hiveName}</td>
                       <td className="px-4 py-2 text-center">{hive.farmId}</td>
@@ -447,23 +448,18 @@ export default function FarmHarvestManagement() {
                           {hive.status}
                         </span>
                       </td>
-                      <td className="px-4 py-2 text-center">
-                        {hive.lastInspection ? new Date(hive.lastInspection).toDateString() : "--"}
-                      </td>
-                      <td className="px-4 py-2 text-center">
-                        {hive.nextInspection ? new Date(hive.nextInspection).toDateString() : "--"}
-                      </td>
                     </tr>
                   ))}
                   {hives.length === 0 && (
                     <tr>
-                      <td colSpan="6" className="text-center py-4 text-gray-400">
+                      <td colSpan="4" className="text-center py-4 text-gray-400">
                         No hives found
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
+
 
               {/* Alerts list */}
               <h3 className="text-lg font-semibold mt-8 mb-4">Hive Alerts</h3>
