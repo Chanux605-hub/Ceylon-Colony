@@ -166,6 +166,8 @@ export default function CustomerMediaManagement() {
   const [filterProduct, setFilterProduct] = useState("all");
   const [videoSort, setVideoSort] = useState("likes"); // likes | comments | views
   const [videoProduct, setVideoProduct] = useState("all");
+  const [searchUser, setSearchUser] = useState("");
+
 
   /* ---------------- Select options ---------------- */
   const tagOptions = useMemo(
@@ -480,9 +482,14 @@ export default function CustomerMediaManagement() {
           (c.product || "").toLowerCase().includes(s)
       );
     }
+    if (searchUser.trim()) {
+      rows = rows.filter((c) =>
+        (c.author || "").toLowerCase().includes(searchUser.trim().toLowerCase())
+      );
+    }
     rows.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     return rows;
-  }, [allContent, q, range, filterTag, filterProduct]);
+  }, [allContent, q, range, filterTag, filterProduct,searchUser ]);
 
   // delete from All Content (approved/rejected)
   const deleteReviewed = async (row) => {
@@ -539,6 +546,22 @@ export default function CustomerMediaManagement() {
   ========================================================================================= */
   return (
     <div className="space-y-6 text-white">
+      <div id="customer-media-section" className="space-y-6 text-white">
+      {/* Header Card */}
+      <div className="rounded-2xl bg-black/40 border border-white/10 p-5 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Customer Media</h1>
+          <p className="text-white/70 text-sm mt-1">
+            Analytics & insights for Customer Media
+          </p>
+        </div>
+        <button
+          onClick={() => window.print()}  // ✅ open print-to-PDF dialog
+          className="rounded-lg px-5 py-2 bg-[#FBB01A] text-black font-semibold hover:opacity-90 shadow"
+        >
+          Export Report
+        </button>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Kpi title="Submissions Today" icon={<BarChart2 className="h-4 w-4" />} value={submissionsToday} />
         <Kpi
@@ -711,6 +734,8 @@ export default function CustomerMediaManagement() {
         rows={allContentFilteredBackend}
         loading={allLoading}
         onReview={setSelectedReviewed}
+        searchUser={searchUser}
+        setSearchUser={setSearchUser}
       />
 
       <PendingReviewModal
@@ -734,6 +759,7 @@ export default function CustomerMediaManagement() {
         onClose={() => setPreviewShort(null)}
       />
     <AnnouncementReviewModal item={selectedAnn} onClose={() => setSelectedAnn(null)} />
+    </div>
     </div>
   );
 }
@@ -1098,18 +1124,24 @@ function PendingUploadsTable({ rows, loading, onReview, onDelete }) {
   );
 }
 
-function AllContentTable({ rows, loading, onReview }) {
+function AllContentTable({ rows, loading, onReview, searchUser, setSearchUser }) {
   return (
     <div className="rounded-2xl bg-black/40 border border-white/10 p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm font-semibold">All Content</div>
+        <input
+          type="text"
+          placeholder="Search by user..."
+          value={searchUser}
+          onChange={(e) => setSearchUser(e.target.value)}
+          className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]/40"
+        />
       </div>
-
       <div className="overflow-x-auto">
         <table className="min-w-[1100px] w-full text-sm">
           <thead className="bg-white/5 text-white/70">
             <tr className="text-left">
-              <th className="py-3 px-4">Title</th>
+              <th className="py-3 px-4">User</th>
               <th className="py-3 px-4">Type</th>
               <th className="py-3 px-4">Tag(s)</th>
               <th className="py-3 px-4">Product</th>
@@ -1128,7 +1160,7 @@ function AllContentTable({ rows, loading, onReview }) {
             )}
             {!loading && rows.map((row) => (
               <tr key={row.id} className="hover:bg-white/5">
-                <td className="py-3 px-4">{row.title}</td>
+                <td className="py-3 px-4">{row.author}</td>
                 <td className="py-3 px-4">{row.type}</td>
                 <td className="py-3 px-4">{row.tags.map((t) => `#${t}`).join(", ")}</td>
                 <td className="py-3 px-4">{row.product || "—"}</td>
