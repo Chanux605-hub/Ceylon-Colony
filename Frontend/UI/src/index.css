@@ -1,6 +1,40 @@
 @import "tailwindcss";
 
+/* Hide horizontal scrollbar without disabling scroll */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+
 html, body, #root {
   height: 100%;
   margin: 0;
 }
+
+.input {
+  @apply w-full px-3 py-2 rounded-lg bg-white/5 border border-white/20 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]/40;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold bg-[#FBB01A] text-black shadow-md transition hover:opacity-90;
+}
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold border border-white/20 text-white bg-white/10 backdrop-blur-sm transition hover:bg-white/15;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #customer-media-section, #customer-media-section * {
+    visibility: visible;
+  }
+  #customer-media-section {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}
+
+
+

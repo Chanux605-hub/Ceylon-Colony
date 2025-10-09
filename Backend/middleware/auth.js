@@ -1,21 +1,27 @@
+// backend/middleware/authMiddleware.js
 import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
-const authMiddleware = (req, res, next) => {
+const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
+
+export const protect = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1]; // "Bearer <token>"
-
     if (!token) {
-      return res.status(401).json({ message: "No token provided" });
+      return res.status(401).json({ error: "No token provided" });
     }
 
-    // verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secretKey");
+    const decoded = jwt.verify(token, JWT_SECRET);
 
-    req.user = decoded; // user info inside token (id, email, role, etc.)
+    // ✅ Lookup user in DB
+    const user = await User.findById(decoded.id).select("_id email role");
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    req.user = user; // attach fresh user info
     next();
-  } catch (error) {
-    res.status(401).json({ message: "Unauthorized", error: error.message });
+  } catch (err) {
+    res.status(401).json({ error: "Unauthorized", details: err.message });
   }
 };
-
-export default authMiddleware;
