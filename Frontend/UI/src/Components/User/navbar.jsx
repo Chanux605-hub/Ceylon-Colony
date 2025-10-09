@@ -54,15 +54,6 @@ const Navbar = () => {
               )}
             </Link>
 
-            {/* Profile */}
-            <button
-              onClick={() => navigate("/FarmerProfile")}
-              className="flex items-center space-x-2 bg-neutral-800 hover:bg-neutral-700 px-3 py-1 rounded-md transition"
-            >
-              <User className="w-5 h-5 text-[#FBB01A]" />
-              <span className="text-white text-sm font-medium">John Silva</span>
-            </button>
-
             {/* Mobile Menu */}
             <button className="md:hidden">
               <Menu className="w-6 h-6 text-white hover:text-[#FBB01A] transition" />

@@ -55,7 +55,7 @@ export const getFarmerAnalytics = async (req, res) => {
       farmId: { $in: farms.map((f) => f.farmId) },
     });
 
-    const hiveData = await Promise.all(
+    let hiveData = await Promise.all(
       hives.map(async (hive) => {
         const harvests = await Harvest.find({
           $or: [
@@ -78,6 +78,10 @@ export const getFarmerAnalytics = async (req, res) => {
         };
       })
     );
+
+    // 🚀 Remove hives with 0 harvest
+    hiveData = hiveData.filter(h => h.harvest > 0);
+
 
     // ✅ Overall stats
     const overallHarvest = farmData.reduce((sum, f) => sum + f.totalHarvest, 0);
