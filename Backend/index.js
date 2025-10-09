@@ -24,9 +24,9 @@ import workshopRouter from "./routes/workshopRoutes.js";
 import blogRouter from "./routes/blogRoutes.js";
 import harvestRoutes from "./routes/harvestRoutes.js";
 import productRouter from "./routes/product.routes.js";
-import inventoryRoutes from "./routes/inventory.routes.js";
-import orderDetailsRouter from "./routes/orderDetailsRouter.js";
-import analyticsRouter from "./routes/analytics.routes.js";
+
+
+
 
 // Routes (Chanuka’s side)
 import postRoutes from "./routes/postRoutes.js";
