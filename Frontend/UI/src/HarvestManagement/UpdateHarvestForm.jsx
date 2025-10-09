@@ -8,19 +8,60 @@ export default function UpdateHarvestForm({ harvest, onClose, onSuccess }) {
     date: harvest.date ? harvest.date.split("T")[0] : "",
   });
 
+  const [errors, setErrors] = useState({});
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // ✅ Validation
+  const validate = () => {
+    const next = {};
+
+    // Date
+    if (!form.date) {
+      next.date = "Date is required";
+    } else {
+      const d = new Date(form.date);
+      if (d > new Date()) next.date = "Date cannot be in the future";
+    }
+
+    // Quantity
+    if (!form.quantity) {
+      next.quantity = "Quantity is required";
+    } else if (Number(form.quantity) <= 0) {
+      next.quantity = "Quantity must be greater than 0";
+    } else if (Number(form.quantity) > 1000) {
+      next.quantity = "Quantity cannot exceed 1000 kg";
+    }
+
+    // Quality
+    if (!["High", "Medium", "Low"].includes(form.quality)) {
+      next.quality = "Select a valid quality";
+    }
+
+    // Notes
+    if (form.notes.length > 300) {
+      next.notes = "Notes cannot exceed 300 characters";
+    }
+
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validate()) return;
 
     try {
-      const res = await fetch(`http://localhost:3000/api/harvests/${harvest._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const res = await fetch(
+        `http://localhost:3000/api/harvests/${harvest._id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        }
+      );
 
       const data = await res.json();
       if (data.success) {
@@ -58,6 +99,9 @@ export default function UpdateHarvestForm({ harvest, onClose, onSuccess }) {
               className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2 focus:ring-2 focus:ring-[#FBB01A] focus:outline-none"
               required
             />
+            {errors.date && (
+              <p className="text-red-400 text-xs">{errors.date}</p>
+            )}
           </div>
 
           {/* Quantity */}
@@ -72,7 +116,12 @@ export default function UpdateHarvestForm({ harvest, onClose, onSuccess }) {
               onChange={handleChange}
               className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2 focus:ring-2 focus:ring-[#FBB01A] focus:outline-none"
               required
+              step="0.1"
+              min="0"
             />
+            {errors.quantity && (
+              <p className="text-red-400 text-xs">{errors.quantity}</p>
+            )}
           </div>
 
           {/* Quality */}
@@ -92,6 +141,9 @@ export default function UpdateHarvestForm({ harvest, onClose, onSuccess }) {
               <option value="Medium">Medium</option>
               <option value="Low">Low</option>
             </select>
+            {errors.quality && (
+              <p className="text-red-400 text-xs">{errors.quality}</p>
+            )}
           </div>
 
           {/* Notes */}
@@ -106,6 +158,9 @@ export default function UpdateHarvestForm({ harvest, onClose, onSuccess }) {
               className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded px-3 py-2 focus:ring-2 focus:ring-[#FBB01A] focus:outline-none"
               rows="3"
             ></textarea>
+            {errors.notes && (
+              <p className="text-red-400 text-xs">{errors.notes}</p>
+            )}
           </div>
 
           {/* Buttons */}

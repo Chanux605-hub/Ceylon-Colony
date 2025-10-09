@@ -3,6 +3,7 @@ import harvestModel from "../models/harvestModel.js";
 import hiveModel from "../models/hiveModel.js";
 import farmModel from "../models/farmModel.js";
 
+
 // Add Harvest 
 export const addHarvest = async (req, res) => {
   try {
@@ -110,5 +111,82 @@ export const deleteHarvest = async (req, res) => {
     res
       .status(500)
       .json({ success: false, message: "Error deleting harvest" });
+  }
+};
+
+
+// Get total harvest quantity for the current month
+export const getMonthlyHarvestTotal = async (req, res) => {
+  try {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    const result = await harvestModel.aggregate([
+      {
+        $match: {
+          date: { $gte: startOfMonth, $lte: endOfMonth }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$quantity" },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    res.json({
+      success: true,
+      total: result[0]?.total || 0,   // Total kg harvested
+      count: result[0]?.count || 0    // Number of harvest records
+    });
+  } catch (err) {
+    console.error("Error in getMonthlyHarvestTotal:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// Additional function to get harvest totals grouped by month (for charts)
+export const getHarvestByMonth = async (req, res) => {
+  try {
+    const result = await harvestModel.aggregate([
+      {
+        $group: {
+          _id: { year: { $year: "$date" }, month: { $month: "$date" } },
+          total: { $sum: "$quantity" }
+        }
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } }
+    ]);
+
+    const formatted = result.map(r => ({
+      month: `${r._id.month}-${r._id.year}`,
+      total: r.total
+    }));
+
+    res.json({ success: true, data: formatted });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
+// Additional function to get harvest totals grouped by farm (for charts)
+export const getHarvestByFarm = async (req, res) => {
+  try {
+    const result = await harvestModel.aggregate([
+      {
+        $group: {
+          _id: "$farmId",
+          total: { $sum: "$quantity" }
+        }
+      }
+    ]);
+
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };

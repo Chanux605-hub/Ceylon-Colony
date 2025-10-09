@@ -12,16 +12,23 @@ import {
   XCircle,
   Tag,
 } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar } from "recharts";
 
 export default function FarmHarvestManagement() {
   const [activeTab, setActiveTab] = useState("overview");
   const [farms, setFarms] = useState([]);
   const [selectedFarm, setSelectedFarm] = useState(null);
 
-// Hive states
+  // Hive states
   const [hives, setHives] = useState([]);
   const [hiveStats, setHiveStats] = useState({ total: 0, productive: 0, lowProductive: 0 });
   const [hiveAlerts, setHiveAlerts] = useState({ overdueInspections: [], lowProductive: [] });
+
+
+  // Harvest state
+  const [monthlyHarvest, setMonthlyHarvest] = useState({ total: 0, count: 0 });
+  const [harvestByMonth, setHarvestByMonth] = useState([]);   // ✅ NEW
+  const [harvestByFarm, setHarvestByFarm] = useState([]); 
 
   const tabs = [
     { id: "overview", label: "Overview", icon: Leaf },
@@ -33,7 +40,7 @@ export default function FarmHarvestManagement() {
     { id: "actions", label: "Admin Actions", icon: Tag },
   ];
 
-  // Fetch farms when "farms" tab is active
+  // Fetch farms
   useEffect(() => {
     if (activeTab === "farms" || activeTab === "overview" || activeTab === "hives") {
       axios
@@ -47,24 +54,46 @@ export default function FarmHarvestManagement() {
     }
   }, [activeTab]);
 
-  // 🔹 Fetch hive stats & list
+  // Fetch hive stats
   useEffect(() => {
     if (activeTab === "hives" || activeTab === "overview") {
-      axios.get("http://localhost:3000/api/hives/stats").then(res => {
+      axios.get("http://localhost:3000/api/hives/stats").then((res) => {
         if (res.data.success) setHiveStats(res.data.stats);
       });
     }
     if (activeTab === "hives") {
-      axios.get("http://localhost:3000/api/hives").then(res => {
+      axios.get("http://localhost:3000/api/hives").then((res) => {
         if (res.data.success) setHives(res.data.hives);
       });
-      axios.get("http://localhost:3000/api/hives/alerts").then(res => {
+      axios.get("http://localhost:3000/api/hives/alerts").then((res) => {
         if (res.data.success) setHiveAlerts(res.data.alerts);
       });
     }
   }, [activeTab]);
 
-  // 🔹 View single farm details
+  // Fetch monthly harvest total
+  useEffect(() => {
+    if (activeTab === "overview") {
+      axios
+        .get("http://localhost:3000/api/harvests/monthly-total")
+        .then((res) => {
+          if (res.data.success) setMonthlyHarvest(res.data);
+        })
+        .catch((err) => console.error("Error fetching monthly harvest:", err));
+    }
+  }, [activeTab]);
+
+  // Fetch analytics
+  useEffect(() => {
+    if (activeTab === "analytics") {
+      axios.get("http://localhost:3000/api/harvests/by-month")
+        .then((res) => res.data.success && setHarvestByMonth(res.data.data));
+      axios.get("http://localhost:3000/api/harvests/by-farm")
+        .then((res) => res.data.success && setHarvestByFarm(res.data.data));
+    }
+  }, [activeTab]);
+
+  // View farm details
   const handleViewFarm = async (farmId) => {
     try {
       const res = await axios.get(`http://localhost:3000/api/farms/${farmId}`);
@@ -76,7 +105,7 @@ export default function FarmHarvestManagement() {
     }
   };
 
-  // 🔹 Update farm status (activate/deactivate)
+  // Update farm status
   const handleUpdateFarmStatus = async (farmId, newStatus) => {
     const confirmAction = window.confirm(
       `Are you sure you want to ${newStatus.toLowerCase()} this farm?`
@@ -136,24 +165,27 @@ export default function FarmHarvestManagement() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-[#2A2A2A] p-4 rounded-lg">
                 <p className="text-sm text-gray-400">Total Farms</p>
-                <p className="text-2xl font-bold">{farms.length}</p>
+                <p className="text-lg font-bold">{farms.length}</p>
               </div>
               <div className="bg-[#2A2A2A] p-4 rounded-lg">
                 <p className="text-sm text-gray-400">Active vs Inactive</p>
-                <p className="text-2xl font-bold">
-                  {farms.filter((f) => f.status === "Active").length} /{" "}
-                  {farms.filter((f) => f.status !== "Active").length}
+                <p className="text-lg font-bold">
+                  {farms.filter((f) => f.status === "Active").length} Active /
+                  {farms.filter((f) => f.status !== "Active").length} Inactive
                 </p>
               </div>
               <div className="bg-[#2A2A2A] p-4 rounded-lg">
                 <p className="text-sm text-gray-400">Total Hives</p>
-                <p className="text-2xl font-bold">
+                <p className="text-lg font-bold">
                   {farms.reduce((acc, f) => acc + (f.numHives || 0), 0)}
                 </p>
               </div>
               <div className="bg-[#2A2A2A] p-4 rounded-lg">
                 <p className="text-sm text-gray-400">Harvests this Month</p>
-                <p className="text-2xl font-bold">--</p>
+                <p className="text-lg font-bold">{monthlyHarvest.total} kg</p>
+                <p className="text-sm text-gray-400">
+                  ({monthlyHarvest.count} records)
+                </p>
               </div>
             </div>
           </div>
@@ -392,13 +424,14 @@ export default function FarmHarvestManagement() {
                     <th className="px-4 py-3 text-left">Name</th>
                     <th className="px-4 py-3 text-center">Farm</th>
                     <th className="px-4 py-3 text-center">Status</th>
-                    <th className="px-4 py-3 text-center">Last Inspection</th>
-                    <th className="px-4 py-3 text-center">Next Inspection</th>
                   </tr>
                 </thead>
                 <tbody>
                   {hives.map((hive) => (
-                    <tr key={hive._id} className="border-b border-gray-700 hover:bg-[#252525]">
+                    <tr
+                      key={hive._id}
+                      className="border-b border-gray-700 hover:bg-[#252525]"
+                    >
                       <td className="px-4 py-2 text-left font-medium">{hive.hiveId}</td>
                       <td className="px-4 py-2 text-left">{hive.hiveName}</td>
                       <td className="px-4 py-2 text-center">{hive.farmId}</td>
@@ -415,23 +448,18 @@ export default function FarmHarvestManagement() {
                           {hive.status}
                         </span>
                       </td>
-                      <td className="px-4 py-2 text-center">
-                        {hive.lastInspection ? new Date(hive.lastInspection).toDateString() : "--"}
-                      </td>
-                      <td className="px-4 py-2 text-center">
-                        {hive.nextInspection ? new Date(hive.nextInspection).toDateString() : "--"}
-                      </td>
                     </tr>
                   ))}
                   {hives.length === 0 && (
                     <tr>
-                      <td colSpan="6" className="text-center py-4 text-gray-400">
+                      <td colSpan="4" className="text-center py-4 text-gray-400">
                         No hives found
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
+
 
               {/* Alerts list */}
               <h3 className="text-lg font-semibold mt-8 mb-4">Hive Alerts</h3>
@@ -454,21 +482,43 @@ export default function FarmHarvestManagement() {
           <div>
             <h2 className="text-lg font-semibold mb-4">Harvest Analytics</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Harvest by Month */}
               <div className="bg-[#2A2A2A] p-6 rounded-lg">
-                <p className="font-semibold">Harvest by Month</p>
-                <div className="h-40 flex items-center justify-center text-gray-500">
-                  📊 Line/Bar Chart
+                <p className="font-semibold mb-3">Harvest by Month</p>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={harvestByMonth}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                      <XAxis dataKey="month" stroke="#ccc" />
+                      <YAxis stroke="#ccc" />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="total" stroke="#FBB01A" strokeWidth={2} />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
+
+              {/* Harvest by Farm */}
               <div className="bg-[#2A2A2A] p-6 rounded-lg">
-                <p className="font-semibold">Harvest by Farm</p>
-                <div className="h-40 flex items-center justify-center text-gray-500">
-                  📊 Comparison Chart
+                <p className="font-semibold mb-3">Harvest by Farm</p>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={harvestByFarm}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                      <XAxis dataKey="_id" stroke="#ccc" />
+                      <YAxis stroke="#ccc" />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="total" fill="#22c55e" />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
             </div>
           </div>
         )}
+
 
         {/* 🔹 Reports Tab */}
         {activeTab === "reports" && (
