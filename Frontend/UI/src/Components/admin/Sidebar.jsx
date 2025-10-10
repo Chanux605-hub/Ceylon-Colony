@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink, Link } from "react-router-dom";
 import {
-  LayoutDashboard, Package, Boxes, BarChart3, Truck, Users, Settings, LogOut, Leaf, CalendarDays, Video,
+  LayoutDashboard, Package, Boxes, BarChart3, Truck, Users, Settings, LogOut, Video, Leaf , CalendarDays, BookOpenText
 } from "lucide-react";
 
 import logo from "../../assets/logo (2).png"; // or .png/.jpg
@@ -24,7 +24,7 @@ const item = (to, label, Icon) => (
 
 export default function Sidebar() {
   return (
-    <aside className="hidden md:flex md:flex-col w-64 shrink-0 bg-[#0B0B0B] text-white border-r border-white/10">
+    <aside className="hidden md:flex md:flex-col w-64 shrink-0 bg-[#0B0B0B] text-white border-r border-white/10 fixed inset-y-0 left-0">
       <div className="h-16 flex items-center px-4 border-b border-white/10">
       <Link to="/admin" className="flex items-center gap-2">
         <img
@@ -41,13 +41,18 @@ export default function Sidebar() {
       <nav className="p-3 space-y-1">
         {item("/admin", "Overview", LayoutDashboard)}
         {item("/admin/products", "Products", Package)}
-        {item("/admin/inventory", "Inventory", Boxes)}
-        {item("/admin/stock-analysis", "Stock Analysis", BarChart3)}
+        {item("/admin/inventory", "Inventory", Boxes)}=
+        {item("/admin/stock-analysis", "Analysis Stock ", BarChart3)}
         {item("/admin/suppliers", "Suppliers", Truck)}
         {item("/admin/customers", "Customers", Users)}
         {item("/admin/farm-harvest", "Farm & Harvest", Leaf)}
         {item("/admin/workshops", "Workshops", CalendarDays)} 
         {item("/admin/customer-media", "Customers Media", Video)}
+        {item("/admin/farm-harvest", "Farm & Harvest", Leaf)}
+        {item("/admin/allorders", "All Orders", Truck)}
+        {item("/admin/blogs", "Manage Blogs", BookOpenText)} 
+        {item("/admin/workshops", "Workshops", CalendarDays)} 
+        {item("/admin/media", "Customers Media", Video)}
       </nav>
 
       <div className="mt-auto p-3 space-y-1">

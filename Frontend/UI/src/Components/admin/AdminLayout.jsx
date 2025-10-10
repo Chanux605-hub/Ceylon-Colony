@@ -34,9 +34,9 @@ export default function AdminLayout() {
         )}
 
         {/* Content */}
-        <main className="flex-1">
+        <main className="flex-1 md:ml-64">
           {/* Top header */}
-          <div className="hidden md:flex items-center justify-between h-16 px-6 border-b border-white/10 bg-black/50 backdrop-blur">
+          <div className="hidden md:flex items-center justify-between h-16 px-6 border-b border-white/10 bg-black/50 backdrop-blur fixed top-0 left-64 right-0 z-40">
             <div className="font-semibold">Dashboard</div>
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -50,7 +50,8 @@ export default function AdminLayout() {
           </div>
 
           {/* Routed content */}
-          <div className="p-6">
+          {/* Routed content (push below fixed header) */}
+          <div className="p-6 pt-24">
             <Outlet />
           </div>
         </main>

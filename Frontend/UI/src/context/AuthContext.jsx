@@ -4,6 +4,7 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     try {
@@ -14,6 +15,8 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.error("Failed to parse user from localStorage:", err);
       localStorage.removeItem("user"); // clean corrupted value
+    }finally {
+      setLoading(false); // ✅ done restoring
     }
   }, []);
 
@@ -29,8 +32,14 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("token");
   };
 
+    // 👇 add helper
+  const updateUser = (newUser) => {
+    setUser(newUser);
+    localStorage.setItem("user", JSON.stringify(newUser));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

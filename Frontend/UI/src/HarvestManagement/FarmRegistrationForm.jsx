@@ -1,28 +1,22 @@
 import React, { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-// Base API URL (from .env or default localhost:4000)
-const API = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/+$/, "");
+// Base API URL (from .env or default localhost:3000)
+const API = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(
+  /\/+$/,
+  ""
+);
 
-/**
- * FarmRegistrationForm.jsx
- * - React form with TailwindCSS
- * - Auto-generates Farm ID
- * - Temporary ownerId = "001"
- * - Submits data to http://localhost:4000/api/farms/register
- */
 export default function FarmRegistrationForm() {
-  // ---------- const (temporary ownerId until session/user is implemented) ----------
-  const ownerId = "001";
+  const navigate = useNavigate();
+  const ownerId = "001"; // temporary until auth is added
 
-  // ---------- form state ----------
   const [form, setForm] = useState(defaultForm(ownerId));
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // ---------- auto ID ----------
   const farmId = useMemo(() => makeFarmId(form.farmName), [form.farmName]);
 
-  // ---------- handlers ----------
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -42,57 +36,82 @@ export default function FarmRegistrationForm() {
     }));
   };
 
-  const validate = () => {
+  const validate = async () => {
     const next = {};
-    if (!String(form.farmName).trim()) next.farmName = "Farm Name is required";
-    if (!String(form.owner).trim()) next.owner = "Owner / Manager is required";
+
+    // Farm Name required + unique check
+    if (!String(form.farmName).trim()) {
+      next.farmName = "Farm Name is required";
+    } else {
+      try {
+        const res = await fetch(
+          `${API}/api/farms/check-name?name=${encodeURIComponent(
+            form.farmName
+          )}`
+        );
+        const data = await res.json();
+        if (data.exists) next.farmName = "Farm Name already exists";
+      } catch (err) {
+        console.warn("Farm name check failed:", err);
+      }
+    }
+
+    if (!String(form.owner).trim())
+      next.owner = "Owner / Manager is required";
     if (!String(form.phone).trim()) next.phone = "Phone is required";
     if (!String(form.address).trim()) next.address = "Address is required";
     if (!String(form.district).trim()) next.district = "District/Region is required";
 
-    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) next.email = "Invalid email";
-    if (form.phone && !/^([+]?\d[\d\s-]{6,})$/.test(form.phone)) next.phone = "Invalid phone number";
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+      next.email = "Invalid email";
+    if (form.phone && !/^([+]?\d[\d\s-]{6,})$/.test(form.phone))
+      next.phone = "Invalid phone number";
 
-    if (form.size !== "" && Number(form.size) < 0) next.size = "Size cannot be negative";
-    if (form.numHives !== "" && Number(form.numHives) < 0) next.numHives = "Number of hives cannot be negative";
-    if (form.expectedAnnualYield !== "" && Number(form.expectedAnnualYield) < 0) next.expectedAnnualYield = "Yield cannot be negative";
+    if (form.size !== "" && (Number(form.size) < 0 || Number(form.size) > 500))
+      next.size = "Farm size must be between 0 and 500 acres";
+
+    if (
+      form.numHives !== "" &&
+      (Number(form.numHives) <= 0 || Number(form.numHives) > 5000)
+    )
+      next.numHives = "Number of hives must be between 1 and 5000";
+
+    if (form.flora && !form.flora.includes(",") && form.flora.trim().length < 3)
+      next.flora = "Enter at least one flowering plant (comma separated if many)";
+
+    if (form.dateEstablished) {
+      const est = new Date(form.dateEstablished);
+      if (est > new Date())
+        next.dateEstablished = "Established date cannot be in the future";
+    }
+
+    if (form.expectedAnnualYield !== "" && Number(form.expectedAnnualYield) <= 0)
+      next.expectedAnnualYield = "Expected yield must be positive";
 
     setErrors(next);
     return Object.keys(next).length === 0;
   };
 
-  // ---------- submit handler (API call) ----------
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!(await validate())) return;
 
     const payload = {
       farmId,
       ...form,
-      lat: form.lat === "" ? null : Number(form.lat),
-      lng: form.lng === "" ? null : Number(form.lng),
-      size: form.size === "" ? null : Number(form.size),
-      numHives: form.numHives === "" ? null : Number(form.numHives),
-      expectedAnnualYield: form.expectedAnnualYield === "" ? null : Number(form.expectedAnnualYield),
       createdAt: new Date().toISOString(),
     };
 
     try {
       setLoading(true);
-
       const res = await fetch(`${API}/api/farms/register`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify(payload),
       });
-
-      const ct = res.headers.get("content-type") || "";
-      if (!ct.includes("application/json")) {
-        const text = await res.text();
-        throw new Error(
-          `Expected JSON from ${res.url}, got ${ct} (status ${res.status}). Snippet: ${text.slice(0, 120)}`
-        );
-      }
 
       const data = await res.json();
       if (!res.ok || data?.success === false) {
@@ -100,8 +119,7 @@ export default function FarmRegistrationForm() {
       }
 
       alert("✅ Farm registered successfully!");
-      console.log("Server response:", data);
-      setForm(defaultForm(ownerId)); // reset
+      setForm(defaultForm(ownerId)); // reset form
     } catch (err) {
       console.error("Error submitting farm:", err);
       alert("❌ API Error: " + err.message);
@@ -110,27 +128,29 @@ export default function FarmRegistrationForm() {
     }
   };
 
-  // ---------- UI ----------
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 p-6">
-      <div className="mx-auto max-w-5xl">
+    <div className="min-h-screen bg-[#0B0B0B] text-white py-10 px-4 flex flex-col items-center">
+      {/* 🔙 Back button */}
+      <div className="w-full max-w-5xl mb-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="px-5 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
+        >
+          ← Back
+        </button>
+      </div>
+
+      {/* Form Card */}
+      <div className="w-full max-w-5xl bg-[#1a1a1a] border border-[#FBB01A]/40 rounded-2xl p-8 shadow-lg">
         <header className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <span className="px-2 py-1 text-xs rounded-full border border-slate-700 text-sky-300">
-              Farm & Harvest Management
-            </span>
-            <h1 className="text-2xl font-bold">Farm Registration</h1>
-          </div>
-          <code className="text-emerald-300 bg-slate-800 border border-slate-700 px-3 py-1 rounded-md text-xs">
+          <h1 className="text-2xl font-bold text-[#FBB01A]">🏡 Farm Registration</h1>
+          <code className="text-emerald-300 bg-[#0B0B0B] border border-gray-600 px-3 py-1 rounded-md text-xs">
             {farmId}
           </code>
         </header>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-slate-950/70 border border-slate-800 rounded-2xl p-5 shadow-xl"
-        >
-          {/* Basic Farm Information */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Info */}
           <Section title="Basic Farm Information">
             <Grid>
               <FormField label="Farm Name" required error={errors.farmName}>
@@ -142,7 +162,7 @@ export default function FarmRegistrationForm() {
                   className={inputCls}
                 />
               </FormField>
-              <FormField label="Farm ID (Auto)" hint="Generated from name + timestamp">
+              <FormField label="Farm ID (Auto)">
                 <input value={farmId} disabled className={inputCls + " opacity-70"} />
               </FormField>
               <FormField label="Owner ID (Auto)">
@@ -179,7 +199,7 @@ export default function FarmRegistrationForm() {
             </Grid>
           </Section>
 
-          {/* Location Details */}
+          {/* Location */}
           <Section title="Location Details">
             <Grid>
               <FormField label="Address / Location" required error={errors.address} span={2}>
@@ -210,7 +230,6 @@ export default function FarmRegistrationForm() {
                 <input
                   type="number"
                   min="0"
-                  step="0.01"
                   name="size"
                   value={form.size}
                   onChange={handleChange}
@@ -222,7 +241,6 @@ export default function FarmRegistrationForm() {
                 <input
                   type="number"
                   min="0"
-                  step="1"
                   name="numHives"
                   value={form.numHives}
                   onChange={handleChange}
@@ -235,7 +253,7 @@ export default function FarmRegistrationForm() {
                   {HIVE_TYPES.map((t) => (
                     <label
                       key={t}
-                      className="inline-flex items-center gap-2 text-sm bg-slate-900 border border-slate-700 rounded-xl px-3 py-2"
+                      className="inline-flex items-center gap-2 text-sm bg-[#0B0B0B] border border-gray-600 rounded-xl px-3 py-2"
                     >
                       <input
                         type="checkbox"
@@ -249,7 +267,10 @@ export default function FarmRegistrationForm() {
                   ))}
                 </div>
               </FormField>
-              <FormField label="Primary Flowering Plants (comma separated)">
+              <FormField
+                label="Primary Flowering Plants (comma separated)"
+                error={errors.flora}
+              >
                 <input
                   name="flora"
                   value={form.flora}
@@ -258,13 +279,7 @@ export default function FarmRegistrationForm() {
                   className={inputCls}
                 />
               </FormField>
-            </Grid>
-          </Section>
-
-          {/* Operational Information */}
-          <Section title="Operational Information">
-            <Grid>
-              <FormField label="Date Established">
+              <FormField label="Date Established" error={errors.dateEstablished}>
                 <input
                   type="date"
                   name="dateEstablished"
@@ -273,29 +288,14 @@ export default function FarmRegistrationForm() {
                   className={inputCls}
                 />
               </FormField>
-              <FormField label="Current Status">
-                <select
-                  name="status"
-                  value={form.status}
-                  onChange={handleChange}
-                  className={inputCls}
-                >
-                  {STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
               <FormField label="Expected Annual Yield (kg)" error={errors.expectedAnnualYield}>
                 <input
                   type="number"
                   min="0"
-                  step="0.1"
                   name="expectedAnnualYield"
                   value={form.expectedAnnualYield}
                   onChange={handleChange}
-                  placeholder="Eg: 120"
+                  placeholder="Eg: 1200"
                   className={inputCls}
                 />
               </FormField>
@@ -303,21 +303,18 @@ export default function FarmRegistrationForm() {
           </Section>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 mt-6">
+          <div className="flex justify-end gap-3">
             <button
               type="button"
-              onClick={() => {
-                setForm(defaultForm(ownerId));
-                setErrors({});
-              }}
-              className="px-4 py-2 rounded-xl border border-slate-700 hover:bg-slate-800"
+              onClick={() => setForm(defaultForm(ownerId))}
+              className="px-4 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600"
             >
               Reset
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 rounded-xl font-semibold text-slate-900 bg-amber-400 hover:bg-amber-300 disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-[#FBB01A] text-black font-semibold hover:bg-yellow-500 disabled:opacity-50"
             >
               {loading ? "Registering..." : "Register Farm"}
             </button>
@@ -330,18 +327,14 @@ export default function FarmRegistrationForm() {
 
 // ---------- helpers ----------
 const HIVE_TYPES = ["Langstroth", "Top-bar", "Warre", "Traditional Box"];
-const STATUSES = ["Active", "Inactive", "Under Maintenance"];
 
 const inputCls =
-  "w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-400";
+  "w-full rounded-lg bg-[#0B0B0B] border border-gray-600 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-[#FBB01A]";
 
 function Section({ title, children }) {
   return (
     <section className="mb-6">
-      <div className="flex items-center gap-2 mb-3">
-        <h2 className="text-base font-semibold text-slate-200">{title}</h2>
-        <span className="h-px flex-1 bg-slate-800" />
-      </div>
+      <h2 className="text-lg font-semibold text-[#FBB01A] mb-3">{title}</h2>
       {children}
     </section>
   );
@@ -351,15 +344,14 @@ function Grid({ children }) {
   return <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{children}</div>;
 }
 
-function FormField({ label, required, hint, error, span = 1, children }) {
+function FormField({ label, required, error, span = 1, children }) {
   return (
     <label className={`grid gap-1 ${span === 2 ? "md:col-span-2" : ""}`}>
-      <span className="text-xs text-slate-300">
-        {label} {required && <span className="text-rose-400">*</span>}
+      <span className="text-sm text-gray-300">
+        {label} {required && <span className="text-red-400">*</span>}
       </span>
       {children}
-      <div className="text-[11px] text-slate-400">{hint}</div>
-      {error && <div className="text-[11px] text-rose-400">{error}</div>}
+      {error && <div className="text-xs text-red-400">{error}</div>}
     </label>
   );
 }
@@ -384,8 +376,6 @@ function defaultForm(ownerId) {
     email: "",
     address: "",
     district: "",
-    lat: "",
-    lng: "",
     size: "",
     numHives: "",
     hiveTypes: [],

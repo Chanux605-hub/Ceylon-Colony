@@ -440,7 +440,7 @@ function BookingModal({ workshop, onClose }) {
               </div>
             </form>
           )}
-        </div>
+        </div>         
       </div>
     </div>
   );
