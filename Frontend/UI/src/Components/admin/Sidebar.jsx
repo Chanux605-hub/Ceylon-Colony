@@ -41,13 +41,10 @@ export default function Sidebar() {
       <nav className="p-3 space-y-1">
         {item("/admin", "Overview", LayoutDashboard)}
         {item("/admin/products", "Products", Package)}
-        {item("/admin/inventory", "Inventory", Boxes)}=
+        {item("/admin/inventory", "Inventory", Boxes)}
         {item("/admin/stock-analysis", "Analysis Stock ", BarChart3)}
         {item("/admin/suppliers", "Suppliers", Truck)}
         {item("/admin/customers", "Customers", Users)}
-        {item("/admin/farm-harvest", "Farm & Harvest", Leaf)}
-        {item("/admin/workshops", "Workshops", CalendarDays)} 
-        {item("/admin/customer-media", "Customers Media", Video)}
         {item("/admin/farm-harvest", "Farm & Harvest", Leaf)}
         {item("/admin/allorders", "All Orders", Truck)}
         {item("/admin/blogs", "Manage Blogs", BookOpenText)} 

@@ -22,8 +22,6 @@ import analyticsRouter from "./routes/analytics.routes.js";
 
 import workshopRouter from "./routes/workshopRoutes.js";
 import participantRoutes from "./routes/participantRoutes.js";
-import postRoutes from "./routes/postRoutes.js";
-import authRoutes from "./routes/authRoutes.js";
 import blogRouter from "./routes/blogRoutes.js";
 import harvestRoutes from "./routes/harvestRoutes.js";
 import productRouter from "./routes/product.routes.js";

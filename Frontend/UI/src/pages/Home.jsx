@@ -12,10 +12,6 @@ import ColonyChatWidget from "../Components/User/chatbot";
 import SignupModal from "../Components/User/SignupModal";
 import LoginModal from "../Components/User/LoginModal";
 
-// ✅ Import modals
-import LoginModal from "../Components/User/LoginModal";
-import SignupModal from "../Components/User/SignupModal";
-
 export default function Home() {
   const [showSignup, setShowSignup] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
