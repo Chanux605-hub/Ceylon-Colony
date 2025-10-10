@@ -13,6 +13,7 @@ import BlogPage from "./pages/BlogPage.jsx";
 import AuthModals from "./Components/User/AuthModals.jsx";
 import Dashboard from "./Components/User/dashboard.jsx";
 import PrivateRoute from "./Components/User/userDashboard/PrivateRoute.jsx";
+import WorkshopPayment from "./pages/WorkshopPayment";
 
 
 // Admin modules...
@@ -97,6 +98,7 @@ export default function App() {
           </PrivateRoute>
         }
       />
+        <Route path="/workshop-payment" element={<WorkshopPayment />} />
 
       {/* Admin shell (protected) */}
       <Route

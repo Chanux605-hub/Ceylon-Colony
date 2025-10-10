@@ -44,6 +44,7 @@ export default function Sidebar() {
         {item("/admin/inventory", "Inventory", Boxes)}
         {item("/admin/stock-analysis", "Analysis Stock ", BarChart3)}
         {item("/admin/suppliers", "Suppliers", Truck)}
+        {item("/admin/customers", "Customers", Users)}
         {item("/admin/farm-harvest", "Farm & Harvest", Leaf)}
         {item("/admin/allorders", "All Orders", Truck)}
         {item("/admin/blogs", "Manage Blogs", BookOpenText)} 

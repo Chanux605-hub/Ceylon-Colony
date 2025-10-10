@@ -21,6 +21,7 @@ import analyticsRouter from "./routes/analytics.routes.js";
 
 
 import workshopRouter from "./routes/workshopRoutes.js";
+import participantRoutes from "./routes/participantRoutes.js";
 import blogRouter from "./routes/blogRoutes.js";
 import harvestRoutes from "./routes/harvestRoutes.js";
 import productRouter from "./routes/product.routes.js";
@@ -44,6 +45,8 @@ const allowedOrigins = [
   "http://localhost:5174",
   "http://localhost:5175",
 ];
+
+// Middleware
 app.use(
   cors({
     origin: allowedOrigins,
@@ -53,8 +56,7 @@ app.use(
   })
 );
 
-// ✅ Middleware
-app.use(express.json({ limit: "50mb" }));
+app.use(express.json({ limit: "50mb" }));               
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // ✅ Static file serving
@@ -64,6 +66,11 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use("/api/farms", farmRouter);
 app.use("/api/hives", hiveRouter);
 app.use("/api/workshops", workshopRouter);
+app.use("/api/participants", participantRoutes);
+
+
+
+app.get("/health", (req, res) => res.json({ ok: true }));
 app.use("/api/blogs", blogRouter);
 app.use("/api/harvests", harvestRoutes);
 app.use("/api/products", productRouter);

@@ -10,7 +10,7 @@ const workshopSchema = new mongoose.Schema(
     duration: { type: String, required: true },
     level: { type: String, enum: ["Beginner", "Intermediate", "All Levels"], required: true },
     location: { type: String, required: true },
-    price: { type: String, required: true }, // now string instead of number
+    price: { type: Number, default: 0 },
     capacity: { type: Number, required: true, min: 1 },
     seatsTaken: { type: Number, default: 0, min: 0 },
     coverUrl: { type: String, default: "" },

@@ -25,7 +25,6 @@ const Navbar = () => {
     <nav className="bg-black shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          
           {/* Left: Logo */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-2">
@@ -43,17 +42,28 @@ const Navbar = () => {
 
           {/* Center: Nav Links (desktop only) */}
           <div className="hidden lg:flex items-center space-x-8 font-medium">
-            <Link to="/home" className="text-white hover:text-[#FBB01A]">Home</Link>
-            <Link to="/about" className="text-white hover:text-[#FBB01A]">About Us</Link>
-            <Link to="/blogs" className="text-white hover:text-[#FBB01A]">Blog</Link>
-            <Link to="/workshops" className="text-white hover:text-[#FBB01A]">WorkShops</Link>
-            <Link to="/products" className="text-white hover:text-[#FBB01A]">Our Products</Link>
-            <Link to="/community" className="text-white hover:text-[#FBB01A]">Community</Link>
+            <Link to="/home" className="text-white hover:text-[#FBB01A]">
+              Home
+            </Link>
+            <Link to="/about" className="text-white hover:text-[#FBB01A]">
+              About Us
+            </Link>
+            <Link to="/blogs" className="text-white hover:text-[#FBB01A]">
+              Blog
+            </Link>
+            <Link to="/workshops" className="text-white hover:text-[#FBB01A]">
+              Workshops
+            </Link>
+            <Link to="/products" className="text-white hover:text-[#FBB01A]">
+              Our Products
+            </Link>
+            <Link to="/community" className="text-white hover:text-[#FBB01A]">
+              Community
+            </Link>
           </div>
 
           {/* Right: Profile / Logout / Dropdown / Cart / Hamburger */}
           <div className="flex items-center gap-4 relative">
-            
             {/* Cart (desktop only) */}
             <button className="relative hidden lg:block">
               <ShoppingCart className="w-6 h-6 text-white hover:text-[#FBB01A] transition" />
@@ -70,7 +80,6 @@ const Navbar = () => {
                   alt={user.name}
                   className="w-10 h-10 rounded-full border-2 border-[#FBB01A] object-cover"
                 />
-                {/* Show name always, hide email on md */}
                 <div className="hidden md:flex flex-col max-w-[150px] truncate">
                   <span className="text-white text-sm font-semibold truncate">
                     {user.name || user.username}
@@ -100,7 +109,6 @@ const Navbar = () => {
 
                 {menuOpen && (
                   <div className="absolute right-0 mt-2 w-72 bg-neutral-900 text-white rounded-xl shadow-xl z-50 overflow-hidden">
-                    {/* Profile Section */}
                     <div className="flex flex-col items-center px-6 py-6 border-b border-neutral-700">
                       <img
                         src={user.avatarUrl || "https://i.pravatar.cc/100?img=3"}
@@ -146,12 +154,24 @@ const Navbar = () => {
             >
               ✕
             </button>
-            <Link to="/home" className="block text-white hover:text-[#FBB01A]">Home</Link>
-            <Link to="/about" className="block text-white hover:text-[#FBB01A]">About Us</Link>
-            <Link to="/blog" className="block text-white hover:text-[#FBB01A]">Blog</Link>
-            <Link to="/workshops" className="block text-white hover:text-[#FBB01A]">WorkShops</Link>
-            <Link to="/products" className="block text-white hover:text-[#FBB01A]">Our Products</Link>
-            <Link to="/community" className="block text-white hover:text-[#FBB01A]">Community</Link>
+            <Link to="/home" className="block text-white hover:text-[#FBB01A]">
+              Home
+            </Link>
+            <Link to="/about" className="block text-white hover:text-[#FBB01A]">
+              About Us
+            </Link>
+            <Link to="/blogs" className="block text-white hover:text-[#FBB01A]">
+              Blog
+            </Link>
+            <Link to="/workshops" className="block text-white hover:text-[#FBB01A]">
+              Workshops
+            </Link>
+            <Link to="/products" className="block text-white hover:text-[#FBB01A]">
+              Our Products
+            </Link>
+            <Link to="/community" className="block text-white hover:text-[#FBB01A]">
+              Community
+            </Link>
           </div>
         </div>
       )}

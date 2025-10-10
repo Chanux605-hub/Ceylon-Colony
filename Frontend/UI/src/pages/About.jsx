@@ -1,5 +1,7 @@
 // src/pages/About.jsx
 import React from "react";
+import Navbar from "../Components/User/navbar";
+import Footer from "../Components/User/Footer";
 // Optional hero image (ensure this file exists: src/assets/about-hero.png)
 import aboutHero from "../assets/about-hero2.jpg";
 import storyImg from '../assets/about-1.jpg';
@@ -12,6 +14,9 @@ import team3 from '../assets/about-6.jpg';
 export default function About() {
   return (
     <div className="min-h-screen bg-white text-neutral-900">
+      {/* Navbar */}
+      <Navbar />
+
       {/* HERO (taller, text position unchanged) */}
       <section
         className="relative isolate"
@@ -256,7 +261,8 @@ export default function About() {
         </div>
         </section>
 
-
+        {/* Footer */}
+      <Footer />
 
 
     </div>
