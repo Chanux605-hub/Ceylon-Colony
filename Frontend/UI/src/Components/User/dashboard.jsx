@@ -1,7 +1,9 @@
 import React from "react";
 import Navbar from "./navbar";
 import UserSidebar from "./userDashboard/userSidebar";
+import { Routes, Route, Navigate } from "react-router-dom";
 import ProfileHub from "./userDashboard/profileHub";
+import OrdersPage from "./orderDetails";
 
 const Dashboard = () => {
   return (
@@ -20,7 +22,11 @@ const Dashboard = () => {
 
         {/* Main content scrollable */}
         <main className="flex-1 overflow-y-auto p-6">
-          <ProfileHub />
+          <Routes>
+            <Route index element={<Navigate to="profile" replace />} />
+            <Route path="profile" element={<ProfileHub />} />
+            <Route path="orders" element={<OrdersPage />} />
+          </Routes>
         </main>
       </div>
     </div>

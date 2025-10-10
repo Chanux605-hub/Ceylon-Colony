@@ -446,11 +446,11 @@ export default function Community() {
   const loadFeed = async () => {
     try {
       // Get approved images
-      const imgRes = await fetchJson(`${API}/api/admin/list?contentType=image&status=approved&sortBy=createdAt&order=desc&limit=50`);
+      const imgRes = await fetchJson(`${API}/api/admin/posts?contentType=image&status=approved&sortBy=createdAt&order=desc&limit=50`);
       const images = (imgRes.items || []).map(mapImageToPost);
 
       // Get approved reviews
-      const revRes = await fetchJson(`${API}/api/admin/list?contentType=review&status=approved&sortBy=createdAt&order=desc&limit=50`);
+      const revRes = await fetchJson(`${API}/api/admin/posts?contentType=review&status=approved&sortBy=createdAt&order=desc&limit=50`);
       const reviews = (revRes.items || []).map(mapReviewToPost);
 
       // Merge + sort by created time (desc)

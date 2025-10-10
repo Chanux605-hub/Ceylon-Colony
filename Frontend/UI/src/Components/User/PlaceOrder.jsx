@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import Navbar from './navbar';
 import Footer from './Footer';
 import { toast } from 'react-toastify';
@@ -8,6 +9,7 @@ import axios from 'axios';
 const PlaceOrder = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const { cartItems, products } = location.state || {}; // coming from Cart
   const [payment, setPayment] = useState('cod'); // COD or Stripe
@@ -52,17 +54,19 @@ const PlaceOrder = () => {
         img: item.img
       }));
 
+    const storedUser = (() => {
+      try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
+    })();
     const orderData = {
-      userId: localStorage.getItem('userId') || 'guest',
+      userId:
+        (user && (user._id || user.email)) ||
+        (storedUser && (storedUser._id || storedUser.email)) ||
+        'guest',
       items: orderItems,
       amount: getTotalCartAmount() + 200, // delivery fee
       address: data,
       paymentMethod: payment
     };
-      
-    
-    // ✅ Add this log here
-  console.log("Order data being sent:", orderData);
 
     try {
       setLoading(true);
@@ -73,7 +77,7 @@ const PlaceOrder = () => {
 
       if (response.data.success) {
         toast.success('Order placed successfully!');
-        navigate('/catalogue');
+        navigate('/dashboard/orders');
       } else {
         toast.error('Failed to place order. Please try again.');
       }
@@ -111,20 +115,68 @@ const PlaceOrder = () => {
         <div className="flex-1 bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-2xl font-bold mb-4">Delivery Information</h2>
           <div className="flex gap-4 mb-4">
-            <input type="text" name="firstName" value={data.firstName} onChange={onChangeHandler} placeholder="First Name" required className="flex-1 border border-gray-300 rounded px-3 py-2" />
-            <input type="text" name="lastName" value={data.lastName} onChange={onChangeHandler} placeholder="Last Name" required className="flex-1 border border-gray-300 rounded px-3 py-2" />
+            <input 
+              type="text" name="firstName" value={data.firstName} onChange={onChangeHandler} 
+              placeholder="First Name" required 
+              pattern="[A-Za-z]{2,}" 
+              title="First name should contain only letters and be at least 2 characters long"
+              className="flex-1 border border-gray-300 rounded px-3 py-2" 
+            />
+            <input 
+              type="text" name="lastName" value={data.lastName} onChange={onChangeHandler} 
+              placeholder="Last Name" required 
+              pattern="[A-Za-z]{2,}" 
+              title="Last name should contain only letters and be at least 2 characters long"
+              className="flex-1 border border-gray-300 rounded px-3 py-2" 
+            />
           </div>
-          <input type="email" name="email" value={data.email} onChange={onChangeHandler} placeholder="Email" required className="w-full mb-4 border border-gray-300 rounded px-3 py-2" />
-          <input type="text" name="street" value={data.street} onChange={onChangeHandler} placeholder="Street" required className="w-full mb-4 border border-gray-300 rounded px-3 py-2" />
+          <input 
+            type="email" name="email" value={data.email} onChange={onChangeHandler} 
+            placeholder="Email" required 
+            className="w-full mb-4 border border-gray-300 rounded px-3 py-2" 
+          />
+          <input 
+            type="text" name="street" value={data.street} onChange={onChangeHandler} 
+            placeholder="Street" required 
+            minLength="2"
+            className="w-full mb-4 border border-gray-300 rounded px-3 py-2" 
+          />
           <div className="flex gap-4 mb-4">
-            <input type="text" name="city" value={data.city} onChange={onChangeHandler} placeholder="City" required className="flex-1 border border-gray-300 rounded px-3 py-2" />
-            <input type="text" name="state" value={data.state} onChange={onChangeHandler} placeholder="State" required className="flex-1 border border-gray-300 rounded px-3 py-2" />
+            <input 
+              type="text" name="city" value={data.city} onChange={onChangeHandler} 
+              placeholder="City" required 
+              minLength="2"
+              className="flex-1 border border-gray-300 rounded px-3 py-2" 
+            />
+            <input 
+              type="text" name="state" value={data.state} onChange={onChangeHandler} 
+              placeholder="State" required 
+              minLength="2"
+              className="flex-1 border border-gray-300 rounded px-3 py-2" 
+            />
           </div>
           <div className="flex gap-4 mb-4">
-            <input type="text" name="zipcode" value={data.zipcode} onChange={onChangeHandler} placeholder="Zip Code" required className="flex-1 border border-gray-300 rounded px-3 py-2" />
-            <input type="text" name="country" value={data.country} onChange={onChangeHandler} placeholder="Country" required className="flex-1 border border-gray-300 rounded px-3 py-2" />
+            <input 
+              type="text" name="zipcode" value={data.zipcode} onChange={onChangeHandler} 
+              placeholder="Zip Code" required 
+              pattern="[0-9]{4,6}" 
+              title="Zip code should be 4–6 digits"
+              className="flex-1 border border-gray-300 rounded px-3 py-2" 
+            />
+            <input 
+              type="text" name="country" value={data.country} onChange={onChangeHandler} 
+              placeholder="Country" required 
+              minLength="2"
+              className="flex-1 border border-gray-300 rounded px-3 py-2" 
+            />
           </div>
-          <input type="text" name="phone" value={data.phone} onChange={onChangeHandler} placeholder="Phone" required className="w-full mb-4 border border-gray-300 rounded px-3 py-2" />
+          <input 
+            type="tel" name="phone" value={data.phone} onChange={onChangeHandler} 
+            placeholder="Phone" required 
+            pattern="[0-9]{10,15}" 
+            title="Phone number should be 10–15 digits"
+            className="w-full mb-4 border border-gray-300 rounded px-3 py-2" 
+          />
         </div>
 
         {/* Payment */}

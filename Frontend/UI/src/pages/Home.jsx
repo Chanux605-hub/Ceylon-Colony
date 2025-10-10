@@ -10,16 +10,14 @@ import ColonyChatWidget from "../Components/User/chatbot";
 
 // ✅ Import modals
 import SignupModal from "../Components/User/SignupModal";
-import LoginModal from "../Components/User/LoginModal";
 
 export default function Home() {
   const [showSignup, setShowSignup] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
 
   return (
     <>
       <Navbar />
-      <HeroBanner onLoginClick={() => setShowLogin(true)} onSignupClick={() => setShowSignup(true)} />
+      <HeroBanner onSignupClick={() => setShowSignup(true)} />
       <AboutBanner />
       <OurLatestProducts />
       <WorkshopsBanner />
@@ -28,7 +26,6 @@ export default function Home() {
 
       {/* ✅ Signup modal still local to Home */}
       <SignupModal open={showSignup} onClose={() => setShowSignup(false)} />
-        <LoginModal open={showLogin} onClose={() => setShowLogin(false)} />
     </>
   );
 }

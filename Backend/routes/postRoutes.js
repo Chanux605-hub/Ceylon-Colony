@@ -19,7 +19,7 @@ router.get("/shorts", listShorts);
 router.patch("/posts/:id/view", addView);
 
 // Admin (protect with auth later)
-router.get("/admin/list", adminListPosts);
+router.get("/admin/posts", adminListPosts);
 router.patch("/admin/posts/:id", adminUpdateStatus);
 router.delete("/admin/posts/:id", adminDeletePost);
 router.get("/admin/stats", adminStats);

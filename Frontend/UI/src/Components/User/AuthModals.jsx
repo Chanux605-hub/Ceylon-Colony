@@ -25,13 +25,7 @@ export default function AuthModals() {
 
   return (
     <>
-      {/* Example trigger to open login (you can replace with Navbar button later) */}
-      <button
-        onClick={() => setShowLogin(true)}
-        className="px-4 py-2 bg-[#FBB01A] text-black rounded-lg font-semibold"
-      >
-        Open Login
-      </button>
+      {/* Trigger removed: use openLoginModal() from other components when needed */}
 
       {/* 🔹 Login Modal */}
       {showLogin && (

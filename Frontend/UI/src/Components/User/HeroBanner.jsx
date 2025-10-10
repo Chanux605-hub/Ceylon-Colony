@@ -4,7 +4,10 @@ import herobanner from "../../assets/background102.jpeg";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
-const HeroBanner = ({ onSignupClick, onLoginClick }) => {
+// import the global trigger
+import { openLoginModal } from "./AuthModals";
+
+const HeroBanner = ({ onSignupClick }) => {
   const { user } = useAuth();  // ✅ auth state
 
   return (
@@ -56,7 +59,7 @@ const HeroBanner = ({ onSignupClick, onLoginClick }) => {
               // 🔹 Visitor → trigger global modals
               <>
                 <button
-                  onClick={onLoginClick}   // ✅ use global login trigger
+                  onClick={openLoginModal}   // ✅ use global login trigger
                   className="inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold bg-[#FBB01A] text-black shadow-md transition
                     hover:opacity-90 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]/60"
                 >

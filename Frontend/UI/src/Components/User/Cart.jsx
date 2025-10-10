@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 import Navbar from '../User/navbar';
 import Footer from './Footer';
 
-const Cart = () => {
+const Cart = ({ embedded = false }) => {
   const { cartItems, removeFromCart, getTotalCartAmount } = useContext(StoreContext);
   const navigate = useNavigate();
   const currency = "Rs ";
@@ -36,8 +36,8 @@ const Cart = () => {
 
   return (
     <>
-      <Navbar />
-      <div className="min-h-screen bg-gray-900 pt-20 pb-16">
+      {!embedded && <Navbar />}
+      <div className={`bg-gray-900 ${embedded ? '' : 'min-h-screen pt-20 pb-16'}`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-white">
           <h1 className="text-3xl font-bold mb-8">Your Cart</h1>
           

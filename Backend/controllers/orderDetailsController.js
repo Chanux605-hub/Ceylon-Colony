@@ -1,18 +1,13 @@
-
 import orderDetailsModel from "../models/orderDetailsModel.js";
-import Inventory from "../models/Inventory.js";
-
 
 export const createOrderDetails = async (req, res) => {
   try {
     const { userId, items, amount, address, paymentMethod } = req.body;
-       console.log("📦 Incoming Order Data:", req.body);  // 👈 add this
 
     if (!items || items.length === 0) {
       return res.status(400).json({ success: false, message: "No items in order" });
     }
 
-    // 1️⃣ Save new order
     const newOrder = new orderDetailsModel({
       userId: userId || "guest",
       items,
@@ -22,15 +17,6 @@ export const createOrderDetails = async (req, res) => {
     });
 
     await newOrder.save();
-
-    // 2️⃣ Reduce stock in Inventory
-    for (const item of items) {
-      const inv = await Inventory.findOne({ productId: item.productId });
-      if (inv) {
-        inv.stock = Math.max(0, inv.stock - item.quantity);
-        await inv.save();
-      }
-    }
 
     res.json({ success: true, message: "Order placed successfully", order: newOrder });
   } catch (error) {
@@ -58,5 +44,34 @@ export const getUserOrders = async (req, res) => {
     res.json({ success: true, data: orders });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error fetching user orders" });
+  }
+};
+
+// Get single order by id
+export const getOrderById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await orderDetailsModel.findById(id);
+    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+    res.json({ success: true, data: order });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching order" });
+  }
+};
+
+// Update order status by id (admin)
+export const updateOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const order = await orderDetailsModel.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+    res.json({ success: true, data: order });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error updating status" });
   }
 };
