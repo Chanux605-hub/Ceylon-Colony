@@ -8,6 +8,7 @@ import hiveRouter from "./routes/hiveRoutes.js";
 import workshopRouter from "./routes/workshopRoutes.js";
 import participantRoutes from "./routes/participantRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.use("/api/hives", hiveRouter);
 app.use("/api/workshops", workshopRouter);
 app.use("/api/participants", participantRoutes);
 app.use("/api", postRoutes);
+app.use("/api/auth", authRoutes);
 
 app.get("/health", (req, res) => res.json({ ok: true }));
 

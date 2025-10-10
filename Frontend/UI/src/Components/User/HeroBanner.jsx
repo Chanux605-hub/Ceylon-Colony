@@ -1,15 +1,24 @@
 // src/components/HeroBanner.jsx
-import React from "react";
+import React, { useState } from "react";
 import herobanner from "../../assets/background102.jpeg";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+
+// import the modals you created
+import LoginModal from "./LoginModal";
+import SignupModal from "./SignupModal";
 
 const HeroBanner = () => {
+  const { user } = useAuth();  // ✅ auth state
+  const [showLogin, setShowLogin] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
+
   return (
     <section
       className="relative bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: `url(${herobanner})` }}
     >
-      {/* overlay for contrast */}
+      {/* overlay */}
       <div className="absolute inset-0 bg-black/60" />
 
       {/* content */}
@@ -27,29 +36,56 @@ const HeroBanner = () => {
             Premium Sri Lankan honey harvested with care and delivered fresh to your door.
           </p>
 
-
-
-          {/* CTAs */}
+          {/* ✅ CTAs */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-           <Link
-             to="/products"
-             className="inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold bg-[#FBB01A] text-black shadow-md transition
-               hover:opacity-90 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]/60"
-           >
-               Show Products
-           </Link>
+            {user ? (
+              // 🔹 Registered Customer
+              <>
+                <Link
+                  to="/products"
+                  className="inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold bg-[#FBB01A] text-black shadow-md transition
+                    hover:opacity-90 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]/60"
+                >
+                  Show Products
+                </Link>
 
-  <Link
-    to="/about"
-    className="inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold border border-white/20 text-white
-               bg-white/10 backdrop-blur-sm transition hover:bg-white/15 hover:-translate-y-0.5
-               focus:outline-none focus:ring-2 focus:ring-white/40"
-  >
-    Learn More
-  </Link>
+                <Link
+                  to="/about"
+                  className="inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold border border-white/20 text-white
+                    bg-white/10 backdrop-blur-sm transition hover:bg-white/15 hover:-translate-y-0.5
+                    focus:outline-none focus:ring-2 focus:ring-white/40"
+                >
+                  Learn More
+                </Link>
+              </>
+            ) : (
+              // 🔹 Visitor → open modals
+              <>
+                <button
+                  onClick={() => setShowLogin(true)}
+                  className="inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold bg-[#FBB01A] text-black shadow-md transition
+                    hover:opacity-90 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]/60"
+                >
+                  Login
+                </button>
+
+                <button
+                  onClick={() => setShowSignup(true)}
+                  className="inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold border border-white/20 text-white
+                    bg-white/10 backdrop-blur-sm transition hover:bg-white/15 hover:-translate-y-0.5
+                    focus:outline-none focus:ring-2 focus:ring-white/40"
+                >
+                  Sign Up
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
+
+      {/* ✅ Modals */}
+      <LoginModal open={showLogin} onClose={() => setShowLogin(false)} />
+      <SignupModal open={showSignup} onClose={() => setShowSignup(false)} />
     </section>
   );
 };

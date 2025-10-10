@@ -48,6 +48,18 @@ const deleteParticipant = (id) =>
 /* --- Main Component --- */
 export default function WorkshopScheduleManagement() {
   const [tab, setTab] = useState("workshops"); // workshops | participants | calendar | analytics
+  const [workshops, setWorkshops] = useState([]);
+
+  // ✅ Shared refresh function
+  const refreshWorkshops = async () => {
+    const data = await listWorkshops();
+    setWorkshops(data || []);
+  };
+
+  // Load once when component mounts
+  useEffect(() => {
+    refreshWorkshops();
+  }, []);
 
   const tabs = [
     { key: "workshops", label: "Workshops", icon: <ClipboardList size={16} /> },
@@ -81,13 +93,23 @@ export default function WorkshopScheduleManagement() {
         ))}
       </div>
 
-      {tab === "workshops" && <WorkshopsTab />}
-      {tab === "participants" && <ParticipantsTab />}
-      {tab === "calendar" && <CalendarTab />}
-      {tab === "analytics" && <AnalyticsTab />}
+      {/* ✅ Pass shared state + refresh function */}
+      {tab === "workshops" && (
+        <WorkshopsTab workshops={workshops} refreshWorkshops={refreshWorkshops} />
+      )}
+      {tab === "participants" && (
+        <ParticipantsTab refreshWorkshops={refreshWorkshops} />
+      )}
+      {tab === "calendar" && (
+        <CalendarTab workshops={workshops} refreshWorkshops={refreshWorkshops} />
+      )}
+      {tab === "analytics" && (
+        <AnalyticsTab workshops={workshops} refreshWorkshops={refreshWorkshops} />
+      )}
     </div>
   );
 }
+
 
 /* --- Workshops Tab (your existing CRUD) --- */
 function WorkshopsTab() {
@@ -154,11 +176,15 @@ function WorkshopsTab() {
     setModalOpen(true);
   };
   const openEdit = (row) => {
-    setForm({ ...row });
-    setEditingId(row.id);
-    setModalMode("edit");
-    setModalOpen(true);
+  setForm({
+    ...row,
+    date: row.date ? new Date(row.date).toISOString().split("T")[0] : "",
+  });
+  setEditingId(row.id);
+  setModalMode("edit");
+  setModalOpen(true);
   };
+
 
   // image picker
   const onPickImage = (e) => {
@@ -172,6 +198,18 @@ function WorkshopsTab() {
   // save
   const submitModal = async (e) => {
     e.preventDefault();
+    // ---- price validation ----
+    if (form.price === "" || form.price === null || isNaN(form.price)) {
+      alert("Please enter a price (use 0 for free).");
+      return;
+    }
+
+    if (form.price < 0) {
+      alert("Price must be 0 (for free) or a positive number.");
+      return;
+    }
+    // ---- end validation ----
+
     setSaving(true);
     try {
       let saved;
@@ -248,6 +286,7 @@ function WorkshopsTab() {
                 <th className="px-3 py-2 text-left">Level</th>
                 <th className="px-3 py-2 text-left">Location</th>
                 <th className="px-3 py-2 text-left">Price</th>
+                <th className="px-3 py-2 text-left">Seats</th>
                 <th className="px-3 py-2 text-left">Status</th>
                 <th className="px-3 py-2 text-right">Actions</th>
               </tr>
@@ -267,10 +306,24 @@ function WorkshopsTab() {
                     )}
                   </td>
                   <td className="px-3 py-2">{w.title}</td>
-                  <td className="px-3 py-2">{w.date}</td>
+                  <td className="px-3 py-2">
+                    {w.date
+                      ? new Date(w.date).toLocaleString("en-GB", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })
+                      : ""}
+                  </td>
                   <td className="px-3 py-2">{w.level}</td>
                   <td className="px-3 py-2">{w.location}</td>
-                  <td className="px-3 py-2">{w.price}</td>
+                  <td className="px-3 py-2">
+                    {w.price === 0 || w.price === "Free" ? "Free" : `Rs. ${w.price}`}
+                  </td>
+                  <td className="px-3 py-2">{w.seatsTaken || 0} / {w.capacity}</td>
                   <td className="px-3 py-2">{w.status}</td>
                   <td className="px-3 py-2 text-right">
                     <button
@@ -410,13 +463,22 @@ function WorkshopsTab() {
                 <label className="text-sm">
                   Price
                   <input
-                    placeholder="e.g. Rs. 5000"
-                    value={form.price}
-                    onChange={(e) => u("price", e.target.value)}
+                    type="number"
+                    min="0"
+                    placeholder="e.g. 5000 (0 for free)"
+                    value={form.price ?? 0}   
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      u("price", val === "" ? 0 : Number(val)); //empty = 0 (Free)
+                    }}
                     className="w-full rounded bg-neutral-800 px-3 py-2"
-                    required
+                    onInvalid={(e) =>
+                      e.target.setCustomValidity("Price must be 0 (Free) or a positive number.")
+                    }
+                    onInput={(e) => e.target.setCustomValidity("")}
                   />
                 </label>
+
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -448,6 +510,7 @@ function WorkshopsTab() {
 
               {/* Footer */}
               <div className="mt-2 flex justify-end gap-2 border-t border-neutral-800 pt-4">
+                
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
@@ -471,10 +534,14 @@ function WorkshopsTab() {
   );
 }
 
-/* --- Participants Tab --- */
-function ParticipantsTab() {
+function ParticipantsTab({ refreshWorkshops }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({ status: "Registered" });
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const u = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
   useEffect(() => {
     (async () => {
@@ -491,6 +558,31 @@ function ParticipantsTab() {
     if (!confirm("Delete this participant?")) return;
     await deleteParticipant(id);
     setRows((prev) => prev.filter((r) => r._id !== id));
+
+    // ✅ refresh seats in workshops
+    await refreshWorkshops();
+  };
+
+  const update = async () => {
+    try {
+      const res = await fetch(`${BASE}/api/participants/${editing._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: form.status }),
+      });
+      if (!res.ok) throw new Error("Failed to update participant");
+      const updated = await res.json();
+
+      setRows((prev) => prev.map((r) => (r._id === updated._id ? updated : r)));
+
+      setModalOpen(false);
+      setEditing(null);
+
+      // ✅ refresh seats in workshops
+      await refreshWorkshops();
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
   return (
@@ -505,7 +597,6 @@ function ParticipantsTab() {
               <th className="px-3 py-2 text-left">Email</th>
               <th className="px-3 py-2 text-left">Phone</th>
               <th className="px-3 py-2 text-left">Workshop</th>
-              <th className="px-3 py-2 text-left">Seats</th>
               <th className="px-3 py-2 text-left">Status</th>
               <th className="px-3 py-2 text-right">Actions</th>
             </tr>
@@ -513,13 +604,22 @@ function ParticipantsTab() {
           <tbody>
             {rows.map((p) => (
               <tr key={p._id} className="border-t border-neutral-800">
-                <td className="px-3 py-2">{p.name}</td>
+                <td className="px-3 py-2">{p.fullName}</td>
                 <td className="px-3 py-2">{p.email}</td>
                 <td className="px-3 py-2">{p.phone}</td>
                 <td className="px-3 py-2">{p.workshopId?.title}</td>
-                <td className="px-3 py-2">{p.seats}</td>
                 <td className="px-3 py-2">{p.status}</td>
                 <td className="px-3 py-2 text-right">
+                  <button
+                    onClick={() => {
+                      setEditing(p);
+                      setForm({ status: p.status });
+                      setModalOpen(true);
+                    }}
+                    className="mr-2 rounded bg-blue-500 px-2 py-1 text-xs text-white"
+                  >
+                    Edit
+                  </button>
                   <button
                     onClick={() => remove(p._id)}
                     className="rounded bg-red-500 px-2 py-1 text-xs text-white"
@@ -532,9 +632,45 @@ function ParticipantsTab() {
           </tbody>
         </table>
       )}
+
+      {/* modal code same as before */}
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-neutral-900 p-6 rounded-xl shadow-lg w-96">
+            <h3 className="text-lg font-semibold mb-4 text-white">Update Status</h3>
+            <label className="text-sm text-neutral-300">
+              Status
+              <select
+                value={form.status}
+                onChange={(e) => u("status", e.target.value)}
+                className="w-full mt-1 rounded bg-neutral-800 px-3 py-2 text-white"
+              >
+                <option>Registered</option>
+                <option>Paid</option>
+                <option>Cancelled</option>
+              </select>
+            </label>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => setModalOpen(false)}
+                className="rounded bg-neutral-700 px-4 py-2 text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={update}
+                className="rounded bg-yellow-400 px-4 py-2 font-semibold text-black"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 
 /* --- Calendar Tab --- */
 function CalendarTab() {
@@ -629,7 +765,11 @@ function CalendarTab() {
           }
 
           const dayStr = `${d.year}-${String(d.month + 1).padStart(2, "0")}-${String(d.day).padStart(2, "0")}`;
-          const dayWorkshops = workshops.filter((w) => w.date === dayStr);
+          const dayWorkshops = workshops.filter((w) => {
+            const d = new Date(w.date);
+            const isoDay = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+            return isoDay === dayStr;
+          });
 
           return (
             <div
@@ -645,7 +785,16 @@ function CalendarTab() {
                     className={`rounded px-2 py-1 text-xs text-white cursor-pointer ${getStatusColor(w.status)}`}
                   >
                     <div className="font-semibold">{w.title}</div>
-                    <div className="text-[10px] opacity-80">{w.date} – {w.time}</div>
+                    <div className="text-[10px] opacity-80">
+                    {new Date(w.date).toLocaleString("en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}
+                  </div>
                   </div>
                 ))}
               </div>
@@ -690,7 +839,7 @@ function AnalyticsTab() {
     participants: participants.filter((p) => p.workshopId?._id === w._id).length,
   }));
 
-  const COLORS = ["#fbb01a", "#8884d8", "#82ca9d", "#ffc658"];
+  const COLORS = ["#fbb01a", "#b06ab8ff", "#82ca9d", "#ffc658"];
 
   // Summary numbers
   const totalWorkshops = workshops.length;

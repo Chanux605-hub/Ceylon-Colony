@@ -1,6 +1,10 @@
 // src/pages/Workshops.jsx
 import React from "react";
+import { useAuth } from "../context/AuthContext";
+
 import aboutHero from "../assets/about-hero2.jpg";
+import Navbar from "../Components/User/navbar";
+import Footer from "../Components/User/Footer";
 import chatIcon from "../assets/chatbot01.png"; // chatbot button image
 
 /* -------- tiny inline API helper -------- */
@@ -79,6 +83,9 @@ export default function Workshops() {
 
   return (
     <div className="min-h-screen bg-white text-neutral-900">
+      {/* Navbar */}
+      <Navbar />
+
       {/* ---------- HERO ---------- */}
       <section
         className="relative isolate w-full"
@@ -168,13 +175,9 @@ export default function Workshops() {
             </div>
           ) : (
             list.map((w) => {
-              const pct = Math.round(
-                (Number(w.seatsTaken || 0) / Math.max(Number(w.capacity || 1), 1)) * 100
-              );
-              const spotsLeft = Math.max(
-                Number(w.capacity || 0) - Number(w.seatsTaken || 0),
-                0
-              );
+              const spotsLeft = w.capacity - (w.seatsTaken || 0);
+              const pct = Math.min(100, (w.seatsTaken / w.capacity) * 100);
+
               return (
                 <article
                   key={w.id}
@@ -203,17 +206,23 @@ export default function Workshops() {
                     )}
                     <div className="mt-3 grid gap-1 text-sm text-neutral-700">
                       <div>
-                        📅 {w.date} — {w.time} {w.duration ? `(${w.duration})` : ""}
+                        📅 {w.date ? new Date(w.date).toDateString() : ""} — {w.time}{" "}
+                        {w.duration ? `(${w.duration})` : ""}
                       </div>
                       <div>📍 {w.location}</div>
-                      <div>💰 {w.price || "N/A"} per person</div>
+                      <div>
+                        💰 
+                        {w.price === 0 || w.price === "Free"
+                          ? "Free"
+                          : w.price
+                          ? `Rs. ${w.price} per person`
+                          : "Free"}
+                      </div>
                     </div>
                     <div className="mt-3">
                       <div className="flex items-center justify-between text-xs text-neutral-600">
                         <span>Spots</span>
-                        <span>
-                          {w.seatsTaken}/{w.capacity}
-                        </span>
+                        <span>{spotsLeft} seats left</span>
                       </div>
                       <div className="mt-1 h-2 w-full rounded-full bg-neutral-200">
                         <div
@@ -249,6 +258,9 @@ export default function Workshops() {
         </section>
       </main>
 
+      {/* Footer */}
+      <Footer />
+
       {/* DETAILS MODAL */}
       {open && (
         <div
@@ -279,7 +291,7 @@ export default function Workshops() {
                 <div>📅 {open.date} — {open.time}</div>
                 <div>📍 {open.location}</div>
                 <div>🎓 {open.level}</div>
-                <div>💰 {open.price || "N/A"}</div>
+                <div>💰 {open.price === 0 ? "Free" : `Rs. ${open.price}`}</div>
               </div>
               <div className="mt-6 flex gap-2">
                 <button
@@ -311,13 +323,13 @@ export default function Workshops() {
 
 /* ======================= Booking Modal ======================= */
 function BookingModal({ workshop, onClose }) {
+  const { user } = useAuth();
   const spotsLeft = Math.max((workshop.capacity || 0) - (workshop.seatsTaken || 0), 0);
   const [form, setForm] = React.useState({
-    name: "",
-    email: "",
+    fullName: "",
+    email: user?.email || "",
     phone: "",
     address: "",
-    seats: 1,
     notes: "",
     agree: false,
   });
@@ -325,17 +337,33 @@ function BookingModal({ workshop, onClose }) {
   const [loading, setLoading] = React.useState(false);
   const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
-  const onSubmit = async (e) => {
+    const onSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.phone || !form.agree) return;
+    if (!form.fullName || !form.phone || !form.agree) return;
     setLoading(true);
     try {
-      await createParticipant({
-        ...form,
+      // Save participant record
+      const participant = await createParticipant({
+        fullName: form.fullName,
+        email: form.email,
+        phone: form.phone,
+        address: form.address,
+        notes: form.notes,
         workshopId: workshop.id,
+       
         status: "Registered",
       });
-      setSubmitted(true);
+
+      if (user?._id) {
+  payload.userId = user._id;
+}
+
+      // ✅ Conditional check for payment
+      if (workshop.price > 0) {
+        window.location.href = `/workshop-payment?participantId=${participant._id}&workshopId=${workshop.id}`;
+      } else {
+        setSubmitted(true); // Free workshop
+      }
     } catch (err) {
       alert(err.message || "Failed to register");
     } finally {
@@ -365,26 +393,34 @@ function BookingModal({ workshop, onClose }) {
           ) : (
             <form onSubmit={onSubmit} className="grid gap-3">
               <div className="grid sm:grid-cols-2 gap-3">
-                <label className="text-sm">
-                  Full name
-                  <input value={form.name} onChange={(e) => update("name", e.target.value)} required className="w-full rounded-xl border px-3 py-2" />
-                </label>
-                <label className="text-sm">
-                  Phone
-                  <input value={form.phone} onChange={(e) => update("phone", e.target.value)} required className="w-full rounded-xl border px-3 py-2" />
-                </label>
-              </div>
+              {/* Full Name for certificate */}
               <label className="text-sm">
-                Email
-                <input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} required className="w-full rounded-xl border px-3 py-2" />
+                  Full Name 
+                  <input
+                    value={form.fullName}
+                    onChange={(e) => update("fullName", e.target.value)}
+                    required
+                    className="w-full rounded-xl border px-3 py-2"
+                  />
               </label>
+              {/* Email (read-only) */}
+              <label className="text-sm">
+                  Email
+                  <input
+                    type="email"
+                    value={form.email}
+                    disabled
+                    className="w-full rounded-xl border px-3 py-2 bg-gray-100 text-neutral-600"
+                  />
+              </label>
+              <label className="text-sm">
+                Phone
+                <input value={form.phone} onChange={(e) => update("phone", e.target.value)} required className="w-full rounded-xl border px-3 py-2" />
+              </label>
+              </div>
               <label className="text-sm">
                 Address
                 <input value={form.address} onChange={(e) => update("address", e.target.value)} className="w-full rounded-xl border px-3 py-2" />
-              </label>
-              <label className="text-sm">
-                Seats
-                <input type="number" min={1} max={Math.max(spotsLeft, 1)} value={form.seats} onChange={(e) => update("seats", Number(e.target.value))} className="w-full rounded-xl border px-3 py-2" />
               </label>
               <label className="text-sm">
                 Notes

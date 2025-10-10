@@ -12,6 +12,7 @@ import Community from "./pages/Community.jsx"
 
 import About from "./pages/About.jsx";
 import Workshops from "./pages/Workshops.jsx";
+import WorkshopPayment from "./pages/WorkshopPayment";
 
 
 // Module pages (rendered inside Layout's <Outlet/>)
@@ -24,6 +25,7 @@ import AdminDahboard from "./Components/admin/AdminDahboard.jsx";
 import FarmRegistrationForm from "./HarvestManagement/FarmRegistrationForm.jsx";
 import HiveRegistrationForm from "./HarvestManagement/HiveRegistration.jsx";
 import FarmHarvestManagement from "./HarvestManagement/FarmHarvestManagement.jsx";
+
 
 
 // --- Simple auth helpers ---
@@ -57,6 +59,7 @@ export default function App() {
         {/* Public marketing page */}
         <Route path="/about" element={<About />} />
         <Route path="/workshops" element={<Workshops />} />
+        <Route path="/workshop-payment" element={<WorkshopPayment />} />
 
         {/* Admin shell (protected) */}
         <Route
@@ -76,8 +79,10 @@ export default function App() {
           <Route path="orders"    element={<OrderDeliveryManagement />} />
           <Route path="customer-media"     element={<CustomerMediaManagement />} />
           <Route path="farm-harvest"     element={<FarmHarvestManagement />} />
+          
 
           
+
           
         
         </Route>
