@@ -1,10 +1,12 @@
-import { useSearchParams } from "react-router-dom";
-import { useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function WorkshopPayment() {
   const [params] = useSearchParams();
+  const navigate = useNavigate();
+
   const participantId = params.get("participantId");
   const workshopId = params.get("workshopId");
 
@@ -15,35 +17,59 @@ export default function WorkshopPayment() {
     cvv: "",
   });
 
+  const [userName, setUserName] = useState("");
   const u = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
-  // ✅ handle payment and update status in DB
+  // ✅ Pre-fill logged-in user name (optional)
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      setUserName(user.fullName || user.name || "");
+      setForm((p) => ({ ...p, name: user.fullName || user.name || "" }));
+    }
+  }, []);
+
+  // ✅ Handle payment and update participant status
   const handlePayment = async (e) => {
     e.preventDefault();
 
-    // Simple validation
     if (!form.name || !form.cardNumber || !form.expiry || !form.cvv) {
       alert("Please fill all fields");
       return;
     }
+
     if (form.cardNumber.length < 12) {
       alert("Card number must be at least 12 digits");
       return;
     }
 
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Please log in again to continue payment.");
+        navigate("/login");
+        return;
+      }
+
       const res = await fetch(`${API_BASE}/api/participants/${participantId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ status: "Paid" }),
       });
 
-      if (!res.ok) throw new Error("Failed to update payment status");
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || "Failed to update payment status");
+      }
 
-      alert("💳 Payment successful!");
-      window.location.href = "/workshops"; // go back after success
+      alert("💳 Payment successful! Your booking has been confirmed.");
+      navigate("/workshops"); // ✅ redirect after success
     } catch (err) {
-      alert(err.message);
+      console.error("Payment error:", err);
+      alert(err.message || "Payment failed");
     }
   };
 

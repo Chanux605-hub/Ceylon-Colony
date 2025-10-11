@@ -40,8 +40,18 @@ const setWorkshopStatus = (id, status) =>
     body: JSON.stringify({ status }),
   });
 
-// participant endpoints
-const listParticipants = () => jfetch(`${BASE}/api/participants`);
+// ✅ participant endpoints (with token)
+const listParticipants = async () => {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${BASE}/api/participants`, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || `Request failed: ${res.status}`);
+  return data;
+};
 const deleteParticipant = (id) =>
   jfetch(`${BASE}/api/participants/${id}`, { method: "DELETE" });
 
@@ -598,6 +608,7 @@ function ParticipantsTab({ refreshWorkshops }) {
               <th className="px-3 py-2 text-left">Phone</th>
               <th className="px-3 py-2 text-left">Workshop</th>
               <th className="px-3 py-2 text-left">Status</th>
+              <th className="px-3 py-2 text-left">Attendance</th>
               <th className="px-3 py-2 text-right">Actions</th>
             </tr>
           </thead>
@@ -609,6 +620,38 @@ function ParticipantsTab({ refreshWorkshops }) {
                 <td className="px-3 py-2">{p.phone}</td>
                 <td className="px-3 py-2">{p.workshopId?.title}</td>
                 <td className="px-3 py-2">{p.status}</td>
+
+                <td className="px-3 py-2">
+                  <select
+                    value={p.attendance || "Pending"}
+                    onChange={async (e) => {
+                      const attendance = e.target.value;
+                      const res = await fetch(`${BASE}/api/participants/${p._id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ attendance }),
+                      });
+                      if (res.ok) {
+                        const updated = await res.json();
+                        setRows((prev) =>
+                          prev.map((r) => (r._id === updated._id ? updated : r))
+                        );
+                      }
+                    }}
+                    className={`rounded px-2 py-1 text-sm ${
+                      p.attendance === "Present"
+                        ? "bg-green-600 text-white"
+                        : p.attendance === "Absent"
+                        ? "bg-red-600 text-white"
+                        : "bg-neutral-700 text-neutral-200"
+                    }`}
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="Present">Present</option>
+                    <option value="Absent">Absent</option>
+                  </select>
+                </td>
+
                 <td className="px-3 py-2 text-right">
                   <button
                     onClick={() => {

@@ -9,7 +9,7 @@ import {
 
 const router = express.Router();
 
-// Routes
+// 🟡 Protect all participant routes
 router.post("/", createParticipant);
 router.get("/", getParticipants);
 router.get("/:id", getParticipantById);

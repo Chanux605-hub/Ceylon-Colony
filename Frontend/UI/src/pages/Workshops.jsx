@@ -11,7 +11,7 @@ import chatIcon from "../assets/chatbot01.png"; // chatbot button image
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 async function jfetch(url, opts = {}) {
   const res = await fetch(url, {
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
     ...opts,
   });
   const data = await res.json().catch(() => ({}));
@@ -19,16 +19,15 @@ async function jfetch(url, opts = {}) {
   return data;
 }
 const listWorkshops = () => jfetch(`${BASE}/api/workshops`);
-const createParticipant = (payload) =>
-  jfetch(`${BASE}/api/participants`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
 /* ---------------------------------------------------------------- */
 
 export default function Workshops() {
+  // ✅ renamed auth loading to avoid conflict
+  const { user, loading } = useAuth();
+
+  // ✅ separate local loading state for workshops
   const [data, setData] = React.useState([]);
-  const [loading, setLoading] = React.useState(true);
+  const [workshopLoading, setWorkshopLoading] = React.useState(true);
   const [error, setError] = React.useState("");
 
   // ---------- UI STATE ----------
@@ -36,9 +35,7 @@ export default function Workshops() {
   const [level, setLevel] = React.useState("All");
   const [location, setLocation] = React.useState("All");
   const [date, setDate] = React.useState("");
-
   const [openId, setOpenId] = React.useState(null); // details modal
-  const [booking, setBooking] = React.useState(null); // booking modal
 
   React.useEffect(() => {
     (async () => {
@@ -50,7 +47,7 @@ export default function Workshops() {
       } catch (e) {
         setError(e?.message || "Could not load workshops");
       } finally {
-        setLoading(false);
+        setWorkshopLoading(false);
       }
     })();
   }, []);
@@ -81,9 +78,54 @@ export default function Workshops() {
 
   const open = data.find((w) => w.id === openId) || null;
 
+  // 🟡 AUTO-BOOK FUNCTION
+    const handleBook = async (workshop) => {
+    if (loading) {
+      alert("⏳ Please wait, checking your login...");
+      return;
+    }
+
+    if (!user) {
+      alert("Please log in to book this workshop.");
+      return;
+    }
+
+    try {
+      if (workshop.seatsTaken >= workshop.capacity) {
+        alert("Sorry, this workshop is already full.");
+        return;
+      }
+
+      const res = await fetch(`${BASE}/api/participants`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workshopId: workshop._id || workshop.id,
+          userId: user.userId,   // ✅ use userId
+          fullName: user.name,
+          email: user.email,
+          phone: user.phone,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Booking failed");
+
+      if (workshop.price > 0) {
+        window.location.href = `/workshop-payment?participantId=${data._id}&workshopId=${workshop._id}`;
+      } else {
+        alert(`✅ Successfully booked "${workshop.title}"!`);
+      }
+    } catch (err) {
+      console.error("Booking error:", err);
+      alert(err.message);
+    }
+  };
+
+
+
   return (
     <div className="min-h-screen bg-white text-neutral-900">
-      {/* Navbar */}
       <Navbar />
 
       {/* ---------- HERO ---------- */}
@@ -166,7 +208,7 @@ export default function Workshops() {
           </div>
         )}
         <section className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {loading ? (
+          {workshopLoading ? (
             <div className="col-span-full text-neutral-600">Loading…</div>
           ) : list.length === 0 ? (
             <div className="col-span-full rounded-2xl border border-neutral-200 bg-white p-10 text-center text-neutral-600">
@@ -211,14 +253,13 @@ export default function Workshops() {
                       </div>
                       <div>📍 {w.location}</div>
                       <div>
-                        💰 
+                        💰{" "}
                         {w.price === 0 || w.price === "Free"
                           ? "Free"
-                          : w.price
-                          ? `Rs. ${w.price} per person`
-                          : "Free"}
+                          : `Rs. ${w.price} per person`}
                       </div>
                     </div>
+
                     <div className="mt-3">
                       <div className="flex items-center justify-between text-xs text-neutral-600">
                         <span>Spots</span>
@@ -231,11 +272,10 @@ export default function Workshops() {
                         />
                       </div>
                       <div className="mt-1 text-xs text-neutral-600">
-                        {spotsLeft > 0
-                          ? `${spotsLeft} seats left`
-                          : "Full — join waitlist"}
+                        {spotsLeft > 0 ? `${spotsLeft} seats left` : "Full — join waitlist"}
                       </div>
                     </div>
+
                     <div className="mt-4 flex items-center gap-2">
                       <button
                         onClick={() => setOpenId(w.id)}
@@ -244,10 +284,15 @@ export default function Workshops() {
                         Details
                       </button>
                       <button
-                        onClick={() => setBooking(w)}
-                        className="rounded-full bg-[#fbb01a] px-4 py-2 text-sm font-semibold text-black hover:brightness-95"
+                        disabled={loading}
+                        onClick={() => handleBook(w)}
+                        className="rounded-full bg-[#fbb01a] px-4 py-2 text-sm font-semibold text-black hover:brightness-95 disabled:opacity-60"
                       >
-                        Book
+                        {loading
+                          ? "Checking login..."
+                          : w.price > 0
+                          ? "Book & Pay"
+                          : "Book Now"}
                       </button>
                     </div>
                   </div>
@@ -258,194 +303,11 @@ export default function Workshops() {
         </section>
       </main>
 
-      {/* Footer */}
       <Footer />
-
-      {/* DETAILS MODAL */}
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-          onClick={() => setOpenId(null)}
-        >
-          <div
-            className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="relative aspect-[16/9] w-full">
-              {open.coverUrl ? (
-                <img src={open.coverUrl} alt={open.title} className="h-full w-full object-cover" />
-              ) : (
-                <div className="h-full w-full bg-neutral-200" />
-              )}
-              <button
-                onClick={() => setOpenId(null)}
-                className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1 text-sm font-semibold"
-              >
-                Close
-              </button>
-            </div>
-            <div className="p-6">
-              <h3 className="text-xl font-bold">{open.title}</h3>
-              {open.blurb && <p className="mt-2">{open.blurb}</p>}
-              <div className="mt-4 text-sm text-neutral-700">
-                <div>📅 {open.date} — {open.time}</div>
-                <div>📍 {open.location}</div>
-                <div>🎓 {open.level}</div>
-                <div>💰 {open.price === 0 ? "Free" : `Rs. ${open.price}`}</div>
-              </div>
-              <div className="mt-6 flex gap-2">
-                <button
-                  onClick={() => setBooking(open)}
-                  className="rounded-full bg-[#fbb01a] px-5 py-2 font-semibold text-black"
-                >
-                  Book this workshop
-                </button>
-                <button
-                  onClick={() => setOpenId(null)}
-                  className="rounded-full border px-5 py-2 font-semibold"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* BOOKING MODAL */}
-      {booking && <BookingModal workshop={booking} onClose={() => setBooking(null)} />}
-
-      {/* CHATBOT */}
       <Chatbot workshops={list} />
     </div>
   );
 }
-
-/* ======================= Booking Modal ======================= */
-function BookingModal({ workshop, onClose }) {
-  const { user } = useAuth();
-  const spotsLeft = Math.max((workshop.capacity || 0) - (workshop.seatsTaken || 0), 0);
-  const [form, setForm] = React.useState({
-    fullName: "",
-    email: user?.email || "",
-    phone: "",
-    address: "",
-    notes: "",
-    agree: false,
-  });
-  const [submitted, setSubmitted] = React.useState(false);
-  const [loading, setLoading] = React.useState(false);
-  const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
-
-    const onSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.fullName || !form.phone || !form.agree) return;
-    setLoading(true);
-    try {
-      // Save participant record
-      const participant = await createParticipant({
-        fullName: form.fullName,
-        email: form.email,
-        phone: form.phone,
-        address: form.address,
-        notes: form.notes,
-        workshopId: workshop.id,
-       
-        status: "Registered",
-      });
-
-      if (user?._id) {
-  payload.userId = user._id;
-}
-
-      // ✅ Conditional check for payment
-      if (workshop.price > 0) {
-        window.location.href = `/workshop-payment?participantId=${participant._id}&workshopId=${workshop.id}`;
-      } else {
-        setSubmitted(true); // Free workshop
-      }
-    } catch (err) {
-      alert(err.message || "Failed to register");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="border-b bg-neutral-50 px-5 py-4 flex justify-between">
-          <h3 className="font-semibold">Register for {workshop.title}</h3>
-          <button onClick={onClose} className="rounded border px-3 py-1 text-sm">Close</button>
-        </div>
-
-        <div className="p-5">
-          {submitted ? (
-            <div className="rounded-xl bg-green-50 p-5 text-green-700">
-              <div className="text-lg font-semibold">Thanks! 🎉</div>
-              <p className="mt-1 text-sm">
-                We’ve received your registration for <strong>{workshop.title}</strong>.
-              </p>
-              <button onClick={onClose} className="mt-4 rounded-full bg-[#fbb01a] px-5 py-2 font-semibold text-black">
-                Done
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={onSubmit} className="grid gap-3">
-              <div className="grid sm:grid-cols-2 gap-3">
-              {/* Full Name for certificate */}
-              <label className="text-sm">
-                  Full Name 
-                  <input
-                    value={form.fullName}
-                    onChange={(e) => update("fullName", e.target.value)}
-                    required
-                    className="w-full rounded-xl border px-3 py-2"
-                  />
-              </label>
-              {/* Email (read-only) */}
-              <label className="text-sm">
-                  Email
-                  <input
-                    type="email"
-                    value={form.email}
-                    disabled
-                    className="w-full rounded-xl border px-3 py-2 bg-gray-100 text-neutral-600"
-                  />
-              </label>
-              <label className="text-sm">
-                Phone
-                <input value={form.phone} onChange={(e) => update("phone", e.target.value)} required className="w-full rounded-xl border px-3 py-2" />
-              </label>
-              </div>
-              <label className="text-sm">
-                Address
-                <input value={form.address} onChange={(e) => update("address", e.target.value)} className="w-full rounded-xl border px-3 py-2" />
-              </label>
-              <label className="text-sm">
-                Notes
-                <textarea rows={3} value={form.notes} onChange={(e) => update("notes", e.target.value)} className="w-full rounded-xl border px-3 py-2" />
-              </label>
-              <label className="flex gap-2 text-sm">
-                <input type="checkbox" checked={form.agree} onChange={(e) => update("agree", e.target.checked)} required />
-                I agree to the event guidelines.
-              </label>
-              <div className="flex gap-2 mt-2">
-                <button type="submit" disabled={loading} className="rounded-full bg-[#fbb01a] px-5 py-2 font-semibold text-black disabled:opacity-50">
-                  {loading ? "Submitting…" : "Submit registration"}
-                </button>
-                <button type="button" onClick={onClose} className="rounded-full border px-5 py-2 font-semibold">
-                  Cancel
-                </button>
-              </div>
-            </form>
-          )}
-        </div>         
-      </div>
-    </div>
-  );
-}
-
 /* ======================= Chatbot ======================= */
 function Chatbot({ workshops }) {
   const [open, setOpen] = React.useState(false);
