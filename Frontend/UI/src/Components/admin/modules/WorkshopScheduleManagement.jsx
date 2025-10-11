@@ -1,6 +1,8 @@
 // src/Components/admin/modules/WorkshopScheduleManagement.jsx
 import React, { useEffect, useState } from "react";
-import { Users, Calendar, ClipboardList, BarChart3 } from "lucide-react";
+import { Users, Calendar, ClipboardList, BarChart3, Download } from "lucide-react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import {
   BarChart,
   Bar,
@@ -849,6 +851,21 @@ function CalendarTab() {
   );
 }
 
+// ===== PDF Export Utility =====
+function exportPDF(title, headers, rows) {
+  const doc = new jsPDF();
+  doc.setFontSize(16);
+  doc.text(title, 14, 20);
+  autoTable(doc, {
+    startY: 30,
+    head: [headers],
+    body: rows,
+    styles: { fontSize: 10 },
+  });
+  doc.save(`${title.replace(/\s+/g, "_")}.pdf`);
+}
+
+
 /* --- Analytics Tab --- */
 function AnalyticsTab() {
   const [workshops, setWorkshops] = useState([]);
@@ -861,24 +878,43 @@ function AnalyticsTab() {
     })();
   }, []);
 
-  // Workshops per month
+  // ✅ Attendance summary
+  const attendanceCount = participants.reduce(
+    (acc, p) => {
+      acc[p.attendance || "Pending"] = (acc[p.attendance || "Pending"] || 0) + 1;
+      return acc;
+    },
+    { Present: 0, Absent: 0, Pending: 0 }
+  );
+  const attendanceData = Object.entries(attendanceCount).map(([name, value]) => ({
+    name,
+    value,
+  }));
+
+  // ✅ Workshops per month
   const workshopsPerMonth = workshops.reduce((acc, w) => {
     const month = new Date(w.date).toLocaleString("default", { month: "short" });
     acc[month] = (acc[month] || 0) + 1;
     return acc;
   }, {});
-  const workshopsData = Object.entries(workshopsPerMonth).map(([m, count]) => ({ month: m, count }));
+  const workshopsData = Object.entries(workshopsPerMonth).map(([m, count]) => ({
+    month: m,
+    count,
+  }));
 
-  // By location
+  // ✅ Workshops by location
   const locationData = workshops.reduce((acc, w) => {
     acc[w.location] = (acc[w.location] || 0) + 1;
     return acc;
   }, {});
-  const locationChart = Object.entries(locationData).map(([loc, value]) => ({ name: loc, value }));
+  const locationChart = Object.entries(locationData).map(([loc, value]) => ({
+    name: loc,
+    value,
+  }));
 
-  // Registration trend
+  // ✅ Registrations trend
   const registrationsTrend = workshops.map((w) => ({
-    date: w.date,
+    date: new Date(w.date).toLocaleDateString(),
     participants: participants.filter((p) => p.workshopId?._id === w._id).length,
   }));
 
@@ -892,29 +928,45 @@ function AnalyticsTab() {
 
   return (
     <div className="grid gap-6">
-      {/* Summary Cards */}
-        <div className="flex gap-6">
-          <div className="flex-1 bg-neutral-900 px-6 py-4 h-28 rounded-lg text-center">
-            <h4 className="text-sm text-neutral-400">Total Workshops</h4>
-            <p className="text-2xl font-bold text-yellow-400">{totalWorkshops}</p>
-          </div>
-          <div className="flex-1 bg-neutral-900 px-6 py-4 h-28 rounded-lg text-center">
-            <h4 className="text-sm text-neutral-400">Published</h4>
-            <p className="text-2xl font-bold text-green-500">{published}</p>
-          </div>
-          <div className="flex-1 bg-neutral-900 px-6 py-4 h-28 rounded-lg text-center">
-            <h4 className="text-sm text-neutral-400">Cancelled</h4>
-            <p className="text-2xl font-bold text-red-500">{cancelled}</p>
-          </div>
-          <div className="flex-1 bg-neutral-900 px-6 py-4 h-28 rounded-lg text-center">
-            <h4 className="text-sm text-neutral-400">Draft</h4>
-            <p className="text-2xl font-bold text-blue-400">{draft}</p>
-          </div>
+      {/* ===== Summary Cards ===== */}
+      <div className="flex gap-6">
+        <div className="flex-1 bg-neutral-900 px-6 py-4 h-28 rounded-lg text-center">
+          <h4 className="text-sm text-neutral-400">Total Workshops</h4>
+          <p className="text-2xl font-bold text-yellow-400">{totalWorkshops}</p>
+        </div>
+        <div className="flex-1 bg-neutral-900 px-6 py-4 h-28 rounded-lg text-center">
+          <h4 className="text-sm text-neutral-400">Published</h4>
+          <p className="text-2xl font-bold text-green-500">{published}</p>
+        </div>
+        <div className="flex-1 bg-neutral-900 px-6 py-4 h-28 rounded-lg text-center">
+          <h4 className="text-sm text-neutral-400">Cancelled</h4>
+          <p className="text-2xl font-bold text-red-500">{cancelled}</p>
+        </div>
+        <div className="flex-1 bg-neutral-900 px-6 py-4 h-28 rounded-lg text-center">
+          <h4 className="text-sm text-neutral-400">Draft</h4>
+          <p className="text-2xl font-bold text-blue-400">{draft}</p>
+        </div>
+      </div>
+
+      {/* ===== Workshops per Month ===== */}
+      <div className="bg-neutral-900 p-4 rounded-xl mt-4 col-span-full">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-yellow-400 font-semibold">Workshops per Month</h3>
+          <button
+            onClick={() =>
+              exportPDF(
+                "Workshops per Month Report",
+                ["Month", "Count"],
+                workshopsData.map((d) => [d.month, d.count])
+              )
+            }
+            className="flex items-center justify-center gap-2 bg-yellow-400 text-black font-semibold px-4 py-2 rounded-lg hover:brightness-90 transition-all duration-200"
+          >
+            <Download size={18} className="mb-[2px]" /> 
+            <span>Download PDF</span>
+          </button>
         </div>
 
-      {/* Workshops per Month */}
-      <div className="bg-neutral-900 p-4 rounded-xl mt-4 col-span-full">
-        <h3 className="text-yellow-400 mb-2 font-semibold">Workshops per Month</h3>
         <ResponsiveContainer width="100%" height={250}>
           <BarChart data={workshopsData}>
             <XAxis dataKey="month" stroke="#aaa" />
@@ -924,16 +976,32 @@ function AnalyticsTab() {
         </ResponsiveContainer>
       </div>
 
-      {/* Workshops by Location */}
+      {/* ===== Workshops by Location ===== */}
       <div className="bg-neutral-900 p-4 rounded-xl">
-        <h3 className="text-yellow-400 mb-2 font-semibold">Workshops by Location</h3>
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-yellow-400 font-semibold">Workshops by Location</h3>
+          <button
+            onClick={() =>
+              exportPDF(
+                "Workshops by Location Report",
+                ["Location", "Count"],
+                locationChart.map((d) => [d.name, d.value])
+              )
+            }
+            className="flex items-center justify-center gap-2 bg-yellow-400 text-black font-semibold px-4 py-2 rounded-lg hover:brightness-90 transition-all duration-200"
+          >
+            <Download size={18} className="mb-[2px]" /> 
+            <span>Download PDF</span>
+          </button>
+        </div>
+
         <ResponsiveContainer width="100%" height={250}>
           <PieChart width={300} height={250}>
             <Pie
               data={locationChart}
               dataKey="value"
               nameKey="name"
-              outerRadius={70}   // smaller so labels don’t cut
+              outerRadius={70}
               label={({ name, value }) => `${name}: ${value}`}
             >
               {locationChart.map((_, index) => (
@@ -944,20 +1012,95 @@ function AnalyticsTab() {
         </ResponsiveContainer>
       </div>
 
-      {/* Registrations Trend */}
+      {/* ===== Attendance Overview ===== */}
+      <div className="bg-neutral-900 p-4 rounded-xl">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-yellow-400 font-semibold">Attendance Overview</h3>
+          <button
+            onClick={() =>
+              exportPDF(
+                "Attendance Overview Report",
+                ["Status", "Count"],
+                attendanceData.map((d) => [d.name, d.value])
+              )
+            }
+            className="flex items-center justify-center gap-2 bg-yellow-400 text-black font-semibold px-4 py-2 rounded-lg hover:brightness-90 transition-all duration-200"
+          >
+            <Download size={18} className="mb-[2px]" /> 
+            <span>Download PDF</span>
+          </button>
+        </div>
+
+        <div className="flex justify-around text-center mb-4">
+          <div>
+            <p className="text-sm text-neutral-400">Present</p>
+            <p className="text-xl font-bold text-green-500">{attendanceCount.Present}</p>
+          </div>
+          <div>
+            <p className="text-sm text-neutral-400">Absent</p>
+            <p className="text-xl font-bold text-red-500">{attendanceCount.Absent}</p>
+          </div>
+          <div>
+            <p className="text-sm text-neutral-400">Pending</p>
+            <p className="text-xl font-bold text-gray-400">{attendanceCount.Pending}</p>
+          </div>
+        </div>
+
+        <ResponsiveContainer width="100%" height={250}>
+          <PieChart>
+            <Pie
+              data={attendanceData}
+              dataKey="value"
+              nameKey="name"
+              outerRadius={80}
+              label={({ name, value }) => `${name}: ${value}`}
+            >
+              <Cell fill="#22c55e" /> {/* green */}
+              <Cell fill="#ef4444" /> {/* red */}
+              <Cell fill="#9ca3af" /> {/* gray */}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* ===== Registrations Trend ===== */}
       <div className="bg-neutral-900 p-4 rounded-xl md:col-span-2">
-        <h3 className="text-yellow-400 mb-2 font-semibold">Registrations Trend</h3>
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-yellow-400 font-semibold">Registrations Trend</h3>
+          <button
+            onClick={() =>
+              exportPDF(
+                "Registrations Trend Report",
+                ["Date", "Participants"],
+                registrationsTrend.map((d) => [d.date, d.participants])
+              )
+            }
+            className="flex items-center justify-center gap-2 bg-yellow-400 text-black font-semibold px-4 py-2 rounded-lg hover:brightness-90 transition-all duration-200"
+          >
+            <Download size={18} className="mb-[2px]" /> 
+            <span>Download PDF</span>
+          </button>
+        </div>
+
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={registrationsTrend}>
             <XAxis dataKey="date" stroke="#aaa" />
             <YAxis stroke="#aaa" allowDecimals={false} />
-            <Line type="monotone" dataKey="participants" stroke="#fbb01a" strokeWidth={2} />
+            <Line
+              type="monotone"
+              dataKey="participants"
+              stroke="#fbb01a"
+              strokeWidth={2}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
     </div>
   );
 }
+
+
 
 
 
