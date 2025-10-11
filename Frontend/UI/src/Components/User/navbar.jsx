@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ShoppingCart, MoreVertical, Menu } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo (2).png";
 import { useAuth } from "../../context/AuthContext";
 
@@ -9,6 +9,17 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const menuRef = useRef(null);
+  const navigate = useNavigate();
+
+  // ✅ Role-based dashboard redirect
+  const handleDashboardRedirect = () => {
+    if (!user) return;
+    if (user.role === "farmOwner") {
+      navigate("/farmerProfile"); // 🐝 Farm Owner Profile page
+    } else {
+      navigate("/dashboard"); // 👤 Normal user dashboard
+    }
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -25,7 +36,6 @@ const Navbar = () => {
     <nav className="bg-black shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          
           {/* Left: Logo */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-2">
@@ -53,7 +63,6 @@ const Navbar = () => {
 
           {/* Right: Profile / Logout / Dropdown / Cart / Hamburger */}
           <div className="flex items-center gap-4 relative">
-            
             {/* Cart (desktop only) */}
             <button className="relative hidden lg:block">
               <ShoppingCart className="w-6 h-6 text-white hover:text-[#FBB01A] transition" />
@@ -70,7 +79,6 @@ const Navbar = () => {
                   alt={user.name}
                   className="w-10 h-10 rounded-full border-2 border-[#FBB01A] object-cover"
                 />
-                {/* Show name always, hide email on md */}
                 <div className="hidden md:flex flex-col max-w-[150px] truncate">
                   <span className="text-white text-sm font-semibold truncate">
                     {user.name || user.username}
@@ -112,20 +120,22 @@ const Navbar = () => {
                       </p>
                       <p className="text-sm text-gray-300">{user.email}</p>
                     </div>
+
+                    {/* ✅ Go to Dashboard (role-aware) */}
                     <div className="p-4">
-                      <Link
-                        to="/dashboard"
+                      <button
+                        onClick={handleDashboardRedirect}
                         className="block w-full text-center px-4 py-2 rounded-lg bg-[#FBB01A] text-black font-semibold hover:opacity-90 transition"
                       >
                         Go to Dashboard
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Mobile hamburger (toggle drawer) */}
+            {/* Mobile hamburger */}
             <button
               onClick={() => setDrawerOpen(true)}
               className="lg:hidden p-2 rounded-md hover:bg-white/10 transition"
@@ -148,7 +158,7 @@ const Navbar = () => {
             </button>
             <Link to="/home" className="block text-white hover:text-[#FBB01A]">Home</Link>
             <Link to="/about" className="block text-white hover:text-[#FBB01A]">About Us</Link>
-            <Link to="/blog" className="block text-white hover:text-[#FBB01A]">Blog</Link>
+            <Link to="/blogs" className="block text-white hover:text-[#FBB01A]">Blog</Link>
             <Link to="/workshops" className="block text-white hover:text-[#FBB01A]">WorkShops</Link>
             <Link to="/products" className="block text-white hover:text-[#FBB01A]">Our Products</Link>
             <Link to="/community" className="block text-white hover:text-[#FBB01A]">Community</Link>

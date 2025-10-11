@@ -1,4 +1,3 @@
-// src/components/User/SignupModal.jsx
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -13,6 +12,7 @@ export default function SignupModal({ open, onClose }) {
     email: "",
     username: "",
     password: "",
+    role: "user", // ✅ added default to prevent "undefined" error
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -38,8 +38,15 @@ export default function SignupModal({ open, onClose }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Signup failed");
 
-      // ✅ store logged-in user in AuthContext
+      // ✅ save user
       login(data);
+
+      // ✅ redirect by role
+      if (data.user?.role === "farmOwner") {
+        window.location.href = "/farmer/profile";
+      } else {
+        window.location.href = "/user/profile";
+      }
 
       onClose();
     } catch (err) {
@@ -151,6 +158,20 @@ export default function SignupModal({ open, onClose }) {
               required
               className="w-full pl-9 pr-3 py-2 rounded-md bg-[#222] border border-[#333] text-white focus:outline-none focus:ring-2 focus:ring-[#FBB01A]"
             />
+          </div>
+
+          {/* ✅ Role Selection */}
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#FBB01A]">🎭</span>
+            <select
+              name="role"
+              value={form.role}
+              onChange={handleChange}
+              className="w-full pl-9 pr-3 py-2 rounded-md bg-[#222] border border-[#333] text-white focus:outline-none focus:ring-2 focus:ring-[#FBB01A]"
+            >
+              <option value="user">Normal User</option>
+              <option value="farmOwner">Farm Owner</option>
+            </select>
           </div>
 
           {/* Buttons */}

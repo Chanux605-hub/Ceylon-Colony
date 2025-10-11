@@ -1,22 +1,26 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // ✅ fixed import path
 
-// Base API URL (from .env or default localhost:3000)
-const API = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(
-  /\/+$/,
-  ""
-);
+// Base API URL
+const API = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/+$/, "");
 
 export default function FarmRegistrationForm() {
   const navigate = useNavigate();
-  const ownerId = "001"; // temporary until auth is added
+  const { user } = useAuth(); // ✅ get logged user from context
 
-  const [form, setForm] = useState(defaultForm(ownerId));
+  // ✅ Auto-fill session details
+  const ownerId = user?.userId || "";
+  const ownerName = user?.name || "";
+  const ownerEmail = user?.email || "";
+
+  const [form, setForm] = useState(defaultForm(ownerId, ownerName, ownerEmail));
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   const farmId = useMemo(() => makeFarmId(form.farmName), [form.farmName]);
 
+  // ------------------ handlers ------------------
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -39,15 +43,12 @@ export default function FarmRegistrationForm() {
   const validate = async () => {
     const next = {};
 
-    // Farm Name required + unique check
     if (!String(form.farmName).trim()) {
       next.farmName = "Farm Name is required";
     } else {
       try {
         const res = await fetch(
-          `${API}/api/farms/check-name?name=${encodeURIComponent(
-            form.farmName
-          )}`
+          `${API}/api/farms/check-name?name=${encodeURIComponent(form.farmName)}`
         );
         const data = await res.json();
         if (data.exists) next.farmName = "Farm Name already exists";
@@ -56,8 +57,7 @@ export default function FarmRegistrationForm() {
       }
     }
 
-    if (!String(form.owner).trim())
-      next.owner = "Owner / Manager is required";
+    if (!String(form.owner).trim()) next.owner = "Owner / Manager is required";
     if (!String(form.phone).trim()) next.phone = "Phone is required";
     if (!String(form.address).trim()) next.address = "Address is required";
     if (!String(form.district).trim()) next.district = "District/Region is required";
@@ -70,10 +70,7 @@ export default function FarmRegistrationForm() {
     if (form.size !== "" && (Number(form.size) < 0 || Number(form.size) > 500))
       next.size = "Farm size must be between 0 and 500 acres";
 
-    if (
-      form.numHives !== "" &&
-      (Number(form.numHives) <= 0 || Number(form.numHives) > 5000)
-    )
+    if (form.numHives !== "" && (Number(form.numHives) <= 0 || Number(form.numHives) > 5000))
       next.numHives = "Number of hives must be between 1 and 5000";
 
     if (form.flora && !form.flora.includes(",") && form.flora.trim().length < 3)
@@ -106,10 +103,7 @@ export default function FarmRegistrationForm() {
       setLoading(true);
       const res = await fetch(`${API}/api/farms/register`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify(payload),
       });
 
@@ -119,7 +113,7 @@ export default function FarmRegistrationForm() {
       }
 
       alert("✅ Farm registered successfully!");
-      setForm(defaultForm(ownerId)); // reset form
+      setForm(defaultForm(ownerId, ownerName, ownerEmail)); // reset form
     } catch (err) {
       console.error("Error submitting farm:", err);
       alert("❌ API Error: " + err.message);
@@ -128,6 +122,7 @@ export default function FarmRegistrationForm() {
     }
   };
 
+  // ------------------ render ------------------
   return (
     <div className="min-h-screen bg-[#0B0B0B] text-white py-10 px-4 flex flex-col items-center">
       {/* 🔙 Back button */}
@@ -162,12 +157,15 @@ export default function FarmRegistrationForm() {
                   className={inputCls}
                 />
               </FormField>
+
               <FormField label="Farm ID (Auto)">
                 <input value={farmId} disabled className={inputCls + " opacity-70"} />
               </FormField>
+
               <FormField label="Owner ID (Auto)">
                 <input value={ownerId} disabled className={inputCls + " opacity-70"} />
               </FormField>
+
               <FormField label="Owner / Manager" required error={errors.owner}>
                 <input
                   name="owner"
@@ -177,6 +175,7 @@ export default function FarmRegistrationForm() {
                   className={inputCls}
                 />
               </FormField>
+
               <FormField label="Contact Phone" required error={errors.phone}>
                 <input
                   name="phone"
@@ -186,6 +185,7 @@ export default function FarmRegistrationForm() {
                   className={inputCls}
                 />
               </FormField>
+
               <FormField label="Contact Email" error={errors.email}>
                 <input
                   type="email"
@@ -237,6 +237,7 @@ export default function FarmRegistrationForm() {
                   className={inputCls}
                 />
               </FormField>
+
               <FormField label="Number of Hives" error={errors.numHives}>
                 <input
                   type="number"
@@ -248,6 +249,7 @@ export default function FarmRegistrationForm() {
                   className={inputCls}
                 />
               </FormField>
+
               <FormField label="Hive Types Used">
                 <div className="flex flex-wrap gap-2">
                   {HIVE_TYPES.map((t) => (
@@ -267,10 +269,8 @@ export default function FarmRegistrationForm() {
                   ))}
                 </div>
               </FormField>
-              <FormField
-                label="Primary Flowering Plants (comma separated)"
-                error={errors.flora}
-              >
+
+              <FormField label="Primary Flowering Plants" error={errors.flora}>
                 <input
                   name="flora"
                   value={form.flora}
@@ -279,6 +279,7 @@ export default function FarmRegistrationForm() {
                   className={inputCls}
                 />
               </FormField>
+
               <FormField label="Date Established" error={errors.dateEstablished}>
                 <input
                   type="date"
@@ -288,6 +289,7 @@ export default function FarmRegistrationForm() {
                   className={inputCls}
                 />
               </FormField>
+
               <FormField label="Expected Annual Yield (kg)" error={errors.expectedAnnualYield}>
                 <input
                   type="number"
@@ -306,7 +308,7 @@ export default function FarmRegistrationForm() {
           <div className="flex justify-end gap-3">
             <button
               type="button"
-              onClick={() => setForm(defaultForm(ownerId))}
+              onClick={() => setForm(defaultForm(ownerId, ownerName, ownerEmail))}
               className="px-4 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600"
             >
               Reset
@@ -367,13 +369,13 @@ function makeFarmId(name) {
   return `${slug || "FARM"}-${last6}`;
 }
 
-function defaultForm(ownerId) {
+function defaultForm(ownerId, ownerName, ownerEmail) {
   return {
     farmName: "",
     ownerId,
-    owner: "",
+    owner: ownerName || "",
     phone: "",
-    email: "",
+    email: ownerEmail || "",
     address: "",
     district: "",
     size: "",

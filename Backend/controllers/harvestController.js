@@ -381,3 +381,38 @@ export const getHarvestInsights = async (req, res) => {
   }
 };
 
+// ✅ Get all harvests by ownerId (with farm & hive names)
+export const getHarvestsByOwner = async (req, res) => {
+  try {
+    const { ownerId } = req.params;
+
+    // 1️⃣ Find all farms owned by this user
+    const farms = await farmModel.find({ ownerId }).lean();
+    const farmIds = farms.map(f => f.farmId);
+
+    // 2️⃣ Fetch harvests linked to those farms
+    const harvests = await harvestModel.find({ farmId: { $in: farmIds } }).lean();
+
+    // 3️⃣ Get all hives (so we can map names)
+    const hives = await hiveModel.find().lean();
+
+    // 4️⃣ Merge with readable names
+    const mapped = harvests.map(h => {
+      const farm = farms.find(f => f.farmId === h.farmId);
+      const hive = hives.find(
+        v => v._id?.toString() === h.hiveId || v.hiveId === h.hiveId
+      );
+      return {
+        ...h,
+        farmName: farm ? farm.farmName : h.farmId,
+        hiveName: hive ? hive.hiveName : h.hiveId,
+      };
+    });
+
+    res.json({ success: true, harvests: mapped });
+  } catch (err) {
+    console.error("❌ Error fetching harvests by owner:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+

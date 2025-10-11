@@ -18,21 +18,16 @@ async function getNextUserId() {
 // SIGN UP
 export const signup = async (req, res) => {
   try {
-    const { name, address, email, phone, username, password } = req.body;
+    const { name, address, email, phone, username, password, role } = req.body;
 
-    // check if already exists
     const existing = await User.findOne({ $or: [{ email }, { username }] });
     if (existing) {
       return res.status(400).json({ error: "Email or username already taken" });
     }
 
-    // hash password
-    const hashed = await bcrypt.hash(password, 10);
-
-    // generate custom userId
     const userId = await getNextUserId();
 
-    // create user
+    // ❌ REMOVE manual bcrypt.hash() — let model pre-save do it
     const user = await User.create({
       userId,
       name,
@@ -40,7 +35,8 @@ export const signup = async (req, res) => {
       email,
       phone,
       username,
-      password: hashed,
+      password, // pass plain password here
+      role: role || "user",
     });
 
     res.status(201).json({
@@ -52,6 +48,7 @@ export const signup = async (req, res) => {
         email: user.email,
         phone: user.phone,
         username: user.username,
+        role: user.role,
         avatarUrl: user.avatarUrl,
       },
     });
@@ -59,6 +56,7 @@ export const signup = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 // LOGIN
 export const login = async (req, res) => {
@@ -98,6 +96,7 @@ export const login = async (req, res) => {
         email: user.email,
         phone: user.phone,
         username: user.username,
+        role: user.role, // ✅ add this
         avatarUrl: user.avatarUrl,
       },
     });
