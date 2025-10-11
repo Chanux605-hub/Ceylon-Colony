@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import HarvestAnalytics from "./HarvestAnalytics";
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from "recharts";
 import axios from "axios";
 import {
@@ -24,18 +25,22 @@ export default function FarmHarvestManagement() {
   const [hiveStats, setHiveStats] = useState({ total: 0, productive: 0, lowProductive: 0 });
   const [hiveAlerts, setHiveAlerts] = useState({ overdueInspections: [], lowProductive: [] });
 
-
   // Harvest state
   const [monthlyHarvest, setMonthlyHarvest] = useState({ total: 0, count: 0 });
-  const [harvestByMonth, setHarvestByMonth] = useState([]);   // ✅ NEW
-  const [harvestByFarm, setHarvestByFarm] = useState([]); 
+
+  // ✅ Harvest Insights
+  const [harvestInsights, setHarvestInsights] = useState({
+    bestFarm: null,
+    avgPerFarm: 0,
+    yearlyTotal: 0,
+    topHive: null,
+  });
 
   const tabs = [
     { id: "overview", label: "Overview", icon: Leaf },
     { id: "farms", label: "Farms", icon: Building },
     { id: "hives", label: "Hives", icon: Hexagon },
     { id: "analytics", label: "Analytics", icon: BarChart3 },
-    { id: "reports", label: "Reports", icon: Download },
     { id: "alerts", label: "Alerts", icon: Bell },
     { id: "actions", label: "Admin Actions", icon: Tag },
   ];
@@ -83,12 +88,26 @@ export default function FarmHarvestManagement() {
     }
   }, [activeTab]);
 
+  // ✅ Fetch harvest insights
+  useEffect(() => {
+    if (activeTab === "overview") {
+      axios
+        .get("http://localhost:3000/api/harvests/insights")
+        .then((res) => {
+          if (res.data.success) setHarvestInsights(res.data.data);
+        })
+        .catch((err) => console.error("Error fetching harvest insights:", err));
+    }
+  }, [activeTab]);
+
   // Fetch analytics
   useEffect(() => {
     if (activeTab === "analytics") {
-      axios.get("http://localhost:3000/api/harvests/by-month")
+      axios
+        .get("http://localhost:3000/api/harvests/by-month")
         .then((res) => res.data.success && setHarvestByMonth(res.data.data));
-      axios.get("http://localhost:3000/api/harvests/by-farm")
+      axios
+        .get("http://localhost:3000/api/harvests/by-farm")
         .then((res) => res.data.success && setHarvestByFarm(res.data.data));
     }
   }, [activeTab]);
@@ -186,6 +205,43 @@ export default function FarmHarvestManagement() {
                 <p className="text-sm text-gray-400">
                   ({monthlyHarvest.count} records)
                 </p>
+              </div>
+            </div>
+
+            {/* ✅ Harvest Insights Section */}
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold mb-4 text-lg">
+                Harvest Insights
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-[#2A2A2A] p-4 rounded-lg text-center">
+                  <p className="text-sm text-gray-400">🏆 Best Farm of the Month</p>
+                  <p className="text-lg font-bold text-white mt-1">
+                    {harvestInsights.bestFarm || "–"}
+                  </p>
+                </div>
+
+                <div className="bg-[#2A2A2A] p-4 rounded-lg text-center">
+                  <p className="text-sm text-gray-400">🍯 Avg Harvest / Farm</p>
+                  <p className="text-lg font-bold text-white mt-1">
+                    {harvestInsights.avgPerFarm?.toFixed(1) || 0} kg
+                  </p>
+                </div>
+
+                <div className="bg-[#2A2A2A] p-4 rounded-lg text-center">
+                  <p className="text-sm text-gray-400">📊 Total Harvest This Year</p>
+                  <p className="text-lg font-bold text-white mt-1">
+                    {harvestInsights.yearlyTotal} kg
+                  </p>
+                </div>
+
+                <div className="bg-[#2A2A2A] p-4 rounded-lg text-center">
+                  <p className="text-sm text-gray-400">🐝 Top Hive</p>
+                  <p className="text-lg font-bold text-white mt-1">
+                    {harvestInsights.topHive || "–"}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -360,184 +416,156 @@ export default function FarmHarvestManagement() {
           </div>
         )}
 
-        {/*  Hives Tab */}
+        {/* 🔹 Hives Tab */}
         {activeTab === "hives" && (
-            <div>
-              <h2 className="text-lg font-semibold mb-4">Hive Management Overview</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                <div>
-                  <p className="text-sm text-gray-400">Total Hives</p>
-                  <p className="text-xl font-bold">{hiveStats.total}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-400">Productive</p>
-                  <p className="text-xl font-bold text-green-400">{hiveStats.productive}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-400">Low Productive</p>
-                  <p className="text-xl font-bold text-red-400">{hiveStats.lowProductive}</p>
-                </div>
-              </div>
+          <div>
+            <h2 className="text-lg font-semibold mb-4">Hive Management Overview</h2>
 
-              {/* Pie/Donut chart */}
-              <div className="mt-6 h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: "Productive", value: hiveStats.productive },
-                        { name: "Low Productive", value: hiveStats.lowProductive },
-                      ]}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={5}
-                    >
-                      <Cell fill="#22c55e" /> {/* Green for productive */}
-                      <Cell fill="#ef4444" /> {/* Red for low productive */}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#1A1A1A",
-                        border: "1px solid #333",
-                        color: "#fff",
-                      }}
-                    />
-                    <Legend
-                      wrapperStyle={{ color: "#ccc" }}
-                      verticalAlign="bottom"
-                      align="center"
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+            {/* Hive stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+              <div>
+                <p className="text-sm text-gray-400">Total Hives</p>
+                <p className="text-xl font-bold">{hiveStats.total}</p>
               </div>
+              <div>
+                <p className="text-sm text-gray-400">Productive</p>
+                <p className="text-xl font-bold text-green-400">{hiveStats.productive}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Low Productive</p>
+                <p className="text-xl font-bold text-red-400">{hiveStats.lowProductive}</p>
+              </div>
+            </div>
 
-              {/* Hive list table */}
-              <h3 className="text-lg font-semibold mt-8 mb-4">All Hives</h3>
-              <table className="w-full text-sm border-collapse">
-                <thead className="bg-[#2A2A2A] text-gray-300">
-                  <tr>
-                    <th className="px-4 py-3 text-left">Hive ID</th>
-                    <th className="px-4 py-3 text-left">Name</th>
-                    <th className="px-4 py-3 text-center">Farm</th>
-                    <th className="px-4 py-3 text-center">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {hives.map((hive) => (
-                    <tr
-                      key={hive._id}
-                      className="border-b border-gray-700 hover:bg-[#252525]"
-                    >
-                      <td className="px-4 py-2 text-left font-medium">{hive.hiveId}</td>
-                      <td className="px-4 py-2 text-left">{hive.hiveName}</td>
-                      <td className="px-4 py-2 text-center">{hive.farmId}</td>
-                      <td className="px-4 py-2 text-center">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-semibold ${
-                            hive.status === "Active"
-                              ? "bg-green-900/30 text-green-400"
-                              : hive.status === "Needs Attention"
-                              ? "bg-red-900/30 text-red-400"
-                              : "bg-yellow-900/30 text-yellow-400"
-                          }`}
+            {/* Donut Chart */}
+            <div className="mt-6 h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: "Productive", value: hiveStats.productive },
+                      { name: "Low Productive", value: hiveStats.lowProductive },
+                    ]}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                  >
+                    <Cell fill="#22c55e" />
+                    <Cell fill="#ef4444" />
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#1A1A1A",
+                      border: "1px solid #333",
+                      color: "#fff",
+                    }}
+                  />
+                  <Legend wrapperStyle={{ color: "#ccc" }} verticalAlign="bottom" align="center" />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* ✅ Hives grouped by farm name */}
+            <h3 className="text-lg font-semibold mt-8 mb-4">All Hives (Grouped by Farm)</h3>
+
+            {Object.entries(
+              hives.reduce((acc, hive) => {
+                const farmId = hive.farmId || "Unknown Farm";
+                if (!acc[farmId]) acc[farmId] = [];
+                acc[farmId].push(hive);
+                return acc;
+              }, {})
+            ).map(([farmId, hiveList]) => {
+              // Find farm name from farms list
+              const farm = farms.find((f) => f.farmId === farmId);
+              const farmName = farm ? farm.farmName : farmId;
+
+              return (
+                <div key={farmId} className="mb-8">
+                  <h4 className="text-[#FBB01A] text-base font-semibold mb-2 flex items-center gap-2">
+                    <Building size={16} /> {farmName}
+                    <span className="text-gray-400 text-sm ml-2">
+                      ({hiveList.length} hives)
+                    </span>
+                  </h4>
+
+                  <table className="w-full text-sm border-collapse mb-4">
+                    <thead className="bg-[#2A2A2A] text-gray-300">
+                      <tr>
+                        <th className="px-4 py-3 text-left">Hive ID</th>
+                        <th className="px-4 py-3 text-left">Name</th>
+                        <th className="px-4 py-3 text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {hiveList.map((hive) => (
+                        <tr
+                          key={hive._id}
+                          className="border-b border-gray-700 hover:bg-[#252525]"
                         >
-                          {hive.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {hives.length === 0 && (
-                    <tr>
-                      <td colSpan="4" className="text-center py-4 text-gray-400">
-                        No hives found
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                          <td className="px-4 py-2 text-left font-medium">{hive.hiveId}</td>
+                          <td className="px-4 py-2 text-left">{hive.hiveName}</td>
+                          <td className="px-4 py-2 text-center">
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-semibold ${
+                                hive.status === "Active"
+                                  ? "bg-green-900/30 text-green-400"
+                                  : hive.status === "Needs Attention"
+                                  ? "bg-red-900/30 text-red-400"
+                                  : "bg-yellow-900/30 text-yellow-400"
+                              }`}
+                            >
+                              {hive.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })}
 
+            {/* If no hives */}
+            {hives.length === 0 && (
+              <p className="text-center py-4 text-gray-400">No hives found</p>
+            )}
 
-              {/* Alerts list */}
-              <h3 className="text-lg font-semibold mt-8 mb-4">Hive Alerts</h3>
-              <ul className="space-y-2 text-sm">
-                {hiveAlerts.overdueInspections.map(h => (
-                  <li key={h._id} className="text-yellow-400">Hive {h.hiveId} → Inspection overdue</li>
-                ))}
-                {hiveAlerts.lowProductive.map(h => (
-                  <li key={h._id} className="text-red-400">Hive {h.hiveId} → Low productivity</li>
-                ))}
-                {hiveAlerts.overdueInspections.length === 0 && hiveAlerts.lowProductive.length === 0 && (
+            {/* Hive Alerts */}
+            <h3 className="text-lg font-semibold mt-8 mb-4">Hive Alerts</h3>
+            <ul className="space-y-2 text-sm">
+              {hiveAlerts.overdueInspections.map((h) => (
+                <li key={h._id} className="text-yellow-400">
+                  Hive {h.hiveId} → Inspection overdue
+                </li>
+              ))}
+              {hiveAlerts.lowProductive.map((h) => (
+                <li key={h._id} className="text-red-400">
+                  Hive {h.hiveId} → Low productivity
+                </li>
+              ))}
+              {hiveAlerts.overdueInspections.length === 0 &&
+                hiveAlerts.lowProductive.length === 0 && (
                   <li className="text-gray-400">No alerts at the moment</li>
                 )}
-              </ul>
-            </div>
-          )}
+            </ul>
+          </div>
+        )}
+
+            
 
         {/* 🔹 Analytics Tab */}
-        {activeTab === "analytics" && (
-          <div>
-            <h2 className="text-lg font-semibold mb-4">Harvest Analytics</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Harvest by Month */}
-              <div className="bg-[#2A2A2A] p-6 rounded-lg">
-                <p className="font-semibold mb-3">Harvest by Month</p>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={harvestByMonth}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                      <XAxis dataKey="month" stroke="#ccc" />
-                      <YAxis stroke="#ccc" />
-                      <Tooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="total" stroke="#FBB01A" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* Harvest by Farm */}
-              <div className="bg-[#2A2A2A] p-6 rounded-lg">
-                <p className="font-semibold mb-3">Harvest by Farm</p>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={harvestByFarm}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                      <XAxis dataKey="_id" stroke="#ccc" />
-                      <YAxis stroke="#ccc" />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="total" fill="#22c55e" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
+         {activeTab === "analytics" && (
+          <div className="mt-4">
+            <HarvestAnalytics />
           </div>
-        )}
+         )}
 
-
-        {/* 🔹 Reports Tab */}
-        {activeTab === "reports" && (
-          <div>
-            <h2 className="text-lg font-semibold mb-4">Reports & Downloads</h2>
-            <div className="flex flex-wrap gap-3">
-              <button className="bg-[#FBB01A] text-black px-4 py-2 rounded hover:bg-yellow-500">
-                Generate Farm Report
-              </button>
-              <button className="bg-[#FBB01A] text-black px-4 py-2 rounded hover:bg-yellow-500">
-                Harvest Summary Report
-              </button>
-              <button className="bg-[#FBB01A] text-black px-4 py-2 rounded hover:bg-yellow-500">
-                Hive-wise Breakdown
-              </button>
-            </div>
-          </div>
-        )}
-
+      
         {/* 🔹 Alerts Tab */}
         {activeTab === "alerts" && (
           <div>
