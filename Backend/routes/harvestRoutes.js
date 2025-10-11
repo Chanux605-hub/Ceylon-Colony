@@ -10,6 +10,7 @@ import {
   getHarvestByFarmAdvanced,
   getMonthlyHarvestTotal,
   getHarvestInsights,
+  getHarvestsByOwner
 } from "../controllers/harvestController.js";
 
 const router = express.Router();
@@ -40,6 +41,10 @@ router.get("/by-farm-advanced", getHarvestByFarmAdvanced);
 
 //get total harvest
 router.get("/monthly-total", getMonthlyHarvestTotal);
+
+// Get harvests by ownerId
+router.get("/owner/:ownerId", getHarvestsByOwner);
+
 
 // Get overall harvest insights
 router.get("/insights", getHarvestInsights);

@@ -82,7 +82,7 @@ export default function App() {
       {/* Farm & Harvest management */}
       <Route path="/farmRegistration" element={<FarmRegistrationForm />} />
       <Route path="/hiveRegistration" element={<HiveRegistrationForm />} />
-      <Route path="/farmerProfile" element={<FarmOwnerProfile farmerId="F001" />} />
+      <Route path="/farmerProfile" element={<FarmOwnerProfile/>} />
       <Route path="/farm/:farmId" element={<FarmDetails />} />
       <Route path="/farm/update/:farmId" element={<UpdateFarmForm />} />
       <Route path="/hive/update/:hiveId" element={<HiveUpdateForm />} />

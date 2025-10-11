@@ -1,19 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { Edit3, Trash2 } from "lucide-react";
+import { useAuth } from "../context/AuthContext"; // ✅ import auth context
 import UpdateHarvestForm from "./UpdateHarvestForm";
 
 export default function HarvestHistory() {
+  const { user } = useAuth(); // ✅ get logged user
   const [harvests, setHarvests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingHarvest, setEditingHarvest] = useState(null);
 
-  // Fetch all harvests
+  // ✅ Fetch only the logged user's harvests
   const fetchHarvests = async () => {
     try {
-      const res = await fetch("http://localhost:3000/api/harvests");
+      if (!user?.userId) return; // wait until user is loaded
+
+      const res = await fetch(`http://localhost:3000/api/harvests/owner/${user.userId}`);
       const data = await res.json();
+
       if (data.success) {
-        // ✅ Sort by date (latest first)
+        // sort by date (latest first)
         const sorted = data.harvests.sort(
           (a, b) => new Date(b.date) - new Date(a.date)
         );
@@ -28,9 +33,9 @@ export default function HarvestHistory() {
 
   useEffect(() => {
     fetchHarvests();
-  }, []);
+  }, [user]); // ✅ re-fetch when logged user changes
 
-  // Delete handler
+  // ✅ Delete handler
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this harvest?")) return;
     try {
@@ -51,7 +56,7 @@ export default function HarvestHistory() {
     }
   };
 
-  // ✅ Group by farm name
+  // ✅ Group harvests by farm name
   const groupedHarvests = harvests.reduce((acc, h) => {
     const farmName = h.farmName || h.farmId || "Unknown Farm";
     if (!acc[farmName]) acc[farmName] = [];

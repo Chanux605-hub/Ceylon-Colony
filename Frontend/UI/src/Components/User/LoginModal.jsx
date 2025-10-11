@@ -1,4 +1,3 @@
-// src/components/User/LoginModal.jsx
 import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
@@ -13,10 +12,8 @@ export default function LoginModal({ open, onClose, onForgotPassword }) {
   const [liveErrors, setLiveErrors] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
 
-  // ✅ regex email check
   const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  // ✅ live validation while typing
   useEffect(() => {
     const errs = { email: "", password: "" };
     if (form.email && !isValidEmail(form.email)) {
@@ -38,7 +35,6 @@ export default function LoginModal({ open, onClose, onForgotPassword }) {
     e.preventDefault();
     setError("");
 
-    // final validation before API call
     if (!isValidEmail(form.email)) {
       setLiveErrors((prev) => ({ ...prev, email: "Please enter a valid email" }));
       return;
@@ -59,7 +55,15 @@ export default function LoginModal({ open, onClose, onForgotPassword }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Login failed");
 
-      login(data); // ✅ login via context
+      login(data); // ✅ keep your existing context login
+
+      // ✅ redirect by role
+      if (data.user?.role === "farmOwner") {
+        window.location.href = "/farmer/profile";
+      } else {
+        window.location.href = "/user/profile";
+      }
+
       onClose();
     } catch (err) {
       setError(err.message);
@@ -71,7 +75,6 @@ export default function LoginModal({ open, onClose, onForgotPassword }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-[#111] w-full max-w-sm rounded-2xl border border-[#FBB01A]/40 shadow-lg overflow-hidden">
-        
         {/* Header */}
         <div className="flex flex-col items-center p-6 border-b border-[#FBB01A]/40">
           <div className="h-12 w-12 rounded-full bg-[#FBB01A] flex items-center justify-center text-black text-xl font-bold">
@@ -108,9 +111,7 @@ export default function LoginModal({ open, onClose, onForgotPassword }) {
                 }`}
               />
             </div>
-            {liveErrors.email && (
-              <p className="text-red-400 text-xs mt-1">{liveErrors.email}</p>
-            )}
+            {liveErrors.email && <p className="text-red-400 text-xs mt-1">{liveErrors.email}</p>}
           </div>
 
           {/* Password */}
@@ -131,7 +132,6 @@ export default function LoginModal({ open, onClose, onForgotPassword }) {
                   liveErrors.password ? "focus:ring-red-500" : "focus:ring-[#FBB01A]"
                 }`}
               />
-              {/* Show/Hide toggle */}
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -145,25 +145,23 @@ export default function LoginModal({ open, onClose, onForgotPassword }) {
             )}
           </div>
 
-          {/* Forgot password link */}
-<p className="text-right text-xs">
-  <button
-    type="button"
-    onClick={() => {
-      if (typeof onForgotPassword === "function") {
-        onForgotPassword();   // 🚀 trigger parent callback
-        console.log("Forgot Password button clicked");
-      } else {
-        console.warn("onForgotPassword not passed!");
-      }
-    }}
-    className="text-[#FBB01A] hover:underline"
-  >
-    Forgot Password?
-  </button>
-</p>
-
-
+          {/* Forgot Password */}
+          <p className="text-right text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof onForgotPassword === "function") {
+                  onForgotPassword();
+                  console.log("Forgot Password button clicked");
+                } else {
+                  console.warn("onForgotPassword not passed!");
+                }
+              }}
+              className="text-[#FBB01A] hover:underline"
+            >
+              Forgot Password?
+            </button>
+          </p>
 
           {/* Buttons */}
           <button
