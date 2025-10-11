@@ -3,6 +3,8 @@ import React from "react";
 import Navbar from "../Components/User/navbar";
 import Footer from "../Components/User/Footer";
 import aboutHero from "../assets/about-hero2.jpg";
+import Navbar from "../Components/User/navbar";
+//import Footer from "../Components/User/Footer";
 
 /* -------- tiny inline API helper (no api/ folder needed) -------- */
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -70,8 +72,14 @@ export default function Workshops() {
   const open = data.find((w) => w.id === openId) || null;
 
   return (
+    
     <div className="min-h-screen bg-white text-neutral-900">
+<<<<<<< HEAD
       <Navbar/>
+=======
+      <Navbar />
+      
+>>>>>>> origin/GimaNew
       {/* ---------- HERO ---------- */}
       <section
         className="relative isolate w-full"
@@ -399,6 +407,7 @@ function BookingModal({ workshop, onClose }) {
           )}
         </div>         
       </div>
+      
     </div>
   );
 }

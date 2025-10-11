@@ -2,18 +2,19 @@
 import React, { useRef } from "react";
 
 // helper to resolve files from src/assets (adjust depth if needed)
-const asset = (file) => new URL(`../assets/${file}`, import.meta.url).href;
+const asset = (file) => new URL(`../../assets/${file}`, import.meta.url).href;
 
 const products = [
-  { id: 1, name: "Wildflower Honey", weight: "350g", price: "Rs 1,200", img:  asset("jar.jpeg") },
-  { id: 2, name: "Cinnamon Infused",  weight: "350g", price: "Rs 1,450", img: "../assets/balm.jpg" },
-  { id: 3, name: "Lime Blossom",      weight: "350g", price: "Rs 1,350", img: "../../assets/balm.jpg" },
-  { id: 4, name: "Forest Honey",      weight: "500g", price: "Rs 1,900", img: "../../assets/balm.jpg" },
-  { id: 5, name: "Organic Raw",       weight: "350g", price: "Rs 1,600", img: "../../assets/balm.jpg" },
-  { id: 6, name: "Multi-Floral",      weight: "500g", price: "Rs 2,050", img: "../../assets/balm.jpg" },
-  { id: 7, name: "Bee Pollen Honey",  weight: "250g", price: "Rs 1,150", img: "../../assets/balm.jpg" },
-  { id: 8, name: "Ginger Infused",    weight: "350g", price: "Rs 1,480", img: "../../assets/balm.jpg" },
+  { id: 1, name: "Wildflower Honey", weight: "350g", price: "Rs 1,200", img: asset("jar.jpeg") },
+  { id: 2, name: "Cinnamon Infused", weight: "350g", price: "Rs 1,450", img: asset("buns.jpeg") },
+  { id: 3, name: "Lime Blossom", weight: "350g", price: "Rs 1,350", img: asset("scrub.jpeg") },
+  { id: 4, name: "Forest Honey", weight: "500g", price: "Rs 1,900", img: asset("soap.jpeg") },
+  { id: 5, name: "Organic Raw", weight: "350g", price: "Rs 1,600", img: asset("honeyjarP1.jpeg") },
+  { id: 6, name: "Multi-Floral", weight: "500g", price: "Rs 2,050", img: asset("candle.jpg") },
+  { id: 7, name: "Bee Pollen Honey", weight: "250g", price: "Rs 1,150", img: asset("Honey gift.jpeg") },
+  { id: 8, name: "Ginger Infused", weight: "350g", price: "Rs 1,480", img: asset("balm.jpg") },
 ];
+
 
 export default function LatestProducts() {
   const scrollerRef = useRef(null);

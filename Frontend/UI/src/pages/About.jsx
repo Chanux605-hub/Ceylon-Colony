@@ -8,10 +8,13 @@ import storyImg3 from '../assets/about-3.jpg';
 import team1 from '../assets/about-4.jpg';
 import team2 from '../assets/about-5.jpg';
 import team3 from '../assets/about-6.jpg';
+import Navbar from "../Components/User/navbar";
 
 export default function About() {
   return (
+    
     <div className="min-h-screen bg-white text-neutral-900">
+      <Navbar />
       {/* HERO (taller, text position unchanged) */}
       <section
         className="relative isolate"
