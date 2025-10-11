@@ -39,6 +39,7 @@ import AddHarvestForm from "./HarvestManagement/AddHarvestForm.jsx";
 import HarvestHistory from "./HarvestManagement/HarvestHistory.jsx";
 import ProductDetails from "./pages/ProductDetails.jsx";
 import AdminOrders from "./Components/admin/modules/AdminOrders.jsx";
+import HarvestAnalytics from "./HarvestManagement/HarvestAnalytics";
 
 // --- Simple auth helpers ---
 const isAuthed = () => !!localStorage.getItem("token");
@@ -87,6 +88,7 @@ export default function App() {
       <Route path="/hive/update/:hiveId" element={<HiveUpdateForm />} />
       <Route path="/harvest/:hiveId" element={<AddHarvestForm />} />
       <Route path="/harvestHistory" element={<HarvestHistory />} />
+      <Route path="/harvestAnalytics" element={<HarvestAnalytics />} />
 
       {/* User Dashboard (separate from admin) */}
       <Route

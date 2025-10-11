@@ -15,7 +15,7 @@
     "@fortawesome/free-regular-svg-icons": "^7.0.0",
     "@fortawesome/free-solid-svg-icons": "^7.0.0",
     "@fortawesome/react-fontawesome": "^3.0.0",
-    "axios": "^1.11.0",
+    "axios": "^1.12.2",
     "dom-to-image-more": "^3.7.1",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.3",
