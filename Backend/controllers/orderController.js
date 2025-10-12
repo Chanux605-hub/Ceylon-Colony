@@ -1,5 +1,8 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js"
+import Product from "../models/Product.js";
+import Inventory from "../models/Inventory.js";
+
 import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -7,6 +10,30 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const currency = "usd";
 const deliveryCharge = 5;
 const frontend_URL = 'http://localhost:5173';
+
+
+// ✅ helper to reduce inventory stock
+async function reduceInventoryStock(items) {
+  for (const item of items) {
+    try {
+      const product = await Product.findById(item.id || item._id);
+      if (!product) continue;
+
+      const inv = await Inventory.findById(product.inventoryId);
+      if (!inv) continue;
+
+      const qty = Number(item.quantity) || 1;
+      inv.stock = Math.max(0, inv.stock - qty);
+      await inv.save();
+
+      product.inStock = inv.stock > 0;
+      await product.save();
+    } catch (err) {
+      console.error("❌ Stock reduce error:", err.message);
+    }
+  }
+}
+
 
 // Placing User Order for Frontend using stripe
 const placeOrder = async (req, res) => {
@@ -73,6 +100,9 @@ const placeOrderCod = async (req, res) => {
     // Clear cart in user model
     await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
 
+      // ✅ Reduce stock after successful order
+    await reduceInventoryStock(req.body.items);
+
     res.json({ success: true, message: "Order Placed Successfully!" }); // ✅ success message
   } catch (error) {
     console.log(error);
@@ -115,20 +145,32 @@ const updateStatus = async (req, res) => {
 }
 
 const verifyOrder = async (req, res) => {
-    const { orderId, success } = req.body;
-    try {
-        if (success === "true") {
-            await orderModel.findByIdAndUpdate(orderId, { payment: true });
-            res.json({ success: true, message: "Paid" })
-        }
-        else {
-            await orderModel.findByIdAndDelete(orderId)
-            res.json({ success: false, message: "Not Paid" })
-        }
-    } catch (error) {
-        res.json({ success: false, message: "Not  Verified" })
-    }
+  const { orderId, success } = req.body;
+  try {
+    if (success === "true") {
+      // Mark order as paid
+      const order = await orderModel.findByIdAndUpdate(
+        orderId,
+        { payment: true },
+        { new: true }
+      );
 
-}
+      if (order && order.items && order.items.length > 0) {
+        // ✅ Reduce stock for all ordered items
+        await reduceInventoryStock(order.items);
+      }
+
+      res.json({ success: true, message: "Paid" });
+    } else {
+      // Delete order if payment failed
+      await orderModel.findByIdAndDelete(orderId);
+      res.json({ success: false, message: "Not Paid" });
+    }
+  } catch (error) {
+    console.error("❌ verifyOrder error:", error);
+    res.json({ success: false, message: "Not Verified" });
+  }
+};
+
 
 export { placeOrder, listOrders, userOrders, updateStatus, verifyOrder, placeOrderCod }
