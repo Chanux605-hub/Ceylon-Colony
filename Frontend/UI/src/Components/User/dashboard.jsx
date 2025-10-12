@@ -5,6 +5,8 @@ import UserSidebar from "./userDashboard/userSidebar";
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProfileHub from "./userDashboard/profileHub";
 import MyWorkshops from "./userDashboard/MyWorkshops";
+import OrdersPage from "./orderDetails";
+
 
 const Dashboard = () => {
   return (
