@@ -31,12 +31,18 @@ useEffect(() => {
       const res = await fetch("http://localhost:3000/api/inventory");
       if (!res.ok) throw new Error("Failed to fetch inventory");
       const json = await res.json();
-      setItems(json);
+
+      // ✅ Fix: set items from json.items (not json)
+      setItems(Array.isArray(json.items) ? json.items : []);
+
+      console.log("Fetched inventory:", json.items);
     } catch (err) {
       console.error("Inventory fetch error:", err);
+      setItems([]); // fallback to empty array if failed
     }
   })();
 }, []);
+
 
 
   // toolbar state
