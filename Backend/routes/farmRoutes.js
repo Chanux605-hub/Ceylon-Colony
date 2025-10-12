@@ -1,35 +1,14 @@
 import express from "express";
-import { 
-  getAllFarms, 
-  getFarmById, 
-  registerFarm, 
-  updateFarmStatus, 
-  getFarmsByOwner, 
-  updateFarm, 
-  deleteFarm
-} from "../controllers/farmController.js";
+//import userAuth from "../middleware/userAuth.js"; //   if you want farm creation tied to logged-in user
+import { getAllFarms, getFarmById, registerFarm } from "../controllers/farmController.js"; 
 
 const farmRouter = express.Router();
 
-// Register a new farm
-farmRouter.post("/register", registerFarm);
-
-// Get all farms
+// Register a new farm 
+farmRouter.post("/register", registerFarm); 
+//get farm details
 farmRouter.get("/", getAllFarms);
+farmRouter.get('/:id', getFarmById);
 
-// Get all farms for a specific owner
-farmRouter.get("/owner/:ownerId", getFarmsByOwner);
-
-// Get a single farm by ID or farmId
-farmRouter.get("/:id", getFarmById);
-
-// Update farm status
-farmRouter.put("/:id/status", updateFarmStatus);
-
-// Update farm details
-farmRouter.put("/:id", updateFarm);
-
-// Delete a farm
-farmRouter.delete("/:id", deleteFarm);
 
 export default farmRouter;

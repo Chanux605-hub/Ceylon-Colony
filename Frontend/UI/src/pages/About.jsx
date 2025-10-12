@@ -243,7 +243,7 @@ export default function About() {
                     alt={m.alt}
                     className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                     loading="lazy"
-                    onError={(e) => { e.currentTarget.src = placeholderImg; }}
+                    onError={(e) => { e.currentTarget.src = '/placeholder.jpg'; }}
                 />
                 <div className="pointer-events-none absolute inset-0 ring-1 ring-black/5" />
                 </div>

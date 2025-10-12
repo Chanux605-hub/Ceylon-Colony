@@ -1,65 +1,78 @@
+// backend/server.js
 import express from "express";
 import cors from "cors";
-//import bodyParser from "body-parser";
+import dotenv from "dotenv";
+import { connectDB } from "./config/db.js";
+import path from "path";
 
-import connection from "./config/db.js"; 
+// Existing app routes
 import farmRouter from "./routes/farmRoutes.js";
 import hiveRouter from "./routes/hiveRoutes.js";
-
-
-import orderDetailsRouter from "./routes/orderDetailsRouter.js";
-import analyticsRouter from "./routes/analytics.routes.js";
-
-
-
-import workshopRouter from "./routes/workshopRoutes.js";
-import blogRouter from "./routes/blogRoutes.js";
-import harvestRoutes from "./routes/harvestRoutes.js";
-
-//gima's crud
-// or productRoutes.js depending on your filename
 import productRouter from "./routes/product.routes.js";
+import orderDetailsRouter from "./routes/orderDetailsRouter.js"; 
+
+// Chanuka branch routes (keep if present in repo)
+import postRoutes from "./routes/postRoutes.js";
+import announcementRoutes from "./routes/announcementRoutes.js";
+import userRoutes from "./routes/authRoutes.js"; 
+import authRoutes from "./routes/auth.routes.js";
+
+// Additional routes
+import analyticsRouter from "./routes/analytics.routes.js";
+//import workshopRouter from "./routes/workshopRoutes.js";
+//import blogRouter from "./routes/blogRoutes.js";
+//import harvestRoutes from "./routes/harvestRoutes.js";
 import inventoryRoutes from "./routes/inventoryRoutes.js";
 
 
 
 const app = express();
-const allowOrigins =['http://localhost:5173']
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+];
 
-// Middleware
-app.use(cors());
-//app.use(bodyParser.json());
+app.use(
+  cors({
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 
-app.use(express.json({ limit: "50mb" }));              
+app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
+// Core routes from both branches
+app.use("/api", postRoutes);
+app.use("/api/admin/announcements", announcementRoutes);
+app.use("/api/auth", userRoutes);
+app.use("/api/auth", authRoutes);
 
-// Routes
+// Existing feature routes
 app.use("/api/farms", farmRouter);
-
-app.use("/api/hives", hiveRouter)
-
 app.use("/api/hives", hiveRouter);
-app.use("/api/workshops", workshopRouter);
-app.use("/api/blogs", blogRouter);
-app.use("/api/harvests", harvestRoutes);
+//app.use("/api/workshops", workshopRouter);
+//app.use("/api/blogs", blogRouter);
+//app.use("/api/harvests", harvestRoutes);
 
 
 
 // register routes
 app.use("/api/products", productRouter);
-app.use("/api/inventory", inventoryRoutes);
-app.use("/api/analytics", analyticsRouter);
-
 app.use("/api/orderdetails", orderDetailsRouter);
+app.use("/api/analytics", analyticsRouter);
+app.use("/api/inventory", inventoryRoutes);
 
+app.get("/health", (req, res) => res.json({ ok: true }));
 
-// Connect to DB
-connection();   
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+connectDB().then(() => {
+  const port = process.env.PORT || 3000;
+  app.listen(port, () =>
+    console.log(`✅ API listening on http://localhost:${port}`)
+  );
 });
 
 

@@ -1,23 +1,23 @@
-// Backend/routes/analytics.routes.js
 import express from "express";
 import {
-  dailyIncome,
-  movementsOut,
-  stockStatus,
-  topMovers,
-  bottomMovers,
-  abcRevenue,
-  kpis,
+  getDashboard,
+  getSalesAnalytics,
+  getProductAnalytics,
+  getUserAnalytics
 } from "../controllers/analytics.controller.js";
 
 const router = express.Router();
 
-router.get("/daily-income", dailyIncome);
-router.get("/movements", movementsOut);
-router.get("/stock-status", stockStatus);
-router.get("/top-movers", topMovers);
-router.get("/bottom-movers", bottomMovers);
-router.get("/abc", abcRevenue);
-router.get("/kpis", kpis);
+// Dashboard analytics
+router.get("/dashboard", getDashboard);
+
+// Sales analytics
+router.get("/sales", getSalesAnalytics);
+
+// Product analytics
+router.get("/products", getProductAnalytics);
+
+// User analytics
+router.get("/users", getUserAnalytics);
 
 export default router;
