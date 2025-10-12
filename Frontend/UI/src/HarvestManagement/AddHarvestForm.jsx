@@ -5,8 +5,10 @@ export default function AddHarvestForm({ hive, onClose, onSuccess }) {
   const [quantity, setQuantity] = useState("");
   const [quality, setQuality] = useState("High");
   const [notes, setNotes] = useState("");
+  const [nextInspectionDate, setNextInspectionDate] = useState("");
   const [errors, setErrors] = useState({});
 
+  // ✅ Validation
   const validate = () => {
     const next = {};
 
@@ -37,10 +39,20 @@ export default function AddHarvestForm({ hive, onClose, onSuccess }) {
       next.notes = "Notes cannot exceed 300 characters";
     }
 
+    // Next inspection date
+    if (nextInspectionDate) {
+      const inspect = new Date(nextInspectionDate);
+      const harvest = new Date(date);
+      if (inspect <= harvest) {
+        next.nextInspectionDate = "Inspection date must be after harvest date";
+      }
+    }
+
     setErrors(next);
     return Object.keys(next).length === 0;
   };
 
+  // ✅ Submit Handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
@@ -56,6 +68,7 @@ export default function AddHarvestForm({ hive, onClose, onSuccess }) {
           quantity,
           quality,
           notes,
+          nextInspectionDate,
         }),
       });
 
@@ -85,7 +98,7 @@ export default function AddHarvestForm({ hive, onClose, onSuccess }) {
           {/* Date */}
           <div>
             <label className="block text-sm font-semibold text-[#FBB01A]">
-              Date
+              Harvest Date
             </label>
             <input
               type="date"
@@ -132,6 +145,22 @@ export default function AddHarvestForm({ hive, onClose, onSuccess }) {
             </select>
             {errors.quality && (
               <p className="text-red-400 text-xs">{errors.quality}</p>
+            )}
+          </div>
+
+          {/* ✅ Next Inspection Date */}
+          <div>
+            <label className="block text-sm font-semibold text-[#FBB01A]">
+              Next Inspection Date
+            </label>
+            <input
+              type="date"
+              className="w-full border border-gray-600 bg-[#0B0B0B] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]"
+              value={nextInspectionDate}
+              onChange={(e) => setNextInspectionDate(e.target.value)}
+            />
+            {errors.nextInspectionDate && (
+              <p className="text-red-400 text-xs">{errors.nextInspectionDate}</p>
             )}
           </div>
 

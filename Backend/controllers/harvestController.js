@@ -4,12 +4,10 @@ import hiveModel from "../models/hiveModel.js";
 import farmModel from "../models/farmModel.js";
 
 
-// Add Harvest 
 export const addHarvest = async (req, res) => {
   try {
-    const { farmId, hiveId, date, quantity, quality, notes } = req.body;
+    const { farmId, hiveId, date, quantity, quality, notes, nextInspectionDate } = req.body;
 
-    // validation
     if (!farmId || !hiveId || !date || !quantity || !quality) {
       return res.status(400).json({
         success: false,
@@ -17,7 +15,6 @@ export const addHarvest = async (req, res) => {
       });
     }
 
-    // auto generate unique harvestId
     const harvestId = `HAR-${Date.now()}`;
 
     const newHarvest = await harvestModel.create({
@@ -28,6 +25,7 @@ export const addHarvest = async (req, res) => {
       quantity,
       quality,
       notes,
+      nextInspectionDate, // ✅ store it
     });
 
     return res.status(201).json({
@@ -43,6 +41,7 @@ export const addHarvest = async (req, res) => {
     });
   }
 };
+
 
 // Get all harvests with farm + hive info
 export const getHarvests = async (req, res) => {
