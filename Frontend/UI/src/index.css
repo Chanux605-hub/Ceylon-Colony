@@ -21,20 +21,4 @@ html, body, #root {
   @apply inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold border border-white/20 text-white bg-white/10 backdrop-blur-sm transition hover:bg-white/15;
 }
 
-@media print {
-  body * {
-    visibility: hidden;
-  }
-  #customer-media-section, #customer-media-section * {
-    visibility: visible;
-  }
-  #customer-media-section {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-  }
-}
-
-
 

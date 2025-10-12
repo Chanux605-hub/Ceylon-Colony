@@ -2,6 +2,7 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./navbar";
 import UserSidebar from "./userDashboard/userSidebar";
+import { Routes, Route, Navigate } from "react-router-dom";
 import ProfileHub from "./userDashboard/profileHub";
 import MyWorkshops from "./userDashboard/MyWorkshops";
 
@@ -25,6 +26,9 @@ const Dashboard = () => {
           <Routes>
             <Route index element={<ProfileHub />} />
             <Route path="workshops" element={<MyWorkshops />} />
+            <Route index element={<Navigate to="profile" replace />} />
+            <Route path="profile" element={<ProfileHub />} />
+            <Route path="orders" element={<OrdersPage />} />
           </Routes>
         </main>
       </div>

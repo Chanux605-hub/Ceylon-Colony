@@ -1,11 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
 import {
   Plus, Search, Filter, Eye, Trash2,
   Heart, MessageCircle, PlayCircle, User, Tag as TagIcon, BarChart2,
   CheckCircle2, XCircle
 } from "lucide-react";
-
 
 /* =========================================================================================
    CONFIG & UTILS
@@ -93,35 +91,14 @@ function makeSeed() {
 ========================================================================================= */
 
 export default function CustomerMediaManagement() {
-// ---------------- Live state (for KPIs / charts / top cards) ----------------
-  const [contents, setContents] = useState([]);
-  const [loading, setLoading] = useState(true);
-
+  /* ---------------- Mock state (for KPIs / charts / top cards) ---------------- */
+  const [contents, setContents] = useState(() => {
+    const saved = localStorage.getItem("admin_media_contents");
+    return saved ? JSON.parse(saved) : makeSeed();
+  });
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const res = await axios.get("http://localhost:3000/api/admin/list?limit=100");
-
-        // Map backend "author" → frontend "user"
-        const items = res.data.items.map((p) => ({
-          ...p,
-          user: {
-            id: p.author.userId,
-            name: p.author.username,
-            avatar: p.author.avatarUrl,
-          },
-        }));
-
-        setContents(items);
-      } catch (err) {
-        console.error("Error fetching posts:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPosts();
-  }, []);
+    localStorage.setItem("admin_media_contents", JSON.stringify(contents));
+  }, [contents]);
 
   /* ---------------- Backend: Approved SHORTS (declare EARLY) ------------------ */
   const [shorts, setShorts] = useState([]);
@@ -133,7 +110,7 @@ export default function CustomerMediaManagement() {
     try {
       setShortsLoading(true);
       const data = await fetchJson(
-        `${API}/api/admin/list?contentType=short&status=approved&sortBy=createdAt&order=desc&limit=200`
+        `${API}/api/admin/posts?contentType=short&status=approved&sortBy=createdAt&order=desc&limit=200`
       );
       const items = Array.isArray(data?.items) ? data.items : data;
       const shaped = items.map((p) => ({
@@ -166,8 +143,6 @@ export default function CustomerMediaManagement() {
   const [filterProduct, setFilterProduct] = useState("all");
   const [videoSort, setVideoSort] = useState("likes"); // likes | comments | views
   const [videoProduct, setVideoProduct] = useState("all");
-  const [searchUser, setSearchUser] = useState("");
-
 
   /* ---------------- Select options ---------------- */
   const tagOptions = useMemo(
@@ -339,7 +314,7 @@ export default function CustomerMediaManagement() {
   const loadPending = async () => {
     try {
       setPendingLoading(true);
-      const data = await fetchJson(`${API}/api/admin/list?status=pending&sortBy=createdAt&order=desc&limit=200`);
+      const data = await fetchJson(`${API}/api/admin/posts?status=pending&sortBy=createdAt&order=desc&limit=200`);
       const items = Array.isArray(data?.items) ? data.items : [];
       const shaped = items
         .filter((p) => p?.contentType === "image" || p?.contentType === "short")
@@ -423,7 +398,7 @@ export default function CustomerMediaManagement() {
   const loadAllContent = async () => {
     try {
       setAllLoading(true);
-      const data = await fetchJson(`${API}/api/admin/list?sortBy=createdAt&order=desc&limit=500`);
+      const data = await fetchJson(`${API}/api/admin/posts?sortBy=createdAt&order=desc&limit=500`);
       const items = Array.isArray(data?.items) ? data.items : [];
       const filtered = items
         .filter(
@@ -482,14 +457,9 @@ export default function CustomerMediaManagement() {
           (c.product || "").toLowerCase().includes(s)
       );
     }
-    if (searchUser.trim()) {
-      rows = rows.filter((c) =>
-        (c.author || "").toLowerCase().includes(searchUser.trim().toLowerCase())
-      );
-    }
     rows.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     return rows;
-  }, [allContent, q, range, filterTag, filterProduct,searchUser ]);
+  }, [allContent, q, range, filterTag, filterProduct]);
 
   // delete from All Content (approved/rejected)
   const deleteReviewed = async (row) => {
@@ -546,22 +516,6 @@ export default function CustomerMediaManagement() {
   ========================================================================================= */
   return (
     <div className="space-y-6 text-white">
-      <div id="customer-media-section" className="space-y-6 text-white">
-      {/* Header Card */}
-      <div className="rounded-2xl bg-black/40 border border-white/10 p-5 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Customer Media</h1>
-          <p className="text-white/70 text-sm mt-1">
-            Analytics & insights for Customer Media
-          </p>
-        </div>
-        <button
-          onClick={() => window.print()}  // ✅ open print-to-PDF dialog
-          className="rounded-lg px-5 py-2 bg-[#FBB01A] text-black font-semibold hover:opacity-90 shadow"
-        >
-          Export Report
-        </button>
-      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Kpi title="Submissions Today" icon={<BarChart2 className="h-4 w-4" />} value={submissionsToday} />
         <Kpi
@@ -734,8 +688,6 @@ export default function CustomerMediaManagement() {
         rows={allContentFilteredBackend}
         loading={allLoading}
         onReview={setSelectedReviewed}
-        searchUser={searchUser}
-        setSearchUser={setSearchUser}
       />
 
       <PendingReviewModal
@@ -759,7 +711,6 @@ export default function CustomerMediaManagement() {
         onClose={() => setPreviewShort(null)}
       />
     <AnnouncementReviewModal item={selectedAnn} onClose={() => setSelectedAnn(null)} />
-    </div>
     </div>
   );
 }
@@ -1124,24 +1075,18 @@ function PendingUploadsTable({ rows, loading, onReview, onDelete }) {
   );
 }
 
-function AllContentTable({ rows, loading, onReview, searchUser, setSearchUser }) {
+function AllContentTable({ rows, loading, onReview }) {
   return (
     <div className="rounded-2xl bg-black/40 border border-white/10 p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm font-semibold">All Content</div>
-        <input
-          type="text"
-          placeholder="Search by user..."
-          value={searchUser}
-          onChange={(e) => setSearchUser(e.target.value)}
-          className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-[#FBB01A]/40"
-        />
       </div>
+
       <div className="overflow-x-auto">
         <table className="min-w-[1100px] w-full text-sm">
           <thead className="bg-white/5 text-white/70">
             <tr className="text-left">
-              <th className="py-3 px-4">User</th>
+              <th className="py-3 px-4">Title</th>
               <th className="py-3 px-4">Type</th>
               <th className="py-3 px-4">Tag(s)</th>
               <th className="py-3 px-4">Product</th>
@@ -1160,7 +1105,7 @@ function AllContentTable({ rows, loading, onReview, searchUser, setSearchUser })
             )}
             {!loading && rows.map((row) => (
               <tr key={row.id} className="hover:bg-white/5">
-                <td className="py-3 px-4">{row.author}</td>
+                <td className="py-3 px-4">{row.title}</td>
                 <td className="py-3 px-4">{row.type}</td>
                 <td className="py-3 px-4">{row.tags.map((t) => `#${t}`).join(", ")}</td>
                 <td className="py-3 px-4">{row.product || "—"}</td>

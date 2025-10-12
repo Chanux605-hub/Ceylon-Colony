@@ -1,16 +1,17 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useContext, useState, useRef, useEffect } from "react";
 import { ShoppingCart, MoreVertical, Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import logo from "../../assets/logo (2).png";
+import { StoreContext } from "../../context/StoreContext";
 import { useAuth } from "../../context/AuthContext";
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { cartCount } = useContext(StoreContext);
+  const { user, logout } = useAuth?.() || {};
   const [menuOpen, setMenuOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const menuRef = useRef(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -65,12 +66,14 @@ const Navbar = () => {
           {/* Right: Profile / Logout / Dropdown / Cart / Hamburger */}
           <div className="flex items-center gap-4 relative">
             {/* Cart (desktop only) */}
-            <button className="relative hidden lg:block">
+            <Link to="/cart" className="relative hidden lg:block">
               <ShoppingCart className="w-6 h-6 text-white hover:text-[#FBB01A] transition" />
-              <span className="absolute -top-2 -right-2 bg-[#FBB01A] text-black font-bold text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                3
-              </span>
-            </button>
+              {typeof cartCount === "number" && cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-[#FBB01A] text-black font-bold text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
 
             {/* User profile + Logout */}
             {user && (

@@ -17,9 +17,8 @@ const { user } = useAuth(); // get user from context
     </div>
 
       <nav className="mt-6 flex flex-col gap-3 px-4">
-        <Link to="/dashboard" className="hover:text-[#FBB01A]">Profile Hub</Link>
+        <Link to="/dashboard/profile" className="hover:text-[#FBB01A]">Profile Hub</Link>
         <Link to="/dashboard/orders" className="hover:text-[#FBB01A]">My Orders</Link>
-        <Link to="/dashboard/cart" className="hover:text-[#FBB01A]">Cart</Link>
         <Link to="/dashboard/uploads" className="hover:text-[#FBB01A]">My Uploads</Link>
         <Link to="/dashboard/workshops" className="hover:text-[#FBB01A]">My Workshops</Link>
         <Link to="/dashboard/notifications" className="hover:text-[#FBB01A]">Notifications</Link>
