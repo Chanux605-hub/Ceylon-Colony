@@ -9,6 +9,7 @@ import {
   adminUpdateStatus,
   adminDeletePost,
   adminStats,
+  addLike, 
 } from "../controllers/postController.js";
 
 const router = Router();
@@ -23,5 +24,6 @@ router.get("/admin/list", adminListPosts);
 router.patch("/admin/posts/:id", adminUpdateStatus);
 router.delete("/admin/posts/:id", adminDeletePost);
 router.get("/admin/stats", adminStats);
+router.patch("/posts/:id/like", addLike);
 
 export default router;

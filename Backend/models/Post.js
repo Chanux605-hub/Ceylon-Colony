@@ -17,6 +17,7 @@ const PostSchema = new mongoose.Schema({
   tags:        [{ type: String }],
   productId:   { type: String, default: "" },
 
+
   author: { type: AuthorSchema, required: true },
 
   // moderation + visibility

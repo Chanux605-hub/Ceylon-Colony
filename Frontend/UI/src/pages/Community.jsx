@@ -483,6 +483,30 @@ export default function Community() {
     return list;
   }, [posts, tab, q]);
 
+  // Add this below your other helper functions in Community()
+const handleLike = async (postId) => {
+  try {
+    // Optimistic UI update
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId ? { ...p, likes: (p.likes ?? 0) + 1 } : p
+      )
+    );
+
+    // Send like to backend
+    await fetch(`${API}/api/posts/${postId}/like`, { method: "PATCH" });
+  } catch (err) {
+    console.error("Failed to like:", err);
+    // Rollback if needed
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId ? { ...p, likes: (p.likes ?? 1) - 1 } : p
+      )
+    );
+  }
+};
+
+
   return (
     <div className="min-h-screen bg-[#0B0B0B] text-white">
       <Navbar />
@@ -638,7 +662,13 @@ export default function Community() {
                   </div>
 
                   <div className="flex items-center gap-4 px-4 py-3 border-t border-white/10 text-sm">
-                    <button className="hover:text-amber-300">👍 {p.likes}</button>
+                  <button
+                    onClick={() => handleLike(p.id)}
+                    className="hover:text-amber-300"
+                  >
+                    👍 {p.likes}
+                  </button>
+
                     <button className="hover:text-amber-300">💬 {p.comments}</button>
                     <button className="ml-auto hover:text-amber-300">🔗 Share</button>
                   </div>

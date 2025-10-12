@@ -369,6 +369,26 @@ export default function CustomerMediaManagement() {
   };
   useEffect(() => { loadPending(); }, []);
 
+  // ---------------- Like Handler ----------------
+const handleLike = async (postId) => {
+  try {
+    // optimistic UI update
+    setAllContent((prev) =>
+      prev.map((c) =>
+        c.id === postId
+          ? { ...c, metrics: { ...c.metrics, likes: (c.metrics.likes ?? 0) + 1 } }
+          : c
+      )
+    );
+
+    // backend call
+    await fetchJson(`${API}/api/posts/${postId}/like`, { method: "PATCH" });
+  } catch (err) {
+    console.error("Failed to like:", err);
+  }
+};
+
+
   const approveReject = async (row, status) => {
     if (!row?.id) return;
     try {

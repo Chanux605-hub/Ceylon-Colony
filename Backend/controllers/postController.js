@@ -72,6 +72,22 @@ export const addView = async (req, res) => {
   }
 };
 
+// Increment likes
+export const addLike = async (req, res) => {
+  try {
+    const doc = await Post.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { likes: 1 } },
+      { new: true }
+    );
+    if (!doc) return res.status(404).json({ message: "Not found" });
+    res.json({ likes: doc.likes });
+  } catch (e) {
+    res.status(500).json({ message: "Failed to add like", error: e.message });
+  }
+};
+
+
 // Admin list
 export const adminListPosts = async (req, res) => {
   try {
