@@ -23,7 +23,7 @@ import participantRoutes from "./routes/participantRoutes.js";
 import blogRouter from "./routes/blogRoutes.js";
 import harvestRoutes from "./routes/harvestRoutes.js";
 import productRouter from "./routes/product.routes.js";
-import orderDetailsRouter from "./routes/orderDetailsRouter.js"; 
+//import orderDetailsRouter from "./routes/orderDetailsRouter.js"; 
 
 // Chanuka branch routes (keep if present in repo)
 import postRoutes from "./routes/postRoutes.js";
@@ -84,7 +84,7 @@ app.use("/api/password", authRoutes);
 app.use("/api/farms", farmRouter);
 app.use("/api/hives", hiveRouter);
 app.use("/api/products", productRouter);
-app.use("/api/orderdetails", orderDetailsRouter);
+//app.use("/api/orderdetails", orderDetailsRouter);
 
 app.get("/health", (req, res) => res.json({ ok: true }));
 
