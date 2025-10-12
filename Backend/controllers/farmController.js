@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
 import farmModel from "../models/farmModel.js";
 
+/**
+ * Register a new farm
+ */
 export const registerFarm = async (req, res) => {
   try {
     const {
@@ -21,7 +24,7 @@ export const registerFarm = async (req, res) => {
       expectedAnnualYield,
     } = req.body;
 
-
+    // ✅ Validation
     if (!farmId || !farmName || !owner || !phone || !address || !district) {
       return res.json({
         success: false,
@@ -29,7 +32,7 @@ export const registerFarm = async (req, res) => {
       });
     }
 
-
+    // ✅ Create farm
     const newFarm = await farmModel.create({
       farmId,
       farmName,
@@ -54,12 +57,14 @@ export const registerFarm = async (req, res) => {
       farm: newFarm,
     });
   } catch (error) {
-    console.error("Error registering farm:", error);
+    console.error("❌ Error registering farm:", error);
     return res.json({ success: false, message: error.message });
   }
 };
 
-//get all farm details
+/**
+ * Get all farms
+ */
 export const getAllFarms = async (req, res) => {
   try {
     const farms = await farmModel.find();
@@ -69,18 +74,18 @@ export const getAllFarms = async (req, res) => {
   }
 };
 
-
+/**
+ * Get a single farm by ID or farmId
+ */
 export const getFarmById = async (req, res) => {
   try {
     const { id } = req.params;
-
     let farm;
+
     if (mongoose.Types.ObjectId.isValid(id)) {
-      // Try finding by _id
       farm = await farmModel.findById(id);
     }
 
-    // If not found by _id, or invalid _id → try farmId
     if (!farm) {
       farm = await farmModel.findOne({ farmId: id });
     }
@@ -90,9 +95,8 @@ export const getFarmById = async (req, res) => {
     }
 
     res.status(200).json({ success: true, farm });
-    
   } catch (error) {
-    console.error("Error fetching farm:", error);
+    console.error("❌ Error fetching farm:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -105,7 +109,8 @@ export const updateFarmStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!["Active", "Inactive", "Under Maintenance"].includes(status)) {
+    const allowedStatuses = ["Active", "Inactive", "Under Maintenance"];
+    if (!allowedStatuses.includes(status)) {
       return res.status(400).json({ success: false, message: "Invalid status value" });
     }
 
@@ -127,7 +132,7 @@ export const updateFarmStatus = async (req, res) => {
 };
 
 /**
- * Get farms by ownerId
+ * Get all farms belonging to a specific owner
  */
 export const getFarmsByOwner = async (req, res) => {
   try {
@@ -135,11 +140,15 @@ export const getFarmsByOwner = async (req, res) => {
     const farms = await farmModel.find({ ownerId });
 
     if (!farms || farms.length === 0) {
-      return res.status(404).json({ success: false, message: "No farms found for this owner" });
+      return res.status(404).json({
+        success: false,
+        message: "No farms found for this owner",
+      });
     }
 
     res.status(200).json({ success: true, farms });
   } catch (error) {
+    console.error("❌ Error fetching farms by owner:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -150,8 +159,8 @@ export const getFarmsByOwner = async (req, res) => {
 export const updateFarm = async (req, res) => {
   try {
     const { id } = req.params;
-
     let updatedFarm;
+
     if (mongoose.Types.ObjectId.isValid(id)) {
       updatedFarm = await farmModel.findByIdAndUpdate(id, req.body, { new: true });
     } else {
@@ -162,13 +171,12 @@ export const updateFarm = async (req, res) => {
       return res.json({ success: false, message: "Farm not found" });
     }
 
-    res.json({ success: true, farm: updatedFarm });
+    res.json({ success: true, message: "Farm updated successfully", farm: updatedFarm });
   } catch (err) {
-    console.error("Error updating farm:", err);
+    console.error("❌ Error updating farm:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
 
 /**
  * Delete a farm
@@ -189,7 +197,9 @@ export const deleteFarm = async (req, res) => {
 
     res.json({ success: true, message: "Farm deleted successfully" });
   } catch (error) {
-    console.error("Error deleting farm:", error);
+    console.error("❌ Error deleting farm:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+

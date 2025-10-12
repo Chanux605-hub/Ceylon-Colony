@@ -5,6 +5,12 @@ import {
   getHarvestsByFarm,   
   updateHarvest,
   deleteHarvest,
+  getHarvestByMonth,
+  getHarvestByFarm,
+  getHarvestByFarmAdvanced,
+  getMonthlyHarvestTotal,
+  getHarvestInsights,
+  getHarvestsByOwner
 } from "../controllers/harvestController.js";
 
 const router = express.Router();
@@ -23,5 +29,24 @@ router.put("/:id", updateHarvest);
 
 // Delete harvest by id
 router.delete("/:id", deleteHarvest);
+
+// Get harvests for the current month
+router.get("/by-month", getHarvestByMonth);
+
+// Get harvests for a specific farm
+router.get("/by-farm", getHarvestByFarm);
+
+// Get advanced harvests by farm (with hive & farm names)
+router.get("/by-farm-advanced", getHarvestByFarmAdvanced);
+
+//get total harvest
+router.get("/monthly-total", getMonthlyHarvestTotal);
+
+// Get harvests by ownerId
+router.get("/owner/:ownerId", getHarvestsByOwner);
+
+
+// Get overall harvest insights
+router.get("/insights", getHarvestInsights);
 
 export default router;

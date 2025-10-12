@@ -10,13 +10,23 @@ import { connectDB } from "./config/db.js";
 // Routes (your side)
 import farmRouter from "./routes/farmRoutes.js";
 import hiveRouter from "./routes/hiveRoutes.js";
+
+import farmAnalyticsRoutes from "./routes/farmAnalyticsRoutes.js";
+
+
+import inventoryRoutes from "./routes/inventory.routes.js";
+import orderDetailsRouter from "./routes/orderDetailsRouter.js";
+import analyticsRouter from "./routes/analytics.routes.js";
+
+
+
 import workshopRouter from "./routes/workshopRoutes.js";
 import blogRouter from "./routes/blogRoutes.js";
 import harvestRoutes from "./routes/harvestRoutes.js";
 import productRouter from "./routes/product.routes.js";
-import inventoryRoutes from "./routes/inventory.routes.js";
-import orderDetailsRouter from "./routes/orderDetailsRouter.js";
-import analyticsRouter from "./routes/analytics.routes.js";
+
+
+
 
 // Routes (Chanuka’s side)
 import postRoutes from "./routes/postRoutes.js";
@@ -58,8 +68,13 @@ app.use("/api/blogs", blogRouter);
 app.use("/api/harvests", harvestRoutes);
 app.use("/api/products", productRouter);
 app.use("/api/inventory", inventoryRoutes);
-app.use("/api/orderdetails", orderDetailsRouter);
+
 app.use("/api/analytics", analyticsRouter);
+app.use("/api/farm-analytics", farmAnalyticsRoutes);
+
+
+app.use("/api/orderdetails", orderDetailsRouter);
+
 
 // 🔹 Chanuka’s Routes
 app.use("/api", postRoutes);

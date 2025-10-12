@@ -11,6 +11,14 @@ const userSchema = new mongoose.Schema(
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     avatarUrl: { type: String, default: "" },
+
+    // ✅ Add role field
+    role: {
+      type: String,
+      enum: ["user", "farmOwner", "admin"],
+      default: "user",
+    },
+    
     // new fields for OTP
     resetOtp: { type: String },
     resetOtpExpiry: { type: Date },
