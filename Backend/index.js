@@ -87,7 +87,7 @@ app.use("/api/orderdetails", orderDetailsRouter);
 app.use("/api", postRoutes);
 app.use("/api/admin/announcements", announcementRoutes);
 app.use("/api/auth", userRoutes);
-app.use("/api/auth", authRoutes);
+app.use("/api/password", authRoutes);
 
 // ✅ Health Check
 app.get("/health", (req, res) => res.json({ ok: true }));

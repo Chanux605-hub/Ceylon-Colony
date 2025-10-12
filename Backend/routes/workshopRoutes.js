@@ -1,12 +1,13 @@
 
 import { Router } from "express";
-import { create, list, get, update, remove, setStatus, cancel } from "../controllers/workshopController.js";
+import { create, list, get, update, remove, setStatus, cancel, getUserWorkshops } from "../controllers/workshopController.js";
 
 const router = Router();
 
 router.post("/", create);
 router.get("/", list);
 router.get("/:id", get);
+router.get("/user/:userId", getUserWorkshops);
 
 // Put the more specific path BEFORE the generic "/:id"
 router.patch("/:id/status", setStatus);

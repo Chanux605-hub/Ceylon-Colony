@@ -91,13 +91,13 @@ export default function App() {
 
       {/* User Dashboard (separate from admin) */}
       <Route
-        path="/dashboard"
-        element={
-          <PrivateRoute>
-            <Dashboard />
-          </PrivateRoute>
-        }
-      />
+      path="/dashboard/*"
+      element={
+        <PrivateRoute>
+          <Dashboard />
+        </PrivateRoute>
+      }
+    />
         <Route path="/workshop-payment" element={<WorkshopPayment />} />
 
       {/* Admin shell (protected) */}

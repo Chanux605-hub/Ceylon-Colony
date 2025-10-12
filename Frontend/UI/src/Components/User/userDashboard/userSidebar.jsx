@@ -21,7 +21,7 @@ const { user } = useAuth(); // get user from context
         <Link to="/dashboard/orders" className="hover:text-[#FBB01A]">My Orders</Link>
         <Link to="/dashboard/cart" className="hover:text-[#FBB01A]">Cart</Link>
         <Link to="/dashboard/uploads" className="hover:text-[#FBB01A]">My Uploads</Link>
-        <Link to="/dashboard/workshops" className="hover:text-[#FBB01A]">Workshops</Link>
+        <Link to="/dashboard/workshops" className="hover:text-[#FBB01A]">My Workshops</Link>
         <Link to="/dashboard/notifications" className="hover:text-[#FBB01A]">Notifications</Link>
       </nav>
     </aside>

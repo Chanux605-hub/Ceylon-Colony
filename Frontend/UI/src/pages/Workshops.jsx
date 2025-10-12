@@ -144,10 +144,10 @@ export default function Workshops() {
             <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-semibold ring-1 ring-white/20">
               Ceylon Colony
             </span>
-            <h1 className="mt-3 text-3xl md:text-5xl font-extrabold leading-tight">
-              Beekeeping <span className="text-[#fbb01a]">Workshops</span>
+            <h1 className="mt-3 text-3xl md:text-5xl font-extrabold leading-tight text-[#ff6b6b]">
+              Beekeeping <span className="text-[#ff6b6b]">Workshops</span>
             </h1>
-            <p className="mt-3 text-white/85">
+            <p className="mt-3 text-[#ff6b6b]/85">
               Learn ethical, hands-on methods—hive setup, seasonal care, safe harvesting, and
               quality standards. Beginner-friendly and community-focused.
             </p>
@@ -171,13 +171,13 @@ export default function Workshops() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search title, location…"
-                className="w-full bg-transparent text-sm outline-none placeholder:text-neutral-400"
+                className="w-full bg-transparent text-sm outline-none text-[#ff6b6b] placeholder:text-[#ff6b6b]/60"
               />
             </div>
             <select
               value={level}
               onChange={(e) => setLevel(e.target.value)}
-              className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none"
+              className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none text-[#ff6b6b]"
             >
               {levelOptions.map((opt) => (
                 <option key={opt}>{opt}</option>
@@ -186,7 +186,7 @@ export default function Workshops() {
             <select
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none"
+              className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none text-[#ff6b6b]"
             >
               {locationOptions.map((opt) => (
                 <option key={opt}>{opt}</option>
@@ -196,7 +196,7 @@ export default function Workshops() {
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none"
+              className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none text-[#ff6b6b]"
             />
           </div>
         </section>
@@ -209,9 +209,9 @@ export default function Workshops() {
         )}
         <section className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {workshopLoading ? (
-            <div className="col-span-full text-neutral-600">Loading…</div>
+            <div className="col-span-full text-[#ff6b6b]">Loading…</div>
           ) : list.length === 0 ? (
-            <div className="col-span-full rounded-2xl border border-neutral-200 bg-white p-10 text-center text-neutral-600">
+            <div className="col-span-full rounded-2xl border border-neutral-200 bg-white p-10 text-center text-[#ff6b6b]">
               No workshops match your filters.{" "}
               {data.length === 0 ? "Check back soon!" : "Try clearing filters."}
             </div>
@@ -242,11 +242,11 @@ export default function Workshops() {
                     )}
                   </div>
                   <div className="p-5">
-                    <h3 className="text-lg font-semibold text-stone-900">{w.title}</h3>
+                    <h3 className="text-lg font-semibold text-[#ff6b6b]">{w.title}</h3>
                     {w.blurb && (
-                      <p className="mt-1 text-sm text-neutral-600">{w.blurb}</p>
+                      <p className="mt-1 text-sm text-[#ff6b6b]">{w.blurb}</p>
                     )}
-                    <div className="mt-3 grid gap-1 text-sm text-neutral-700">
+                    <div className="mt-3 grid gap-1 text-sm text-[#ff6b6b]">
                       <div>
                         📅 {w.date ? new Date(w.date).toDateString() : ""} — {w.time}{" "}
                         {w.duration ? `(${w.duration})` : ""}
@@ -261,7 +261,7 @@ export default function Workshops() {
                     </div>
 
                     <div className="mt-3">
-                      <div className="flex items-center justify-between text-xs text-neutral-600">
+                      <div className="flex items-center justify-between text-xs text-[#ff6b6b]">
                         <span>Spots</span>
                         <span>{spotsLeft} seats left</span>
                       </div>
@@ -271,7 +271,7 @@ export default function Workshops() {
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <div className="mt-1 text-xs text-neutral-600">
+                      <div className="mt-1 text-xs text-[#ff6b6b]">
                         {spotsLeft > 0 ? `${spotsLeft} seats left` : "Full — join waitlist"}
                       </div>
                     </div>
@@ -279,7 +279,7 @@ export default function Workshops() {
                     <div className="mt-4 flex items-center gap-2">
                       <button
                         onClick={() => setOpenId(w.id)}
-                        className="rounded-full border border-neutral-300 px-4 py-2 text-sm font-semibold hover:bg-neutral-50"
+                        className="rounded-full border border-neutral-300 px-4 py-2 text-sm font-semibold text-[#ff6b6b] hover:bg-neutral-50"
                       >
                         Details
                       </button>
@@ -455,7 +455,7 @@ function Chatbot({ workshops }) {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
               placeholder="Ask about a workshop..."
-              className="flex-1 px-3 py-2 text-sm outline-none bg-transparent text-white placeholder:text-neutral-400"
+              className="flex-1 px-3 py-2 text-sm outline-none bg-transparent text-[#ff6b6b] placeholder:text-[#ff6b6b]/60"
             />
             <button
               onClick={sendMessage}
