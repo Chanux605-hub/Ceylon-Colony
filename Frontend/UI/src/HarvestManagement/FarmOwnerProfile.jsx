@@ -1,3 +1,4 @@
+// src/HarvestManagement/FarmOwnerProfile.jsx
 import React, { useEffect, useState } from "react";
 import {
   Leaf,
@@ -12,25 +13,27 @@ import {
 import { useNavigate } from "react-router-dom";
 import HarvestHistory from "./HarvestHistory.jsx";
 import FarmAnalyticsDashboard from "./FarmAnalyticsDashboard.jsx";
-import Navbar from "../Components/User/navbar.jsx"; // ✅ Navbar
-import { useAuth } from "../context/AuthContext"; // ✅ logged user info
+import Navbar from "../Components/User/navbar.jsx";
+import { useAuth } from "../context/AuthContext";
 
 export default function FarmOwnerProfile() {
-  const { user, logout } = useAuth(); // ✅ current logged user
+  const { user, logout } = useAuth();
   const [farmer, setFarmer] = useState(null);
   const [activeTab, setActiveTab] = useState("farms");
+  const [notifications, setNotifications] = useState([]);
+  const [loadingNotifs, setLoadingNotifs] = useState(false);
   const navigate = useNavigate();
 
-  // ✅ Fetch data according to logged farm owner
+  // ✅ Fetch farms for logged user
   useEffect(() => {
-    if (!user) return; // wait until user is loaded
-
+    if (!user) return;
     const fetchFarmerData = async () => {
       try {
         const ownerId = user.userId;
-        const res = await fetch(`http://localhost:3000/api/farms/owner/${ownerId}`);
+        const res = await fetch(
+          `http://localhost:3000/api/farms/owner/${ownerId}`
+        );
         const data = await res.json();
-
         if (data.success) {
           setFarmer({
             farmerId: ownerId,
@@ -40,9 +43,7 @@ export default function FarmOwnerProfile() {
               email: user.email,
               address: user.address,
             },
-            profilePic:
-              user.avatarUrl ||
-              "https://i.pravatar.cc/150?img=12",
+            profilePic: user.avatarUrl || "https://i.pravatar.cc/150?img=12",
             farms: data.farms,
           });
         } else {
@@ -52,24 +53,43 @@ export default function FarmOwnerProfile() {
         console.error("Error fetching farms:", err);
       }
     };
-
     fetchFarmerData();
   }, [user]);
 
-  // ✅ delete farm
+  // ✅ Fetch notifications
+  useEffect(() => {
+    if (!farmer?.farmerId) return;
+    const fetchNotifications = async () => {
+      setLoadingNotifs(true);
+      try {
+        const res = await fetch(
+          `http://localhost:3000/api/notifications/farmer/${farmer.farmerId}`
+        );
+        const data = await res.json();
+        if (data.success) setNotifications(data.notifications);
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      } finally {
+        setLoadingNotifs(false);
+      }
+    };
+    fetchNotifications();
+  }, [farmer]);
+
+  // ✅ Delete farm
   const handleDeleteFarm = async (id) => {
     if (!window.confirm("Are you sure you want to delete this farm?")) return;
-
     try {
       const res = await fetch(`http://localhost:3000/api/farms/${id}`, {
         method: "DELETE",
       });
       const data = await res.json();
-
       if (data.success) {
         setFarmer((prev) => ({
           ...prev,
-          farms: prev.farms.filter((f) => f._id.toString() !== id.toString()),
+          farms: prev.farms.filter(
+            (f) => f._id.toString() !== id.toString()
+          ),
         }));
         alert("✅ Farm deleted successfully!");
       } else {
@@ -81,20 +101,28 @@ export default function FarmOwnerProfile() {
     }
   };
 
-  // ✅ loading states
-  if (!user) return <p className="text-center text-gray-400 mt-10">Loading user...</p>;
-  if (!farmer) return <p className="text-center text-gray-400 mt-10">Loading farms...</p>;
+  if (!user)
+    return (
+      <p className="text-center text-gray-400 mt-10">Loading user...</p>
+    );
+  if (!farmer)
+    return (
+      <p className="text-center text-gray-400 mt-10">Loading farms...</p>
+    );
+
+  // ✅ Categorize notifications
+  const reminders = notifications.filter((n) => n.type === "Reminder");
+  const alerts = notifications.filter((n) => n.type === "Alert");
 
   return (
     <div className="bg-[#0B0B0B] min-h-screen text-white flex flex-col">
-      {/* Navbar */}
       <Navbar />
 
-      {/* Layout */}
       <div className="flex flex-1">
         {/* Sidebar */}
         <aside className="w-64 bg-[#111111] text-gray-300 flex flex-col justify-between p-6 border-r border-[#2a2a2a]">
           <div>
+            {/* Profile */}
             <div className="flex flex-col items-center text-center mb-8">
               <img
                 src={farmer.profilePic}
@@ -107,23 +135,25 @@ export default function FarmOwnerProfile() {
 
             {/* Sidebar Tabs */}
             <div className="flex flex-col space-y-2">
-              {["farms", "analytics", "harvest", "notifications"].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`flex items-center gap-3 px-4 py-2 rounded-lg transition ${
-                    activeTab === tab
-                      ? "bg-[#FBB01A] text-black font-semibold"
-                      : "hover:bg-[#1f1f1f]"
-                  }`}
-                >
-                  {tab === "farms" && <Leaf className="w-4 h-4" />}
-                  {tab === "analytics" && <BarChart3 className="w-4 h-4" />}
-                  {tab === "harvest" && <History className="w-4 h-4" />}
-                  {tab === "notifications" && <Bell className="w-4 h-4" />}
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
-              ))}
+              {["farms", "analytics", "harvest", "notifications"].map(
+                (tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`flex items-center gap-3 px-4 py-2 rounded-lg transition ${
+                      activeTab === tab
+                        ? "bg-[#FBB01A] text-black font-semibold"
+                        : "hover:bg-[#1f1f1f]"
+                    }`}
+                  >
+                    {tab === "farms" && <Leaf className="w-4 h-4" />}
+                    {tab === "analytics" && <BarChart3 className="w-4 h-4" />}
+                    {tab === "harvest" && <History className="w-4 h-4" />}
+                    {tab === "notifications" && <Bell className="w-4 h-4" />}
+                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  </button>
+                )
+              )}
             </div>
           </div>
 
@@ -146,7 +176,7 @@ export default function FarmOwnerProfile() {
 
         {/* Main Content */}
         <main className="flex-1 bg-[#0B0B0B] p-8 overflow-y-auto">
-          {/* Farms Tab */}
+          {/* Farms */}
           {activeTab === "farms" && (
             <div className="bg-[#1A1A1A] rounded-xl p-6 shadow-lg">
               <div className="flex justify-between items-center mb-5">
@@ -191,7 +221,9 @@ export default function FarmOwnerProfile() {
                           <Eye className="w-4 h-4" /> View
                         </button>
                         <button
-                          onClick={() => navigate(`/farm/update/${farm._id}`)}
+                          onClick={() =>
+                            navigate(`/farm/update/${farm._id}`)
+                          }
                           className="flex items-center gap-1 bg-[#10B981] text-white px-3 py-1 rounded-lg font-medium hover:bg-[#059669]"
                         >
                           <Edit3 className="w-4 h-4" /> Update
@@ -210,21 +242,112 @@ export default function FarmOwnerProfile() {
             </div>
           )}
 
-          {/* Analytics Tab */}
+          {/* Analytics */}
           {activeTab === "analytics" && (
             <div className="bg-[#1A1A1A] rounded-xl shadow-lg p-6">
               <FarmAnalyticsDashboard ownerId={farmer.farmerId} />
             </div>
           )}
 
-          {/* Harvest Tab */}
+          {/* Harvest */}
           {activeTab === "harvest" && (
             <div className="bg-[#1A1A1A] rounded-xl shadow-lg p-6">
               <HarvestHistory />
             </div>
           )}
-        </main>
-      </div>
-    </div>
-  );
-}
+
+          {/* Notifications */}
+                {activeTab === "notifications" && (
+                  <div className="bg-[#1A1A1A] rounded-xl shadow-lg p-6">
+                    <h2 className="text-2xl font-bold text-[#FBB01A] mb-6 flex items-center gap-2">
+                      <Bell className="w-6 h-6" /> Notifications
+                    </h2>
+
+                    {loadingNotifs ? (
+                      <p className="text-gray-400">Loading notifications...</p>
+                    ) : (
+                      <div className="space-y-8">
+                        {/* Alerts */}
+                        <section>
+                          <h3 className="text-xl font-semibold text-red-400 mb-3">
+                            ⚠️ Alerts
+                          </h3>
+                          {alerts.length === 0 ? (
+                            <p className="text-gray-400 text-sm">
+                              No alerts at the moment.
+                            </p>
+                          ) : (
+                            <div className="space-y-3">
+                              {alerts.map((n) => (
+                                <div
+                                  key={n._id}
+                                  onClick={() => handleMarkRead(n._id)}
+                                  className={`cursor-pointer border rounded-lg p-4 transition ${
+                                    n.isRead
+                                      ? "border-gray-600 bg-[#111111]"
+                                      : "border-red-500/40 bg-red-950/40"
+                                  } hover:border-[#FBB01A]`}
+                                >
+                                  <h4
+                                    className={`font-bold ${
+                                      n.isRead ? "text-gray-300" : "text-red-400"
+                                    }`}
+                                  >
+                                    {n.title}
+                                  </h4>
+                                  <p className="text-sm mt-1">{n.message}</p>
+                                  <p className="text-xs text-gray-400 mt-2">
+                                    {new Date(n.createdAt).toLocaleString()}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </section>
+
+                        {/* Reminders */}
+                        <section>
+                          <h3 className="text-xl font-semibold text-yellow-400 mb-3">
+                            🕒 Reminders
+                          </h3>
+                          {reminders.length === 0 ? (
+                            <p className="text-gray-400 text-sm">
+                              No reminders right now.
+                            </p>
+                          ) : (
+                            <div className="space-y-3">
+                              {reminders.map((n) => (
+                                <div
+                                  key={n._id}
+                                  onClick={() => handleMarkRead(n._id)}
+                                  className={`cursor-pointer border rounded-lg p-4 transition ${
+                                    n.isRead
+                                      ? "border-gray-600 bg-[#111111]"
+                                      : "border-yellow-500/40 bg-yellow-900/30"
+                                  } hover:border-[#FBB01A]`}
+                                >
+                                  <h4
+                                    className={`font-bold ${
+                                      n.isRead ? "text-gray-300" : "text-yellow-400"
+                                    }`}
+                                  >
+                                    {n.title}
+                                  </h4>
+                                  <p className="text-sm mt-1">{n.message}</p>
+                                  <p className="text-xs text-gray-400 mt-2">
+                                    {new Date(n.createdAt).toLocaleString()}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </section>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </main>
+            </div>
+          </div>
+        );
+      }
