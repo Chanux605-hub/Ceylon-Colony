@@ -1,27 +1,17 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useContext, useState, useRef, useEffect } from "react";
 import { ShoppingCart, MoreVertical, Menu } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import logo from "../../assets/logo (2).png";
+import { StoreContext } from "../../context/StoreContext";
 import { useAuth } from "../../context/AuthContext";
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { cartCount } = useContext(StoreContext);
+  const { user, logout } = useAuth?.() || {};
   const [menuOpen, setMenuOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const menuRef = useRef(null);
-  const navigate = useNavigate();
 
-  // ✅ Role-based dashboard redirect
-  const handleDashboardRedirect = () => {
-    if (!user) return;
-    if (user.role === "farmOwner") {
-      navigate("/farmerProfile"); // 🐝 Farm Owner Profile page
-    } else {
-      navigate("/dashboard"); // 👤 Normal user dashboard
-    }
-  };
-
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -53,12 +43,24 @@ const Navbar = () => {
 
           {/* Center: Nav Links (desktop only) */}
           <div className="hidden lg:flex items-center space-x-8 font-medium">
-            <Link to="/home" className="text-white hover:text-[#FBB01A]">Home</Link>
-            <Link to="/about" className="text-white hover:text-[#FBB01A]">About Us</Link>
-            <Link to="/blogs" className="text-white hover:text-[#FBB01A]">Blog</Link>
-            <Link to="/workshops" className="text-white hover:text-[#FBB01A]">WorkShops</Link>
-            <Link to="/products" className="text-white hover:text-[#FBB01A]">Our Products</Link>
-            <Link to="/community" className="text-white hover:text-[#FBB01A]">Community</Link>
+            <Link to="/home" className="text-white hover:text-[#FBB01A]">
+              Home
+            </Link>
+            <Link to="/about" className="text-white hover:text-[#FBB01A]">
+              About Us
+            </Link>
+            <Link to="/blogs" className="text-white hover:text-[#FBB01A]">
+              Blog
+            </Link>
+            <Link to="/workshops" className="text-white hover:text-[#FBB01A]">
+              Workshops
+            </Link>
+            <Link to="/products" className="text-white hover:text-[#FBB01A]">
+              Our Products
+            </Link>
+            <Link to="/community" className="text-white hover:text-[#FBB01A]">
+              Community
+            </Link>
           </div>
 
           {/* Right: Profile / Logout / Dropdown / Cart / Hamburger */}
@@ -110,7 +112,6 @@ const Navbar = () => {
 
                 {menuOpen && (
                   <div className="absolute right-0 mt-2 w-72 bg-neutral-900 text-white rounded-xl shadow-xl z-50 overflow-hidden">
-                    {/* Profile Section */}
                     <div className="flex flex-col items-center px-6 py-6 border-b border-neutral-700">
                       <img
                         src={user.avatarUrl || "https://i.pravatar.cc/100?img=3"}
@@ -122,22 +123,20 @@ const Navbar = () => {
                       </p>
                       <p className="text-sm text-gray-300">{user.email}</p>
                     </div>
-
-                    {/* ✅ Go to Dashboard (role-aware) */}
                     <div className="p-4">
-                      <button
-                        onClick={handleDashboardRedirect}
+                      <Link
+                        to="/dashboard"
                         className="block w-full text-center px-4 py-2 rounded-lg bg-[#FBB01A] text-black font-semibold hover:opacity-90 transition"
                       >
                         Go to Dashboard
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Mobile hamburger */}
+            {/* Mobile hamburger (toggle drawer) */}
             <button
               onClick={() => setDrawerOpen(true)}
               className="lg:hidden p-2 rounded-md hover:bg-white/10 transition"
@@ -158,12 +157,24 @@ const Navbar = () => {
             >
               ✕
             </button>
-            <Link to="/home" className="block text-white hover:text-[#FBB01A]">Home</Link>
-            <Link to="/about" className="block text-white hover:text-[#FBB01A]">About Us</Link>
-            <Link to="/blogs" className="block text-white hover:text-[#FBB01A]">Blog</Link>
-            <Link to="/workshops" className="block text-white hover:text-[#FBB01A]">WorkShops</Link>
-            <Link to="/products" className="block text-white hover:text-[#FBB01A]">Our Products</Link>
-            <Link to="/community" className="block text-white hover:text-[#FBB01A]">Community</Link>
+            <Link to="/home" className="block text-white hover:text-[#FBB01A]">
+              Home
+            </Link>
+            <Link to="/about" className="block text-white hover:text-[#FBB01A]">
+              About Us
+            </Link>
+            <Link to="/blogs" className="block text-white hover:text-[#FBB01A]">
+              Blog
+            </Link>
+            <Link to="/workshops" className="block text-white hover:text-[#FBB01A]">
+              Workshops
+            </Link>
+            <Link to="/products" className="block text-white hover:text-[#FBB01A]">
+              Our Products
+            </Link>
+            <Link to="/community" className="block text-white hover:text-[#FBB01A]">
+              Community
+            </Link>
           </div>
         </div>
       )}

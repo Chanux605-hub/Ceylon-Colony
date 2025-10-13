@@ -49,6 +49,11 @@ const harvestSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+
+    nextInspectionDate: {
+      type: Date,
+      required: false, // optional but useful
+    },
   },
   { timestamps: true } // auto-manages createdAt & updatedAt
 );
