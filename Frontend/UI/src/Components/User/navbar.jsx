@@ -64,12 +64,14 @@ const Navbar = () => {
           {/* Right: Profile / Logout / Dropdown / Cart / Hamburger */}
           <div className="flex items-center gap-4 relative">
             {/* Cart (desktop only) */}
-            <button className="relative hidden lg:block">
+            <Link to="/cart" className="relative hidden lg:block">
               <ShoppingCart className="w-6 h-6 text-white hover:text-[#FBB01A] transition" />
-              <span className="absolute -top-2 -right-2 bg-[#FBB01A] text-black font-bold text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                3
-              </span>
-            </button>
+              {typeof cartCount === "number" && cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-[#FBB01A] text-black font-bold text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
 
             {/* User profile + Logout */}
             {user && (
