@@ -5,6 +5,10 @@ import {
   Heart, MessageCircle, PlayCircle, User, Tag as TagIcon, BarChart2,
   CheckCircle2, XCircle
 } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
+
 
 
 /* =========================================================================================
@@ -122,6 +126,93 @@ export default function CustomerMediaManagement() {
 
     fetchPosts();
   }, []);
+
+  // ✅ Report export
+const [reportSection, setReportSection] = useState("overview");
+
+const handleExportReport = () => {
+  const doc = new jsPDF();
+  const now = new Date().toLocaleString();
+
+  doc.setFontSize(16);
+  doc.text("Customer Media Report", 14, 18);
+  doc.setFontSize(10);
+  doc.text(`Generated: ${now}`, 14, 25);
+  doc.setFontSize(12);
+  doc.text(`Section: ${reportSection}`, 14, 33);
+
+  if (reportSection === "overview") {
+    autoTable(doc, {
+      startY: 40,
+      head: [["Metric", "Value"]],
+      body: [
+        ["Submissions Today", submissionsToday],
+        [
+          "Top Contributor",
+          topContributor
+            ? `${topContributor.name} (#${topContributor.tag})`
+            : "—",
+        ],
+        [
+          "Top Tag (Users)",
+          topTagUniqueUsers
+            ? `#${topTagUniqueUsers.tag} — ${topTagUniqueUsers.users}`
+            : "—",
+        ],
+      ],
+    });
+  } else if (reportSection === "announcements") {
+    const rows = filteredAnnouncements.map((a) => [
+      a.title,
+      a.date,
+      a.time,
+      a.status,
+      new Date(a.createdAt).toLocaleDateString(),
+    ]);
+
+    autoTable(doc, {
+      startY: 40,
+      head: [["Title", "Date", "Time", "Status", "Created"]],
+      body: rows.length
+        ? rows
+        : [["No announcements available", "", "", "", ""]],
+    });
+  } else if (reportSection === "allContent") {
+    const rows = allContentFilteredBackend.map((r) => [
+      r.author,
+      r.type,
+      r.product,
+      r.status,
+      r.metrics.likes,
+      r.metrics.comments,
+      r.metrics.views,
+      new Date(r.createdAt).toLocaleDateString(),
+    ]);
+
+    autoTable(doc, {
+      startY: 40,
+      head: [
+        [
+          "User",
+          "Type",
+          "Product",
+          "Status",
+          "Likes",
+          "Comments",
+          "Views",
+          "Created",
+        ],
+      ],
+      body: rows.length
+        ? rows
+        : [["No content found", "", "", "", "", "", "", ""]],
+    });
+  }
+
+  doc.save(`CustomerMedia_Report_${reportSection}.pdf`);
+};
+
+
 
   /* ---------------- Backend: Approved SHORTS (declare EARLY) ------------------ */
   const [shorts, setShorts] = useState([]);
@@ -575,12 +666,25 @@ const handleLike = async (postId) => {
             Analytics & insights for Customer Media
           </p>
         </div>
-        <button
-          onClick={() => window.print()}  // ✅ open print-to-PDF dialog
-          className="rounded-lg px-5 py-2 bg-[#FBB01A] text-black font-semibold hover:opacity-90 shadow"
-        >
-          Export Report
-        </button>
+        <div className="flex items-center gap-2">
+  <select
+    value={reportSection}
+    onChange={(e) => setReportSection(e.target.value)}
+    className="bg-white/5 border border-white/10 text-white rounded-md text-sm px-2 py-1"
+  >
+    <option value="overview" className="bg-[#121212]">Overview (KPIs)</option>
+    <option value="announcements" className="bg-[#121212]">Announcements</option>
+    <option value="allContent" className="bg-[#121212]">All Content</option>
+  </select>
+
+  <button
+    onClick={handleExportReport}
+    className="rounded-lg px-5 py-2 bg-[#FBB01A] text-black font-semibold hover:opacity-90 shadow"
+  >
+    Export Report
+  </button>
+</div>
+
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Kpi title="Submissions Today" icon={<BarChart2 className="h-4 w-4" />} value={submissionsToday} />

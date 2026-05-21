@@ -21,6 +21,7 @@ import blogRouter from "./routes/blogRoutes.js";
 import harvestRoutes from "./routes/harvestRoutes.js";
 import productRouter from "./routes/product.routes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import commentRoutes from "./routes/commentRoutes.js";
 
 // Controller for notifications
 import { checkAndSendNotifications } from "./controllers/notificationController.js";
@@ -30,6 +31,7 @@ import postRoutes from "./routes/postRoutes.js";
 import announcementRoutes from "./routes/announcementRoutes.js";
 import userRoutes from "./routes/authRoutes.js";
 import authRoutes from "./routes/auth.routes.js";
+
 
 dotenv.config();
 
@@ -68,6 +70,7 @@ app.use("/api/inventory", inventoryRoutes);
 app.use("/api/analytics", analyticsRouter);
 app.use("/api/farm-analytics", farmAnalyticsRoutes);
 app.use("/api/orderdetails", orderDetailsRouter);
+app.use("/api/comments", commentRoutes);
 
 // 🔹 Notification Routes
 app.use("/api/notifications", notificationRoutes);

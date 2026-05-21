@@ -5,6 +5,8 @@ import Footer from "../Components/User/Footer";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
 import LoginModal from "../components/User/LoginModal";   // adjust path if needed
+import CommentPortal from "../components/User/CommentPortal"; // ✅ added
+
 
 /* ============================================
    CONFIG
@@ -397,6 +399,15 @@ export default function Community() {
     loadAnnouncements();
   }, []);
 
+  // ✅ Comment portal state
+const [openComment, setOpenComment] = useState(false);
+const [selectedPostId, setSelectedPostId] = useState(null);
+
+const handleOpenComments = (postId) => {
+  setSelectedPostId(postId);
+  setOpenComment(true);
+};
+
 
   // Replace with your real logged-in user data
   const currentUser = {
@@ -483,30 +494,43 @@ export default function Community() {
     return list;
   }, [posts, tab, q]);
 
-  // Add this below your other helper functions in Community()
+// ✅ Updated like handler with toggle feature
 const handleLike = async (postId) => {
-  try {
-    // Optimistic UI update
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === postId ? { ...p, likes: (p.likes ?? 0) + 1 } : p
-      )
-    );
+  if (!user) {
+    alert("Please login to like posts");
+    return;
+  }
 
-    // Send like to backend
-    await fetch(`${API}/api/posts/${postId}/like`, { method: "PATCH" });
+  setPosts((prev) =>
+    prev.map((p) => {
+      if (p.id !== postId) return p;
+
+      // Initialize likedBy array if missing
+      const likedBy = p.likedBy || [];
+      const alreadyLiked = likedBy.includes(user.userId);
+
+      // Toggle like state
+      return {
+        ...p,
+        likes: alreadyLiked ? p.likes - 1 : p.likes + 1,
+        likedBy: alreadyLiked
+          ? likedBy.filter((id) => id !== user.userId)
+          : [...likedBy, user.userId],
+      };
+    })
+  );
+
+  try {
+    const res = await fetch(`${API}/api/posts/${postId}/like`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: user.userId }),
+    });
+    if (!res.ok) throw new Error("Failed to update like");
   } catch (err) {
-    console.error("Failed to like:", err);
-    // Rollback if needed
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === postId ? { ...p, likes: (p.likes ?? 1) - 1 } : p
-      )
-    );
+    console.error("Like toggle failed:", err);
   }
 };
-
-
   return (
     <div className="min-h-screen bg-[#0B0B0B] text-white">
       <Navbar />
@@ -663,13 +687,17 @@ const handleLike = async (postId) => {
 
                   <div className="flex items-center gap-4 px-4 py-3 border-t border-white/10 text-sm">
                   <button
-                    onClick={() => handleLike(p.id)}
-                    className="hover:text-amber-300"
-                  >
-                    👍 {p.likes}
-                  </button>
-
-                    <button className="hover:text-amber-300">💬 {p.comments}</button>
+                      onClick={() => handleLike(p.id)}
+                      className={`hover:text-amber-300 ${p.likedBy?.includes(user?.userId) ? "text-amber-400" : ""}`}
+                    >
+                      👍 {p.likes}
+                    </button>
+                    <button
+                      onClick={() => handleOpenComments(p.id)}
+                      className="hover:text-amber-300"
+                    >
+                      💬 {p.comments}
+                    </button>
                     <button className="ml-auto hover:text-amber-300">🔗 Share</button>
                   </div>
                 </article>
@@ -816,6 +844,14 @@ const handleLike = async (postId) => {
           currentUser={user}
         />
       )}
+
+      {/* ✅ Comment Portal */}
+      <CommentPortal
+        open={openComment}
+        onClose={() => setOpenComment(false)}
+        postId={selectedPostId}
+        currentUser={user}
+      />
     </div>
   );
 }
